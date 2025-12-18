@@ -493,14 +493,20 @@ export default function Tracker() {
                                 </p>
                               </div>
                               <div>
-                                <a
-                                  href={post.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-sm text-primary hover:underline"
-                                >
-                                  Ver post original →
-                                </a>
+                                {post.url && post.url !== '#' ? (
+                                  <a
+                                    href={post.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-primary hover:underline"
+                                  >
+                                    Ver post original →
+                                  </a>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">
+                                    Link não disponível
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </SheetContent>

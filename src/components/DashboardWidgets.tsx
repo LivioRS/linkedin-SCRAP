@@ -274,34 +274,40 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer
-          config={pieChartConfig}
-          className="min-h-[250px] w-full"
-        >
-          <PieChart>
-            <Pie
-              data={shareOfVoiceData}
-              dataKey="value"
-              nameKey="name"
-              innerRadius={70}
-              paddingAngle={2}
-              strokeWidth={2}
-              stroke="#fff"
-            >
-              {shareOfVoiceData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={`hsl(var(--chart-${(index % 5) + 1}))`}
-                />
-              ))}
-            </Pie>
-            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-            <ChartLegend
-              content={<ChartLegendContent nameKey="name" />}
-              className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-            />
-          </PieChart>
-        </ChartContainer>
+        {shareOfVoiceData.length > 0 ? (
+          <ChartContainer
+            config={pieChartConfig}
+            className="min-h-[250px] w-full"
+          >
+            <PieChart>
+              <Pie
+                data={shareOfVoiceData}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={70}
+                paddingAngle={2}
+                strokeWidth={2}
+                stroke="#fff"
+              >
+                {shareOfVoiceData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={`hsl(var(--chart-${(index % 5) + 1}))`}
+                  />
+                ))}
+              </Pie>
+              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+              <ChartLegend
+                content={<ChartLegendContent nameKey="name" />}
+                className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+              />
+            </PieChart>
+          </ChartContainer>
+        ) : (
+          <div className="flex items-center justify-center min-h-[250px] text-muted-foreground">
+            <p className="text-sm">Sem dados disponíveis para exibir</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
