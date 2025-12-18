@@ -48,6 +48,7 @@ const formSchema = z.object({
   url: z.string().url({ message: 'URL inválida.' }),
   type: z.enum(['own', 'competitor']),
   industry: z.string().min(2, { message: 'Indústria é obrigatória.' }),
+  platform: z.enum(['linkedin', 'instagram', 'facebook', 'twitter', 'youtube']).optional(),
 })
 
 export default function Clients() {
@@ -61,6 +62,7 @@ export default function Clients() {
       url: '',
       type: 'competitor',
       industry: 'Tecnologia',
+      platform: 'linkedin',
     },
   })
 
@@ -131,7 +133,7 @@ export default function Clients() {
                   name="url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL do LinkedIn</FormLabel>
+                      <FormLabel>URL do Perfil</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="https://linkedin.com/company/..."
@@ -183,6 +185,33 @@ export default function Clients() {
                     )}
                   />
                 </div>
+                <FormField
+                  control={form.control}
+                  name="platform"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Plataforma</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a plataforma" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="linkedin">LinkedIn</SelectItem>
+                          <SelectItem value="instagram">Instagram</SelectItem>
+                          <SelectItem value="facebook">Facebook</SelectItem>
+                          <SelectItem value="twitter">X (Twitter)</SelectItem>
+                          <SelectItem value="youtube">YouTube</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <div className="flex justify-end pt-4">
                   <Button type="submit">Iniciar Monitoramento</Button>
                 </div>
