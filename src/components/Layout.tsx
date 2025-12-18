@@ -21,7 +21,7 @@ const getPageTitle = (pathname: string) => {
     case '/alerts':
       return 'Central de Alertas'
     case '/settings':
-      return 'Configurações do Sistema'
+      return 'Configurações'
     default:
       return 'ReputaMonitor'
   }
@@ -37,24 +37,30 @@ function LayoutContent() {
   }, [pathname])
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className="flex min-h-screen bg-background text-foreground font-sans">
       <AppSidebar />
       <div className="md:hidden fixed top-4 left-4 z-50">
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button
+              variant="outline"
+              size="icon"
+              className="bg-primary text-white border-none shadow-lg"
+            >
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-[260px]">
+          <SheetContent side="left" className="p-0 w-[280px] border-r-0">
             <AppSidebar />
           </SheetContent>
         </Sheet>
       </div>
-      <div className="flex-1 md:ml-[260px] flex flex-col min-h-screen transition-all duration-300 ease-in-out">
+      <div className="flex-1 md:ml-[280px] flex flex-col min-h-screen transition-all duration-300 ease-in-out">
         <AppHeader title={title} />
-        <main className="flex-1 p-6 overflow-y-auto">
-          <Outlet />
+        <main className="flex-1 p-8 overflow-y-auto">
+          <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
+            <Outlet />
+          </div>
         </main>
       </div>
       <Toaster />

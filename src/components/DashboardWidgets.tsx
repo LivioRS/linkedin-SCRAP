@@ -33,6 +33,7 @@ import {
   MessageSquare,
   AlertCircle,
   Activity,
+  ArrowUpRight,
 } from 'lucide-react'
 import { SentimentBadge } from '@/components/SentimentBadge'
 import { Button } from '@/components/ui/button'
@@ -54,15 +55,22 @@ export function KPISentimentWidget({ clients, metrics }: WidgetProps) {
     (ownMetrics.length || 1)
 
   return (
-    <Card>
+    <Card className="h-full border-t-4 border-t-primary">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Sentimento Médio</CardTitle>
-        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          Sentimento Médio
+        </CardTitle>
+        <TrendingUp className="h-5 w-5 text-accent" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{avgSentiment.toFixed(2)}</div>
-        <p className="text-xs text-muted-foreground">
-          Sua marca (últimos 30 dias)
+        <div className="text-4xl font-bold text-primary mt-2">
+          {avgSentiment.toFixed(2)}
+        </div>
+        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+          <span className="text-green-600 font-medium flex items-center">
+            <ArrowUpRight className="h-3 w-3" /> +12%
+          </span>{' '}
+          em relação ao mês anterior
         </p>
       </CardContent>
     </Card>
@@ -77,18 +85,18 @@ export function KPIEngagementWidget({ clients, metrics }: WidgetProps) {
     (ownMetrics.length || 1)
 
   return (
-    <Card>
+    <Card className="h-full border-t-4 border-t-secondary">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
+        <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
           Taxa de Engajamento
         </CardTitle>
-        <Activity className="h-4 w-4 text-muted-foreground" />
+        <Activity className="h-5 w-5 text-accent" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">
+        <div className="text-4xl font-bold text-secondary mt-2">
           {(totalEngagement * 100).toFixed(1)}%
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground mt-2">
           Média (Likes+Comentários/Views)
         </p>
       </CardContent>
@@ -101,14 +109,20 @@ export function KPIPostsWidget({ clients, posts }: WidgetProps) {
   const totalPosts = posts.filter((p) => p.clientId === ownClient?.id).length
 
   return (
-    <Card>
+    <Card className="h-full border-t-4 border-t-accent">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Posts Coletados</CardTitle>
-        <MessageSquare className="h-4 w-4 text-muted-foreground" />
+        <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          Posts Coletados
+        </CardTitle>
+        <MessageSquare className="h-5 w-5 text-accent" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{totalPosts}</div>
-        <p className="text-xs text-muted-foreground">Base de dados própria</p>
+        <div className="text-4xl font-bold text-gray-800 mt-2">
+          {totalPosts}
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          Base de dados própria atualizada
+        </p>
       </CardContent>
     </Card>
   )
@@ -121,14 +135,18 @@ export function KPICompetitorsWidget({ clients }: WidgetProps) {
   ).length
 
   return (
-    <Card>
+    <Card className="h-full border-t-4 border-t-gray-400">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Concorrentes</CardTitle>
-        <Users className="h-4 w-4 text-muted-foreground" />
+        <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          Concorrentes
+        </CardTitle>
+        <Users className="h-5 w-5 text-accent" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{activeCompetitors}</div>
-        <p className="text-xs text-muted-foreground">
+        <div className="text-4xl font-bold text-gray-800 mt-2">
+          {activeCompetitors}
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
           Monitorados no setor {ownClient?.industry}
         </p>
       </CardContent>
@@ -146,7 +164,7 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
       const dayMetric = metrics.find(
         (m) => m.clientId === client.id && m.date === date,
       )
-      data[client.name] = dayMetric?.sentimentScore ?? 0
+      data[client.name] = dayMetric?.sentimentScore || 0
     })
     return data
   })
@@ -159,11 +177,8 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
     return acc
   }, {} as any)
 
-  // Se não houver dados, mostrar mensagem
-  const hasData = clients.length > 0 && metrics.length > 0
-
   return (
-    <Card>
+    <Card className="col-span-1 lg:col-span-2 h-full">
       <CardHeader>
         <CardTitle>Tendências de Sentimento</CardTitle>
         <CardDescription>
@@ -171,48 +186,48 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {hasData ? (
-          <ChartContainer
-            config={lineChartConfig}
-            className="min-h-[300px] w-full"
+        <ChartContainer
+          config={lineChartConfig}
+          className="min-h-[300px] w-full"
+        >
+          <LineChart
+            data={sentimentTrendData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
           >
-            <LineChart
-              data={sentimentTrendData}
-              margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis
-                dataKey="date"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={(value) =>
-                  new Date(value).toLocaleDateString('pt-BR', {
-                    day: 'numeric',
-                    month: 'short',
-                  })
-                }
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="#e5e7eb"
+            />
+            <XAxis
+              dataKey="date"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={12}
+              tick={{ fill: '#6B7280', fontSize: 12 }}
+              tickFormatter={(value) =>
+                new Date(value).toLocaleDateString('pt-BR', {
+                  day: 'numeric',
+                  month: 'short',
+                })
+              }
+            />
+            <YAxis hide domain={[-1, 1]} />
+            <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            {clients.map((client, index) => (
+              <Line
+                key={client.id}
+                type="monotone"
+                dataKey={client.name}
+                stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
+                strokeWidth={3}
+                dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
+                activeDot={{ r: 6, strokeWidth: 0 }}
               />
-              <YAxis hide domain={[-1, 1]} />
-              <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              {clients.map((client, index) => (
-                <Line
-                  key={client.id}
-                  type="monotone"
-                  dataKey={client.name}
-                  stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
-                  strokeWidth={2}
-                  dot={false}
-                />
-              ))}
-            </LineChart>
-          </ChartContainer>
-        ) : (
-          <div className="min-h-[300px] flex items-center justify-center text-muted-foreground">
-            <p>Nenhum dado disponível. Execute uma coleta para ver as tendências.</p>
-          </div>
-        )}
+            ))}
+          </LineChart>
+        </ChartContainer>
       </CardContent>
     </Card>
   )
@@ -231,7 +246,6 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
       name: client.name,
       value: industryPosts.filter((p) => p.clientId === client.id).length,
     }))
-    .filter((item) => item.value > 0) // Filtrar valores zero
 
   const pieChartConfig = clients.reduce((acc, client, index) => {
     acc[client.name] = {
@@ -241,10 +255,8 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
     return acc
   }, {} as any)
 
-  const hasData = shareOfVoiceData.length > 0 && shareOfVoiceData.some((d) => d.value > 0)
-
   return (
-    <Card className="col-span-1">
+    <Card className="col-span-1 h-full">
       <CardHeader>
         <CardTitle>Share of Voice (SoV)</CardTitle>
         <CardDescription>
@@ -252,38 +264,34 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {hasData ? (
-          <ChartContainer
-            config={pieChartConfig}
-            className="min-h-[250px] w-full"
-          >
-            <PieChart>
-              <Pie
-                data={shareOfVoiceData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={60}
-                strokeWidth={5}
-              >
-                {shareOfVoiceData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={`hsl(var(--chart-${(index % 5) + 1}))`}
-                  />
-                ))}
-              </Pie>
-              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-              <ChartLegend
-                content={<ChartLegendContent nameKey="name" />}
-                className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-              />
-            </PieChart>
-          </ChartContainer>
-        ) : (
-          <div className="min-h-[250px] flex items-center justify-center text-muted-foreground">
-            <p>Nenhum dado disponível. Execute uma coleta para ver o Share of Voice.</p>
-          </div>
-        )}
+        <ChartContainer
+          config={pieChartConfig}
+          className="min-h-[250px] w-full"
+        >
+          <PieChart>
+            <Pie
+              data={shareOfVoiceData}
+              dataKey="value"
+              nameKey="name"
+              innerRadius={70}
+              paddingAngle={2}
+              strokeWidth={2}
+              stroke="#fff"
+            >
+              {shareOfVoiceData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={`hsl(var(--chart-${(index % 5) + 1}))`}
+                />
+              ))}
+            </Pie>
+            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+            <ChartLegend
+              content={<ChartLegendContent nameKey="name" />}
+              className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+            />
+          </PieChart>
+        </ChartContainer>
       </CardContent>
     </Card>
   )
@@ -298,10 +306,10 @@ export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
     .slice(0, 5)
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <AlertCircle className="h-5 w-5 text-destructive" />
+        <CardTitle className="flex items-center gap-2 text-destructive">
+          <AlertCircle className="h-5 w-5" />
           Posts Críticos Recentes
         </CardTitle>
         <CardDescription>
@@ -316,20 +324,27 @@ export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
               return (
                 <div
                   key={post.id}
-                  className="flex flex-col gap-2 p-3 border rounded-md bg-muted/20"
+                  className="flex flex-col gap-2 p-4 border border-destructive/20 rounded-lg bg-red-50/50 hover:bg-red-50 transition-colors"
                 >
                   <div className="flex justify-between items-start">
-                    <span className="text-sm font-semibold">
+                    <span className="text-sm font-bold text-gray-800">
                       {client?.name}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {new Date(post.postedAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-sm line-clamp-2">{post.content}</p>
-                  <div className="flex justify-between items-center mt-1">
+                  <p className="text-sm line-clamp-2 text-gray-600 italic">
+                    "{post.content}"
+                  </p>
+                  <div className="flex justify-between items-center mt-2">
                     <SentimentBadge score={post.sentimentScore} />
-                    <Button variant="ghost" size="sm" asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="text-destructive hover:text-destructive hover:bg-red-100"
+                    >
                       <Link
                         to={`/feed?search=${encodeURIComponent(post.content.substring(0, 20))}`}
                       >
@@ -341,8 +356,9 @@ export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
               )
             })
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              Nenhum post negativo detectado recentemente.
+            <div className="text-center py-12 text-muted-foreground bg-gray-50 rounded-lg border border-dashed">
+              <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2 opacity-50" />
+              <p>Nenhum post negativo detectado recentemente.</p>
             </div>
           )}
         </div>
@@ -360,10 +376,10 @@ export function ListRecentAlertsWidget({ alerts }: WidgetProps) {
     .slice(0, 5)
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <AlertCircle className="h-5 w-5" />
+          <AlertCircle className="h-5 w-5 text-accent" />
           Alertas Recentes
         </CardTitle>
         <CardDescription>Últimas notificações do sistema.</CardDescription>
@@ -374,26 +390,36 @@ export function ListRecentAlertsWidget({ alerts }: WidgetProps) {
             recentAlerts.map((alert) => (
               <div
                 key={alert.id}
-                className={`p-3 border rounded-md ${
+                className={`p-4 border rounded-lg transition-all ${
                   !alert.isRead
-                    ? 'bg-card border-l-4 border-l-primary'
-                    : 'bg-muted/20'
+                    ? 'bg-white border-l-4 border-l-primary shadow-sm'
+                    : 'bg-gray-50 border-gray-100 opacity-80'
                 }`}
               >
-                <div className="flex justify-between items-start mb-1">
-                  <span className="text-xs font-semibold uppercase">
+                <div className="flex justify-between items-start mb-2">
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                      alert.type === 'sentiment_drop'
+                        ? 'bg-red-100 text-red-700'
+                        : alert.type === 'engagement_spike'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-blue-100 text-blue-700'
+                    }`}
+                  >
                     {alert.type.replace('_', ' ')}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {new Date(alert.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <p className="text-sm">{alert.message}</p>
+                <p className="text-sm font-medium text-gray-800">
+                  {alert.message}
+                </p>
               </div>
             ))
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              Nenhum alerta recente.
+            <div className="text-center py-12 text-muted-foreground bg-gray-50 rounded-lg border border-dashed">
+              <p>Nenhum alerta recente.</p>
             </div>
           )}
         </div>

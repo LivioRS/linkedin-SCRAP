@@ -6,62 +6,64 @@
 
 @layer base {
   :root {
-    /* LinkedIn-inspired Light Theme */
-    --background: 210 20% 96%; /* #F3F2EF */
-    --foreground: 222 47% 11%;
+    /* Planin Brand Colors */
+    --background: 210 20% 97%; /* #F5F7FA - Light Grey */
+    --foreground: 220 13% 10%; /* #1A1A1A - Dark Text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 220 13% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 220 13% 10%;
 
-    --primary: 210 90% 40%; /* #0A66C2 LinkedIn Blue */
-    --primary-foreground: 210 40% 98%;
+    /* Planin Blue Palette */
+    --primary: 200 100% 18%; /* #003D5C - Dark Blue */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 200 100% 26%; /* #005A87 - Medium Blue */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 20% 96.1%;
+    --muted-foreground: 220 9% 46%; /* #6B7280 */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 195 100% 40%; /* #0099CC - Light Blue */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%; /* Red */
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --success: 142 76% 36%; /* Green */
-    --success-foreground: 210 40% 98%;
+    --success: 142 70% 40%;
+    --success-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 195 100% 40%; /* Accent color for rings */
 
-    --radius: 0.5rem;
+    --radius: 0.5rem; /* 8px base radius */
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 210 90% 40%;
+    /* Sidebar - Dark Theme */
+    --sidebar-background: 200 100% 18%; /* #003D5C */
+    --sidebar-foreground: 0 0% 100%; /* White */
+    --sidebar-primary: 195 100% 40%; /* Accent Blue */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 215 20.2% 65.1%;
+    --sidebar-accent: 200 100% 26%; /* Secondary Blue for hover */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 200 100% 22%; /* Slightly lighter than bg */
+    --sidebar-ring: 195 100% 40%;
 
-    /* Charts */
-    --chart-1: 210 90% 40%; /* Blue */
-    --chart-2: 262 83% 58%; /* Purple */
-    --chart-3: 162 76% 40%; /* Green */
-    --chart-4: 33 100% 50%; /* Orange */
-    --chart-5: 199 89% 48%; /* Cyan */
+    /* Charts - Planin Palette */
+    --chart-1: 200 100% 18%; /* #003D5C */
+    --chart-2: 195 100% 40%; /* #0099CC */
+    --chart-3: 200 100% 26%; /* #005A87 */
+    --chart-4: 199 80% 65%; /* Lighter Blue */
+    --chart-5: 199 60% 85%; /* Pale Blue */
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    /* ... dark theme variables omitted for brevity, keeping default shadcn dark mode structure if needed but focusing on light mode as per specs */
-    --primary: 210 90% 50%;
+    /* Dark mode overrides would go here, but focusing on the specified light theme */
+    --primary: 200 100% 18%;
     --primary-foreground: 222.2 47.4% 11.2%;
   }
 }
@@ -74,7 +76,7 @@
     background-color: hsl(var(--success));
   }
   .bg-success-light {
-    background-color: hsla(142, 76%, 36%, 0.1);
+    background-color: hsla(142, 70%, 40%, 0.1);
   }
   .text-destructive-light {
     color: hsl(var(--destructive));
@@ -82,8 +84,17 @@
   .bg-destructive-light {
     background-color: hsla(0, 84%, 60%, 0.1);
   }
+
+  /* Custom shadow for cards */
+  .shadow-planin {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .shadow-planin-hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  }
 }
 
 body {
-  @apply bg-background text-foreground font-sans;
+  @apply bg-background text-foreground font-sans antialiased;
 }

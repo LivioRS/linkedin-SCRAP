@@ -34,7 +34,7 @@ import {
   YAxis,
   CartesianGrid,
 } from 'recharts'
-import { Lightbulb, Activity } from 'lucide-react'
+import { Lightbulb, Activity, TrendingUp } from 'lucide-react'
 
 export default function Analysis() {
   const { clients, metrics, posts } = useAppStore()
@@ -99,32 +99,34 @@ export default function Analysis() {
     ) / (competitors.length || 1)
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl shadow-planin">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            Análise Competitiva Avançada
+          <h2 className="text-2xl font-bold tracking-tight text-primary">
+            Análise Competitiva
           </h2>
           <p className="text-muted-foreground">
             Comparação detalhada de performance e reputação de mercado.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Período:</span>
+        <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-lg border">
+          <span className="text-sm font-medium px-2 text-gray-600">
+            Período:
+          </span>
           <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[120px]">
+            <SelectTrigger className="w-[140px] border-0 bg-white shadow-sm h-8">
               <SelectValue placeholder="Período" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7">7 Dias</SelectItem>
-              <SelectItem value="30">30 Dias</SelectItem>
-              <SelectItem value="90">90 Dias</SelectItem>
+              <SelectItem value="7">Últimos 7 Dias</SelectItem>
+              <SelectItem value="30">Últimos 30 Dias</SelectItem>
+              <SelectItem value="90">Últimos 90 Dias</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="h-full">
           <CardHeader>
             <CardTitle>Share of Voice</CardTitle>
             <CardDescription>
@@ -143,6 +145,8 @@ export default function Analysis() {
                   nameKey="name"
                   innerRadius={80}
                   paddingAngle={5}
+                  stroke="#fff"
+                  strokeWidth={2}
                 >
                   {shareOfVoiceData.map((entry, index) => (
                     <Cell
@@ -160,7 +164,7 @@ export default function Analysis() {
             </ChartContainer>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="h-full">
           <CardHeader>
             <CardTitle>Comparativo de Engajamento</CardTitle>
             <CardDescription>Média de engajamento no período</CardDescription>
@@ -179,6 +183,7 @@ export default function Analysis() {
                   horizontal={true}
                   vertical={false}
                   strokeDasharray="3 3"
+                  stroke="#e5e7eb"
                 />
                 <YAxis
                   dataKey="name"
@@ -187,7 +192,12 @@ export default function Analysis() {
                   width={100}
                   tick={{ fontSize: 12 }}
                 />
-                <XAxis type="number" unit="%" />
+                <XAxis
+                  type="number"
+                  unit="%"
+                  tickLine={false}
+                  axisLine={false}
+                />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="engagement" radius={[0, 4, 4, 0]} barSize={32}>
                   {engagementData.map((entry, index) => (
@@ -212,13 +222,17 @@ export default function Analysis() {
           <CardContent>
             <ChartContainer
               config={trendChartConfig}
-              className="h-[350px] w-full"
+              className="h-[400px] w-full"
             >
               <LineChart
                 data={trendData}
                 margin={{ top: 20, right: 20, left: 0, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#e5e7eb"
+                />
                 <XAxis
                   dataKey="date"
                   tickFormatter={(value) =>
@@ -230,8 +244,14 @@ export default function Analysis() {
                   tickLine={false}
                   axisLine={false}
                   tickMargin={10}
+                  tick={{ fill: '#6B7280' }}
                 />
-                <YAxis domain={[-1, 1]} />
+                <YAxis
+                  domain={[-1, 1]}
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: '#6B7280' }}
+                />
                 <ChartTooltip
                   content={<ChartTooltipContent indicator="line" />}
                 />
@@ -242,8 +262,9 @@ export default function Analysis() {
                     type="monotone"
                     dataKey={client.name}
                     stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
-                    strokeWidth={2}
+                    strokeWidth={3}
                     dot={false}
+                    activeDot={{ r: 6 }}
                   />
                 ))}
               </LineChart>
@@ -251,44 +272,54 @@ export default function Analysis() {
           </CardContent>
         </Card>
       </div>
-      <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-100 dark:from-indigo-950/30 dark:to-purple-950/30">
+      <Card className="bg-gradient-to-br from-primary/5 to-secondary/10 border-accent/20">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-indigo-800 dark:text-indigo-300">
-            <Lightbulb className="h-5 w-5" /> Insights Competitivos (Claude AI)
+          <CardTitle className="flex items-center gap-2 text-primary">
+            <Lightbulb className="h-5 w-5 text-accent" /> Insights Competitivos
+            (Claude AI)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {ownEngagement > avgCompEngagement ? (
-            <div className="flex items-start gap-3 p-3 bg-white/60 dark:bg-black/20 rounded-lg">
-              <Activity className="h-5 w-5 text-green-600 mt-0.5" />
+            <div className="flex items-start gap-4 p-4 bg-white/80 rounded-xl shadow-sm border border-white/50">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Activity className="h-6 w-6 text-green-700" />
+              </div>
               <div>
-                <p className="font-semibold text-sm">
+                <p className="font-bold text-gray-900 text-lg">
                   Liderança em Engajamento
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  Sua marca tem {(ownEngagement - avgCompEngagement).toFixed(1)}
-                  % mais engajamento que a média dos concorrentes.
+                <p className="text-gray-600 mt-1">
+                  Sua marca tem{' '}
+                  <span className="text-green-700 font-bold">
+                    {(ownEngagement - avgCompEngagement).toFixed(1)}%
+                  </span>{' '}
+                  mais engajamento que a média dos concorrentes. Continue com a
+                  estratégia de conteúdo atual.
                 </p>
               </div>
             </div>
           ) : (
-            <div className="flex items-start gap-3 p-3 bg-white/60 dark:bg-black/20 rounded-lg">
-              <Activity className="h-5 w-5 text-amber-600 mt-0.5" />
+            <div className="flex items-start gap-4 p-4 bg-white/80 rounded-xl shadow-sm border border-white/50">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-amber-700" />
+              </div>
               <div>
-                <p className="font-semibold text-sm">
+                <p className="font-bold text-gray-900 text-lg">
                   Oportunidade de Melhoria
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-gray-600 mt-1">
                   O engajamento está abaixo da média do setor. Considere
-                  analisar os posts com melhor performance dos concorrentes.
+                  analisar os posts com melhor performance dos concorrentes para
+                  identificar temas de interesse.
                 </p>
               </div>
             </div>
           )}
-          <div className="p-3 bg-white/60 dark:bg-black/20 rounded-lg">
-            <p className="text-sm text-muted-foreground">
+          <div className="p-4 bg-white/80 rounded-xl shadow-sm border border-white/50">
+            <p className="text-gray-600 leading-relaxed">
               "A análise de tendências mostra que{' '}
-              <strong>
+              <strong className="text-primary">
                 {clients.find((c) => c.type === 'competitor')?.name}
               </strong>{' '}
               teve um pico de sentimento positivo na última semana,

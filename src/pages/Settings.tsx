@@ -211,134 +211,162 @@ export default function Settings() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold tracking-tight">Configurações</h2>
+    <div className="space-y-8">
+      <div className="flex flex-col gap-2 bg-white p-6 rounded-xl shadow-planin">
+        <h2 className="text-2xl font-bold tracking-tight text-primary">
+          Configurações
+        </h2>
         <p className="text-muted-foreground">
           Gerencie integrações, notificações e preferências do sistema.
         </p>
       </div>
       <Tabs defaultValue="monitoring" className="space-y-6">
-        <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="monitoring" className="gap-2">
+        <TabsList className="flex-wrap h-auto bg-white p-2 rounded-xl border shadow-sm w-full justify-start gap-2">
+          <TabsTrigger
+            value="monitoring"
+            className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-md"
+          >
             <Target className="h-4 w-4" /> Monitoramento
           </TabsTrigger>
-          <TabsTrigger value="targets" className="gap-2">
+          <TabsTrigger
+            value="targets"
+            className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-md"
+          >
             <ListPlus className="h-4 w-4" /> Fontes Alvo
           </TabsTrigger>
-          <TabsTrigger value="integrations" className="gap-2">
+          <TabsTrigger
+            value="integrations"
+            className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-md"
+          >
             <Key className="h-4 w-4" /> Integrações API
           </TabsTrigger>
-          <TabsTrigger value="platforms" className="gap-2">
+          <TabsTrigger
+            value="platforms"
+            className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-md"
+          >
             <Globe className="h-4 w-4" /> Redes Sociais
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
+          <TabsTrigger
+            value="notifications"
+            className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-md"
+          >
             <Bell className="h-4 w-4" /> Notificações
           </TabsTrigger>
-          <TabsTrigger value="system" className="gap-2">
+          <TabsTrigger
+            value="system"
+            className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-md"
+          >
             <Database className="h-4 w-4" /> Sistema & Dados
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="monitoring">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuração da Marca Principal</CardTitle>
-              <CardDescription>
-                Defina a empresa foco do monitoramento (Você).
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleUpdateOwnClient} className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="brandName">Nome da Empresa</Label>
-                    <Input
-                      id="brandName"
-                      defaultValue={ownClient?.name}
-                      placeholder="Ex: Grupo Plaenge"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="brandIndustry">Setor de Atuação</Label>
-                    <Input
-                      id="brandIndustry"
-                      defaultValue={ownClient?.industry}
-                      placeholder="Ex: Construção Civil"
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="brandUrl">URL Principal (LinkedIn)</Label>
-                    <Input
-                      id="brandUrl"
-                      defaultValue={ownClient?.url}
-                      placeholder="https://linkedin.com/company/..."
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <Button type="submit">Atualizar Marca</Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Gestão de Concorrentes</CardTitle>
-              <CardDescription>
-                Adicione empresas para comparação direta nos gráficos de
-                análise.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex gap-4">
-                <Input
-                  placeholder="Nome do Concorrente"
-                  value={newCompetitorName}
-                  onChange={(e) => setNewCompetitorName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddCompetitor()}
-                />
-                <Button onClick={handleAddCompetitor}>
-                  <Plus className="h-4 w-4 mr-2" /> Adicionar
-                </Button>
-              </div>
-              <div className="border rounded-md divide-y">
-                {competitors.length > 0 ? (
-                  competitors.map((comp) => (
-                    <div
-                      key={comp.id}
-                      className="flex items-center justify-between p-4"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
-                          {comp.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-medium">{comp.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {comp.url}
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => removeClient(comp.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+          <div className="grid gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Configuração da Marca Principal</CardTitle>
+                <CardDescription>
+                  Defina a empresa foco do monitoramento (Você).
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdateOwnClient} className="space-y-6">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="brandName">Nome da Empresa</Label>
+                      <Input
+                        id="brandName"
+                        defaultValue={ownClient?.name}
+                        placeholder="Ex: Grupo Plaenge"
+                      />
                     </div>
-                  ))
-                ) : (
-                  <div className="p-8 text-center text-muted-foreground">
-                    Nenhum concorrente cadastrado.
+                    <div className="space-y-2">
+                      <Label htmlFor="brandIndustry">Setor de Atuação</Label>
+                      <Input
+                        id="brandIndustry"
+                        defaultValue={ownClient?.industry}
+                        placeholder="Ex: Construção Civil"
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="brandUrl">URL Principal (LinkedIn)</Label>
+                      <Input
+                        id="brandUrl"
+                        defaultValue={ownClient?.url}
+                        placeholder="https://linkedin.com/company/..."
+                      />
+                    </div>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="flex justify-end">
+                    <Button type="submit" variant="planin">
+                      Atualizar Marca
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Gestão de Concorrentes</CardTitle>
+                <CardDescription>
+                  Adicione empresas para comparação direta nos gráficos de
+                  análise.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex gap-4">
+                  <Input
+                    placeholder="Nome do Concorrente"
+                    value={newCompetitorName}
+                    onChange={(e) => setNewCompetitorName(e.target.value)}
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' && handleAddCompetitor()
+                    }
+                  />
+                  <Button onClick={handleAddCompetitor} variant="outline">
+                    <Plus className="h-4 w-4 mr-2" /> Adicionar
+                  </Button>
+                </div>
+                <div className="border rounded-xl divide-y overflow-hidden">
+                  {competitors.length > 0 ? (
+                    competitors.map((comp) => (
+                      <div
+                        key={comp.id}
+                        className="flex items-center justify-between p-4 bg-gray-50/50 hover:bg-gray-100/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 rounded-full bg-white border shadow-sm flex items-center justify-center text-sm font-bold text-primary">
+                            {comp.name.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800">
+                              {comp.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {comp.url}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => removeClient(comp.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center text-muted-foreground">
+                      Nenhum concorrente cadastrado.
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="targets">
@@ -370,16 +398,16 @@ export default function Settings() {
                   />
                 </div>
                 <div className="flex items-end">
-                  <Button onClick={handleAddTargetUrl}>
+                  <Button onClick={handleAddTargetUrl} variant="planin">
                     <Plus className="h-4 w-4 mr-2" /> Adicionar
                   </Button>
                 </div>
               </div>
 
-              <div className="border rounded-md">
+              <div className="border rounded-xl overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-gray-50">
                       <TableHead>Plataforma</TableHead>
                       <TableHead>URL</TableHead>
                       <TableHead>Descrição</TableHead>
@@ -392,7 +420,10 @@ export default function Settings() {
                       settings.targetUrls.map((target) => (
                         <TableRow key={target.id}>
                           <TableCell>
-                            <Badge variant="outline" className="capitalize">
+                            <Badge
+                              variant="outline"
+                              className="capitalize bg-white shadow-sm"
+                            >
                               {target.platform}
                             </Badge>
                           </TableCell>
@@ -401,7 +432,7 @@ export default function Settings() {
                               href={target.url}
                               target="_blank"
                               rel="noreferrer"
-                              className="flex items-center gap-1 hover:underline text-blue-600"
+                              className="flex items-center gap-1 hover:underline text-accent"
                             >
                               <Link2 className="h-3 w-3" /> {target.url}
                             </a>
@@ -414,7 +445,7 @@ export default function Settings() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                               onClick={() => handleRemoveTargetUrl(target.id)}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -426,7 +457,7 @@ export default function Settings() {
                       <TableRow>
                         <TableCell
                           colSpan={5}
-                          className="text-center py-8 text-muted-foreground"
+                          className="text-center py-12 text-muted-foreground"
                         >
                           Nenhuma URL específica adicionada.
                         </TableCell>
@@ -470,6 +501,7 @@ export default function Settings() {
                                     }
                                     placeholder="apify_api_..."
                                     {...field}
+                                    className="pr-10"
                                   />
                                 </FormControl>
                                 <Button
@@ -527,6 +559,7 @@ export default function Settings() {
                                     }
                                     placeholder="sk-ant-..."
                                     {...field}
+                                    className="pr-10"
                                   />
                                 </FormControl>
                                 <Button
@@ -584,6 +617,7 @@ export default function Settings() {
                                     }
                                     placeholder="123456:ABC-..."
                                     {...field}
+                                    className="pr-10"
                                   />
                                 </FormControl>
                                 <Button
@@ -654,6 +688,7 @@ export default function Settings() {
                                     }
                                     placeholder="eyJ..."
                                     {...field}
+                                    className="pr-10"
                                   />
                                 </FormControl>
                                 <Button
@@ -692,7 +727,7 @@ export default function Settings() {
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <Button type="submit" disabled={isSaving}>
+                    <Button type="submit" disabled={isSaving} variant="planin">
                       {isSaving ? (
                         <Save className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
@@ -751,12 +786,16 @@ export default function Settings() {
                 ].map((platform) => (
                   <div
                     key={platform.id}
-                    className="flex flex-col space-y-2 rounded-lg border p-4"
+                    className="flex flex-col space-y-4 rounded-xl border border-border/60 p-6 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <platform.icon className="h-5 w-5 text-muted-foreground" />
-                        <span className="font-semibold">{platform.label}</span>
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-gray-100 rounded-lg text-primary">
+                          <platform.icon className="h-6 w-6" />
+                        </div>
+                        <span className="font-bold text-lg">
+                          {platform.label}
+                        </span>
                       </div>
                       <Switch
                         checked={
@@ -774,7 +813,7 @@ export default function Settings() {
                         }
                       />
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       {platform.desc}
                     </p>
                   </div>
@@ -814,11 +853,15 @@ export default function Settings() {
                 </div>
               </div>
               <div className="space-y-4">
-                <h3 className="text-sm font-medium">Gatilhos de Notificação</h3>
+                <h3 className="text-sm font-semibold uppercase text-muted-foreground tracking-wider">
+                  Gatilhos de Notificação
+                </h3>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="flex items-center justify-between rounded-lg border p-4 bg-gray-50/50">
                     <div className="space-y-0.5">
-                      <Label className="text-base">Sentimento Negativo</Label>
+                      <Label className="text-base font-semibold">
+                        Sentimento Negativo
+                      </Label>
                       <p className="text-sm text-muted-foreground">
                         Alertar quando um post com score &lt; -0.3 for
                         detectado.
@@ -836,9 +879,11 @@ export default function Settings() {
                       }
                     />
                   </div>
-                  <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="flex items-center justify-between rounded-lg border p-4 bg-gray-50/50">
                     <div className="space-y-0.5">
-                      <Label className="text-base">Atividade Concorrente</Label>
+                      <Label className="text-base font-semibold">
+                        Atividade Concorrente
+                      </Label>
                       <p className="text-sm text-muted-foreground">
                         Alertar sobre novos posts de empresas concorrentes.
                       </p>
@@ -855,9 +900,11 @@ export default function Settings() {
                       }
                     />
                   </div>
-                  <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="flex items-center justify-between rounded-lg border p-4 bg-gray-50/50">
                     <div className="space-y-0.5">
-                      <Label className="text-base">Pico de Engajamento</Label>
+                      <Label className="text-base font-semibold">
+                        Pico de Engajamento
+                      </Label>
                       <p className="text-sm text-muted-foreground">
                         Notificar se um post exceder a média de likes em 50%.
                       </p>
@@ -930,7 +977,9 @@ export default function Settings() {
                 </div>
               </div>
               <div className="space-y-4">
-                <h3 className="text-sm font-medium">Exportação de Dados</h3>
+                <h3 className="text-sm font-semibold uppercase text-muted-foreground tracking-wider">
+                  Exportação de Dados
+                </h3>
                 <div className="flex gap-4">
                   <Button
                     variant="outline"
@@ -940,7 +989,7 @@ export default function Settings() {
                     <FileText className="mr-2 h-4 w-4" /> Exportar CSV
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="planin"
                     className="w-full sm:w-auto"
                     onClick={() => handleExport('pdf')}
                   >

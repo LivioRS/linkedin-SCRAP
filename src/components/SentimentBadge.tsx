@@ -19,11 +19,12 @@ export function SentimentBadge({ score }: SentimentBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border',
+        'inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border tracking-wide uppercase',
         colorClass,
       )}
     >
-      {label} <span className="ml-1 opacity-75">({score.toFixed(2)})</span>
+      {label}{' '}
+      <span className="ml-1 opacity-75 font-normal">| {score.toFixed(2)}</span>
     </span>
   )
 }

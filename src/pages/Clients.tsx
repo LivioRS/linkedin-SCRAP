@@ -77,37 +77,38 @@ export default function Clients() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'processing':
-        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+        return <Loader2 className="h-4 w-4 animate-spin text-accent" />
       case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />
+        return <CheckCircle className="h-4 w-4 text-green-600" />
       case 'error':
-        return <AlertCircle className="h-4 w-4 text-red-500" />
+        return <AlertCircle className="h-4 w-4 text-red-600" />
       default:
         return <Clock className="h-4 w-4 text-gray-400" />
     }
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-8">
+      <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-planin">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
+          <h2 className="text-2xl font-bold tracking-tight text-primary">
             Gestão de Clientes
           </h2>
-          <p className="text-muted-foreground">
-            Configure as marcas e concorrentes que serão monitorados pelo
-            scraper.
+          <p className="text-muted-foreground mt-1">
+            Configure as marcas e concorrentes que serão monitorados.
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button variant="planin">
               <Plus className="mr-2 h-4 w-4" /> Adicionar Cliente
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Novo Monitoramento</DialogTitle>
+              <DialogTitle className="text-xl text-primary">
+                Novo Monitoramento
+              </DialogTitle>
               <DialogDescription>
                 Adicione uma empresa para iniciar a coleta automática de dados.
               </DialogDescription>
@@ -115,7 +116,7 @@ export default function Clients() {
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+                className="space-y-6 pt-4"
               >
                 <FormField
                   control={form.control}
@@ -215,7 +216,9 @@ export default function Clients() {
                   )}
                 />
                 <div className="flex justify-end pt-4">
-                  <Button type="submit">Iniciar Monitoramento</Button>
+                  <Button type="submit" className="w-full sm:w-auto">
+                    Iniciar Monitoramento
+                  </Button>
                 </div>
               </form>
             </Form>
@@ -229,43 +232,62 @@ export default function Clients() {
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Empresa</TableHead>
-                <TableHead>Indústria</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Status Coleta</TableHead>
-                <TableHead>Última Sincronização</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+              <TableRow className="bg-gray-50 hover:bg-gray-50">
+                <TableHead className="font-bold text-gray-700">
+                  Empresa
+                </TableHead>
+                <TableHead className="font-bold text-gray-700">
+                  Indústria
+                </TableHead>
+                <TableHead className="font-bold text-gray-700">Tipo</TableHead>
+                <TableHead className="font-bold text-gray-700">
+                  Status Coleta
+                </TableHead>
+                <TableHead className="font-bold text-gray-700">
+                  Última Sincronização
+                </TableHead>
+                <TableHead className="text-right font-bold text-gray-700">
+                  Ações
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {clients.map((client) => (
-                <TableRow key={client.id}>
+                <TableRow key={client.id} className="hover:bg-gray-50/50">
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9 border">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-10 w-10 border shadow-sm">
                         <AvatarImage src={client.avatarUrl} alt={client.name} />
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
                           {client.name.substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
-                        <span>{client.name}</span>
+                        <span className="text-base font-semibold text-gray-900">
+                          {client.name}
+                        </span>
                         <a
                           href={client.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs text-muted-foreground hover:underline truncate max-w-[150px]"
+                          className="text-xs text-muted-foreground hover:text-accent truncate max-w-[200px]"
                         >
                           {client.url}
                         </a>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{client.industry}</TableCell>
+                  <TableCell className="text-gray-600">
+                    {client.industry}
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant={client.type === 'own' ? 'default' : 'secondary'}
+                      className={
+                        client.type === 'own'
+                          ? 'bg-primary hover:bg-primary/90'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }
                     >
                       {client.type === 'own' ? 'Próprio' : 'Concorrente'}
                     </Badge>
@@ -273,7 +295,7 @@ export default function Clients() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(client.status)}
-                      <span className="capitalize text-sm">
+                      <span className="capitalize text-sm font-medium">
                         {client.status}
                       </span>
                     </div>
@@ -282,7 +304,11 @@ export default function Clients() {
                     {new Date(client.lastUpdated).toLocaleString('pt-BR')}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-gray-100"
+                    >
                       Configurar
                     </Button>
                   </TableCell>
