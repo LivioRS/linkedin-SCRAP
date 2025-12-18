@@ -155,30 +155,79 @@ export function KPICompetitorsWidget({ clients }: WidgetProps) {
   )
 }
 
+// DADOS DE FALLBACK PARA TENDÊNCIAS DE SENTIMENTO
+const FALLBACK_SENTIMENT_DATA = Array.from({ length: 15 }).map((_, i) => {
+  const date = new Date(Date.now() - (14 - i) * 86400000)
+    .toISOString()
+    .split('T')[0]
+  return {
+    date,
+    'Grupo Plaenge': Math.sin((i / 15) * Math.PI * 2) * 0.4 + 0.2 + (Math.random() - 0.5) * 0.2,
+    'Vanguard': Math.sin((i / 15) * Math.PI * 2 + Math.PI / 3) * 0.3 + 0.1 + (Math.random() - 0.5) * 0.2,
+    'A.Yoshii Engenharia': Math.sin((i / 15) * Math.PI * 2 - Math.PI / 3) * 0.35 + 0.15 + (Math.random() - 0.5) * 0.2,
+  }
+})
+
+const FALLBACK_SENTIMENT_CONFIG = {
+  'Grupo Plaenge': { label: 'Grupo Plaenge', color: 'hsl(var(--chart-1))' },
+  'Vanguard': { label: 'Vanguard', color: 'hsl(var(--chart-2))' },
+  'A.Yoshii Engenharia': { label: 'A.Yoshii Engenharia', color: 'hsl(var(--chart-3))' },
+}
+
 export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
+  // Gerar dados reais ou usar fallback
   const sentimentTrendData = Array.from({ length: 15 }).map((_, i) => {
     const date = new Date(Date.now() - (14 - i) * 86400000)
       .toISOString()
       .split('T')[0]
     const data: any = { date }
-    clients.forEach((client) => {
-      const dayMetric = metrics.find(
-        (m) => m.clientId === client.id && m.date === date,
-      )
-      data[client.name] = dayMetric?.sentimentScore || 0
-    })
+    
+    if (clients.length > 0 && metrics.length > 0) {
+      clients.forEach((client) => {
+        const dayMetric = metrics.find(
+          (m) => m.clientId === client.id && m.date === date,
+        )
+        data[client.name] = dayMetric?.sentimentScore ?? 0
+      })
+    } else {
+      // Usar dados de fallback
+      Object.keys(FALLBACK_SENTIMENT_DATA[0] || {}).forEach((key) => {
+        if (key !== 'date') {
+          data[key] = FALLBACK_SENTIMENT_DATA[i]?.[key as keyof typeof FALLBACK_SENTIMENT_DATA[0]] || 0
+        }
+      })
+    }
+    
     return data
   })
 
-  const lineChartConfig = clients.reduce((acc, client, index) => {
-    acc[client.name] = {
-      label: client.name,
-      color: `hsl(var(--chart-${(index % 5) + 1}))`,
-    }
-    return acc
-  }, {} as any)
+  const lineChartConfig = clients.length > 0
+    ? clients.reduce((acc, client, index) => {
+        acc[client.name] = {
+          label: client.name,
+          color: `hsl(var(--chart-${(index % 5) + 1}))`,
+        }
+        return acc
+      }, {} as any)
+    : FALLBACK_SENTIMENT_CONFIG
 
-  const hasData = metrics.length > 0 && clients.length > 0
+  const chartClients = clients.length > 0 
+    ? clients 
+    : [
+        { id: '1', name: 'Grupo Plaenge' },
+        { id: '2', name: 'Vanguard' },
+        { id: '3', name: 'A.Yoshii Engenharia' },
+      ] as any[]
+
+  const usingFallback = clients.length === 0 || metrics.length === 0
+
+  // Debug
+  if (usingFallback) {
+    console.warn('⚠️ ChartSentimentTrendWidget: Usando dados de exemplo - dados reais não disponíveis', {
+      clientsCount: clients.length,
+      metricsCount: metrics.length,
+    })
+  }
 
   return (
     <Card className="w-full">
@@ -189,57 +238,71 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {hasData ? (
-          <ChartContainer
-            config={lineChartConfig}
-            className="min-h-[300px] w-full"
-          >
-            <LineChart
-              data={sentimentTrendData}
-              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                stroke="#e5e7eb"
-              />
-              <XAxis
-                dataKey="date"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={12}
-                tick={{ fill: '#6B7280', fontSize: 12 }}
-                tickFormatter={(value) =>
-                  new Date(value).toLocaleDateString('pt-BR', {
-                    day: 'numeric',
-                    month: 'short',
-                  })
-                }
-              />
-              <YAxis hide domain={[-1, 1]} />
-              <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              {clients.map((client, index) => (
-                <Line
-                  key={client.id}
-                  type="monotone"
-                  dataKey={client.name}
-                  stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
-                  strokeWidth={3}
-                  dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                />
-              ))}
-            </LineChart>
-          </ChartContainer>
-        ) : (
-          <div className="flex items-center justify-center min-h-[300px] text-muted-foreground">
-            <p className="text-sm">Sem dados disponíveis para exibir</p>
+        {usingFallback && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-lg mb-4 text-sm">
+            ⚠️ Dados de exemplo - Execute "Global Scrape" para coletar dados reais
           </div>
         )}
+        <ChartContainer
+          config={lineChartConfig}
+          className="min-h-[300px] w-full"
+        >
+          <LineChart
+            data={sentimentTrendData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="#e5e7eb"
+            />
+            <XAxis
+              dataKey="date"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={12}
+              tick={{ fill: '#6B7280', fontSize: 12 }}
+              tickFormatter={(value) =>
+                new Date(value).toLocaleDateString('pt-BR', {
+                  day: 'numeric',
+                  month: 'short',
+                })
+              }
+            />
+            <YAxis hide domain={[-1, 1]} />
+            <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            {chartClients.map((client: any, index: number) => (
+              <Line
+                key={client.id || index}
+                type="monotone"
+                dataKey={client.name}
+                stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
+                strokeWidth={3}
+                dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
+                activeDot={{ r: 6, strokeWidth: 0 }}
+              />
+            ))}
+          </LineChart>
+        </ChartContainer>
       </CardContent>
     </Card>
   )
+}
+
+// DADOS DE FALLBACK PARA SHARE OF VOICE
+const FALLBACK_SOV_DATA = [
+  { name: 'Grupo Plaenge', value: 35 },
+  { name: 'Vanguard', value: 28 },
+  { name: 'A.Yoshii Engenharia', value: 22 },
+  { name: 'Outros', value: 15 },
+]
+
+const FALLBACK_SOV_CONFIG = {
+  'Grupo Plaenge': { label: 'Grupo Plaenge', color: 'hsl(var(--chart-1))' },
+  'Vanguard': { label: 'Vanguard', color: 'hsl(var(--chart-2))' },
+  'A.Yoshii Engenharia': { label: 'A.Yoshii Engenharia', color: 'hsl(var(--chart-3))' },
+  'Outros': { label: 'Outros', color: 'hsl(var(--chart-4))' },
 }
 
 export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
@@ -249,21 +312,35 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
     return client?.industry === ownClient?.industry
   })
 
-  const shareOfVoiceData = clients
+  // Gerar dados reais ou usar fallback
+  let shareOfVoiceData = clients
     .filter((c) => c.industry === ownClient?.industry)
     .map((client) => ({
       name: client.name,
       value: industryPosts.filter((p) => p.clientId === client.id).length,
     }))
-    .filter((item) => item.value > 0) // Filtrar apenas itens com valor > 0
+    .filter((item) => item.value > 0)
 
-  const pieChartConfig = clients.reduce((acc, client, index) => {
-    acc[client.name] = {
-      label: client.name,
-      color: `hsl(var(--chart-${(index % 5) + 1}))`,
-    }
-    return acc
-  }, {} as any)
+  const usingFallback = shareOfVoiceData.length === 0 || clients.length === 0 || posts.length === 0
+
+  if (usingFallback) {
+    shareOfVoiceData = FALLBACK_SOV_DATA
+    console.warn('⚠️ ChartShareOfVoiceWidget: Usando dados de exemplo - dados reais não disponíveis', {
+      clientsCount: clients.length,
+      postsCount: posts.length,
+      shareOfVoiceDataCount: shareOfVoiceData.length,
+    })
+  }
+
+  const pieChartConfig = clients.length > 0
+    ? clients.reduce((acc, client, index) => {
+        acc[client.name] = {
+          label: client.name,
+          color: `hsl(var(--chart-${(index % 5) + 1}))`,
+        }
+        return acc
+      }, {} as any)
+    : FALLBACK_SOV_CONFIG
 
   return (
     <Card className="col-span-1 h-full">
@@ -274,40 +351,39 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {shareOfVoiceData.length > 0 ? (
-          <ChartContainer
-            config={pieChartConfig}
-            className="min-h-[250px] w-full"
-          >
-            <PieChart>
-              <Pie
-                data={shareOfVoiceData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={70}
-                paddingAngle={2}
-                strokeWidth={2}
-                stroke="#fff"
-              >
-                {shareOfVoiceData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={`hsl(var(--chart-${(index % 5) + 1}))`}
-                  />
-                ))}
-              </Pie>
-              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-              <ChartLegend
-                content={<ChartLegendContent nameKey="name" />}
-                className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-              />
-            </PieChart>
-          </ChartContainer>
-        ) : (
-          <div className="flex items-center justify-center min-h-[250px] text-muted-foreground">
-            <p className="text-sm">Sem dados disponíveis para exibir</p>
+        {usingFallback && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-lg mb-4 text-sm">
+            ⚠️ Dados de exemplo - Execute "Global Scrape" para coletar dados reais
           </div>
         )}
+        <ChartContainer
+          config={pieChartConfig}
+          className="min-h-[250px] w-full"
+        >
+          <PieChart>
+            <Pie
+              data={shareOfVoiceData}
+              dataKey="value"
+              nameKey="name"
+              innerRadius={70}
+              paddingAngle={2}
+              strokeWidth={2}
+              stroke="#fff"
+            >
+              {shareOfVoiceData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={`hsl(var(--chart-${(index % 5) + 1}))`}
+                />
+              ))}
+            </Pie>
+            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+            <ChartLegend
+              content={<ChartLegendContent nameKey="name" />}
+              className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+            />
+          </PieChart>
+        </ChartContainer>
       </CardContent>
     </Card>
   )
