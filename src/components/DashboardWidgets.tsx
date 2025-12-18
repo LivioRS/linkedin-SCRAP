@@ -219,7 +219,8 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
         { id: '3', name: 'A.Yoshii Engenharia' },
       ] as any[]
 
-  const usingFallback = clients.length === 0 || metrics.length === 0
+  const hasData = metrics.length > 0 && clients.length > 0
+  const usingFallback = !hasData
 
   // Debug
   if (usingFallback) {
@@ -266,7 +267,7 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
                 }
               />
               <YAxis hide domain={[-1, 1]} />
-              <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+              <ChartTooltip content={<ChartTooltipContent indicator="line" payload={[]} />} />
               <ChartLegend content={<ChartLegendContent />} />
               {clients.map((client, index) => (
                 <Line
@@ -378,7 +379,7 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
                 />
               ))}
             </Pie>
-            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+              <ChartTooltip content={<ChartTooltipContent hideLabel payload={[]} />} />
             <ChartLegend
               content={<ChartLegendContent nameKey="name" />}
               className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
