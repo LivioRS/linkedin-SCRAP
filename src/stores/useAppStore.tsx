@@ -14,6 +14,9 @@ interface AppState {
   metrics: DailyMetric[]
   alerts: Alert[]
   isLoading: boolean
+  isScraping: boolean
+  scrapingStatus: Record<string, string>
+  triggerGlobalScrape: () => Promise<void>
   refreshData: () => void
 }
 
@@ -25,6 +28,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [metrics, setMetrics] = useState<DailyMetric[]>([])
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isScraping, setIsScraping] = useState(false)
+  const [scrapingStatus, setScrapingStatus] = useState<Record<string, string>>(
+    {},
+  )
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
   const generateMockData = () => {
     // Clients
@@ -72,7 +82,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const date = subDays(today, 14 - i)
         const dateStr = format(date, 'yyyy-MM-dd')
 
-        // Random sentiment with some trends
         let baseSentiment = client.type === 'own' ? 0.6 : 0.4
         const randomVar = (Math.random() - 0.5) * 0.4
         const trend = Math.sin(i / 3) * 0.1
@@ -90,10 +99,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     })
 
-    // Posts (For Share of Voice)
+    // Posts
     const mockPosts: Post[] = []
     mockClients.forEach((client) => {
-      // Generate random number of posts for SoV
       const postCount =
         client.type === 'own' ? 45 : Math.floor(Math.random() * 30) + 20
 
@@ -101,15 +109,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         mockPosts.push({
           id: `${client.id}-post-${i}`,
           clientId: client.id,
-          content: `Post content for ${client.name} - ${i}`,
+          content: `Post content for ${client.name} - ${i}. Análise de reputação e impacto de marca no mercado.`,
           likes: Math.floor(Math.random() * 100),
           comments: Math.floor(Math.random() * 20),
           shares: Math.floor(Math.random() * 10),
           views: Math.floor(Math.random() * 1000),
           sentimentScore: Math.random() * 2 - 1,
           sentimentExplanation: 'Generated mock post',
-          postedAt: new Date().toISOString(),
+          postedAt: subDays(
+            new Date(),
+            Math.floor(Math.random() * 30),
+          ).toISOString(),
           url: '#',
+          vehicle: Math.random() > 0.5 ? 'LinkedIn' : 'News',
         })
       }
     })
@@ -141,11 +153,121 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false)
   }
 
-  useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
+  const fetchFromSupabase = async () => {
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn('Supabase credentials not found. Using mock data.')
       generateMockData()
-    }, 800)
+      return
+    }
+
+    try {
+      const headers = {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      }
+
+      // Parallel Fetch
+      const [clientsRes, postsRes, metricsRes, alertsRes] = await Promise.all([
+        fetch(`${supabaseUrl}/rest/v1/clients?select=*`, { headers }),
+        fetch(`${supabaseUrl}/rest/v1/posts?select=*&order=posted_at.desc`, {
+          headers,
+        }),
+        fetch(`${supabaseUrl}/rest/v1/daily_metrics?select=*&order=date.asc`, {
+          headers,
+        }),
+        fetch(`${supabaseUrl}/rest/v1/alerts?select=*&order=created_at.desc`, {
+          headers,
+        }),
+      ])
+
+      if (!clientsRes.ok || !postsRes.ok || !metricsRes.ok || !alertsRes.ok) {
+        throw new Error('Failed to fetch from Supabase')
+      }
+
+      const clientsData = await clientsRes.json()
+      const postsData = await postsRes.json()
+      const metricsData = await metricsRes.json()
+      const alertsData = await alertsRes.json()
+
+      // Map to Types
+      setClients(
+        clientsData.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          url: c.url,
+          type: c.type,
+          industry: c.industry,
+          status: c.status,
+          lastUpdated: c.last_updated,
+          avatarUrl: c.avatar_url,
+        })),
+      )
+
+      setPosts(
+        postsData.map((p: any) => ({
+          id: p.id,
+          clientId: p.client_id,
+          content: p.content,
+          likes: p.likes,
+          comments: p.comments,
+          shares: p.shares,
+          views: p.views,
+          sentimentScore: p.sentiment_score,
+          sentimentExplanation: p.sentiment_explanation,
+          postedAt: p.posted_at,
+          url: p.url,
+          vehicle: p.vehicle,
+          category: p.category,
+        })),
+      )
+
+      setMetrics(
+        metricsData.map((m: any) => ({
+          date: m.date,
+          clientId: m.client_id,
+          sentimentScore: m.sentiment_score,
+          engagementRate: m.engagement_rate,
+          postsCount: m.posts_count,
+        })),
+      )
+
+      setAlerts(
+        alertsData.map((a: any) => ({
+          id: a.id,
+          type: a.type,
+          message: a.message,
+          severity: a.severity,
+          createdAt: a.created_at,
+          isRead: a.is_read,
+        })),
+      )
+
+      setIsLoading(false)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+      generateMockData() // Fallback
+    }
+  }
+
+  const triggerGlobalScrape = async () => {
+    setIsScraping(true)
+    setScrapingStatus({
+      linkedin: 'loading',
+      instagram: 'pending',
+    })
+
+    // Simulate scraping process
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+    setScrapingStatus((prev) => ({ ...prev, linkedin: 'success' }))
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    setScrapingStatus((prev) => ({ ...prev, instagram: 'success' }))
+
+    setIsScraping(false)
+    fetchFromSupabase()
+  }
+
+  useEffect(() => {
+    fetchFromSupabase()
   }, [])
 
   return React.createElement(
@@ -157,7 +279,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         metrics,
         alerts,
         isLoading,
-        refreshData: generateMockData,
+        isScraping,
+        scrapingStatus,
+        triggerGlobalScrape,
+        refreshData: fetchFromSupabase,
       },
     },
     children,

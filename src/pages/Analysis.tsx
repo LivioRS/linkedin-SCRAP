@@ -7,14 +7,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 import { AnalysisHeader } from '@/components/analysis/AnalysisHeader'
 import { SentimentOverview } from '@/components/analysis/SentimentOverview'
 import { SentimentCharts } from '@/components/analysis/SentimentCharts'
 import { MentionsFeed } from '@/components/analysis/MentionsFeed'
 import { subDays, isAfter } from 'date-fns'
+import { Download } from 'lucide-react'
+import { exportToCSV } from '@/services/export/reports'
 
 export default function Analysis() {
-  const { clients, posts, metrics } = useAppStore()
+  const { clients, posts, metrics, alerts } = useAppStore()
   const [period, setPeriod] = useState('30')
   const [platform, setPlatform] = useState('all')
 
@@ -118,6 +121,22 @@ export default function Analysis() {
     return { trendData, distributionData, topicData }
   }, [filteredData])
 
+  const handleExport = () => {
+    exportToCSV(
+      {
+        clients,
+        posts: filteredData.posts,
+        metrics: filteredData.metrics,
+        alerts: [],
+        period: {
+          start: subDays(new Date(), parseInt(period)),
+          end: new Date(),
+        },
+      },
+      `analise-sentimento-${period}d.csv`,
+    )
+  }
+
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       {/* Header Section */}
@@ -125,10 +144,10 @@ export default function Analysis() {
 
       {/* Filter Section */}
       <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl border border-border/50 shadow-sm gap-4">
-        <h2 className="text-sm font-bold text-foreground uppercase tracking-wide">
-          Filtros de Dados
-        </h2>
         <div className="flex items-center gap-3 w-full sm:w-auto">
+          <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mr-2">
+            Filtros
+          </h2>
           <Select value={platform} onValueChange={setPlatform}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Plataforma" />
@@ -151,6 +170,13 @@ export default function Analysis() {
             </SelectContent>
           </Select>
         </div>
+        <Button
+          variant="outline"
+          className="gap-2 w-full sm:w-auto"
+          onClick={handleExport}
+        >
+          <Download className="h-4 w-4" /> Exportar Dados
+        </Button>
       </div>
 
       {/* KPI Section */}

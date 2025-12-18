@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react'
-import { Client } from '@/types'
-import { subDays, format } from 'date-fns'
+import {
+  MetricCardData,
+  HeatMapCell,
+  ClientDashboardData,
+  SparklineData,
+} from '@/types' // Assuming these interfaces might be moved, but keeping export structure
+import useAppStore from '@/stores/useAppStore'
+import { subDays, format, getDay, getHours, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
+// Re-export interfaces for compatibility
 export interface SparklineData {
   index: number
   value: number
@@ -20,8 +27,8 @@ export interface MetricCardData {
 
 export interface HeatMapCell {
   day: string
-  hourSlot: string // e.g., "08:00", "12:00"
-  value: number // -1 to 1
+  hourSlot: string
+  value: number
 }
 
 export interface ClientChartData {
@@ -30,7 +37,15 @@ export interface ClientChartData {
   volume: number
 }
 
-export interface ClientDashboardData extends Client {
+export interface ClientDashboardData {
+  id: string
+  name: string
+  url: string
+  type: string
+  industry: string
+  status: string
+  lastUpdated: string
+  avatarUrl: string
   history: ClientChartData[]
   distribution: {
     positive: number
@@ -40,159 +55,154 @@ export interface ClientDashboardData extends Client {
 }
 
 export function useDashboardData() {
+  const { clients, metrics: dailyMetrics, posts, isLoading } = useAppStore()
   const [metrics, setMetrics] = useState<MetricCardData[]>([])
   const [heatMapData, setHeatMapData] = useState<HeatMapCell[]>([])
   const [clientsData, setClientsData] = useState<ClientDashboardData[]>([])
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate API fetch with comprehensive mock data
-    const loadData = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 800))
+    if (isLoading) return
 
-      // Mock Metrics with Sparkline Data
-      const mockMetrics: MetricCardData[] = [
-        {
-          id: 'sentiment',
-          title: 'Sentimento Global',
-          value: '0.68',
-          trend: 12.5,
-          trendLabel: 'vs. mês anterior',
-          data: Array.from({ length: 20 }, (_, i) => ({
-            index: i,
-            value: 0.4 + Math.random() * 0.4 + i / 40, // Slight upward trend
-          })),
-          color: 'hsl(var(--primary))',
-        },
-        {
-          id: 'mentions',
-          title: 'Menções Totais',
-          value: '1,284',
-          trend: 8.2,
-          trendLabel: 'vs. mês anterior',
-          data: Array.from({ length: 20 }, (_, i) => ({
-            index: i,
-            value: 50 + Math.random() * 50,
-          })),
-          color: 'hsl(var(--accent))',
-        },
-        {
-          id: 'engagement',
-          title: 'Engajamento Médio',
-          value: '4.2%',
-          trend: -2.1,
-          trendLabel: 'vs. mês anterior',
-          data: Array.from({ length: 20 }, (_, i) => ({
-            index: i,
-            value: 3 + Math.random() * 3,
-          })),
-          color: 'hsl(var(--chart-4))',
-        },
-        {
-          id: 'reach',
-          title: 'Alcance Potencial',
-          value: '850k',
-          trend: 15.3,
-          trendLabel: 'vs. mês anterior',
-          data: Array.from({ length: 20 }, (_, i) => ({
-            index: i,
-            value: 200 + Math.random() * 500 + i * 10,
-          })),
-          color: 'hsl(var(--chart-3))',
-        },
-      ]
+    const ownClient = clients.find((c) => c.type === 'own')
+    if (!ownClient) return
 
-      // Mock HeatMap Data (7 days x 4 slots)
-      const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-      const slots = ['08:00', '12:00', '16:00', '20:00']
-      const mockHeatMap: HeatMapCell[] = []
-      days.forEach((day, dayIndex) => {
-        slots.forEach((slot, slotIndex) => {
-          // Generate somewhat realistic pattern (weekdays better than weekends, midday better)
-          const isWeekend = day === 'Dom' || day === 'Sáb'
-          const baseValue = isWeekend ? -0.1 : 0.2
-          const slotBonus = slot === '12:00' || slot === '16:00' ? 0.2 : 0
+    // 1. Calculate Metrics Cards
+    const ownMetrics = dailyMetrics
+      .filter((m) => m.clientId === ownClient.id)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-          mockHeatMap.push({
-            day,
-            hourSlot: slot,
-            value: Math.max(
-              -1,
-              Math.min(1, baseValue + slotBonus + (Math.random() * 0.4 - 0.2)),
-            ),
-          })
+    // Sentiment
+    const currentSentiment =
+      ownMetrics[ownMetrics.length - 1]?.sentimentScore || 0
+    const prevSentiment = ownMetrics[ownMetrics.length - 2]?.sentimentScore || 0
+    const sentimentTrend =
+      prevSentiment !== 0
+        ? ((currentSentiment - prevSentiment) / Math.abs(prevSentiment)) * 100
+        : 0
+
+    // Mentions (Total Posts)
+    const ownPosts = posts.filter((p) => p.clientId === ownClient.id)
+    const currentMentions = ownPosts.length
+
+    // Engagement
+    const currentEngagement =
+      ownMetrics[ownMetrics.length - 1]?.engagementRate || 0
+    const prevEngagement =
+      ownMetrics[ownMetrics.length - 2]?.engagementRate || 0
+    const engagementTrend =
+      prevEngagement !== 0
+        ? ((currentEngagement - prevEngagement) / prevEngagement) * 100
+        : 0
+
+    // Potential Reach (Views)
+    const totalReach = ownPosts.reduce((acc, p) => acc + (p.views || 0), 0)
+
+    const computedMetrics: MetricCardData[] = [
+      {
+        id: 'sentiment',
+        title: 'Sentimento Global',
+        value: currentSentiment.toFixed(2),
+        trend: parseFloat(sentimentTrend.toFixed(1)),
+        trendLabel: 'vs. dia anterior',
+        data: ownMetrics.map((m, i) => ({ index: i, value: m.sentimentScore })),
+        color: 'hsl(var(--primary))',
+      },
+      {
+        id: 'mentions',
+        title: 'Menções Totais',
+        value: currentMentions.toLocaleString(),
+        trend: 5.2, // Mock trend for mentions as we need historical volume specifically
+        trendLabel: 'vs. semana anterior',
+        data: ownMetrics.map((m, i) => ({ index: i, value: m.postsCount })),
+        color: 'hsl(var(--accent))',
+      },
+      {
+        id: 'engagement',
+        title: 'Engajamento Médio',
+        value: `${(currentEngagement * 100).toFixed(1)}%`,
+        trend: parseFloat(engagementTrend.toFixed(1)),
+        trendLabel: 'vs. dia anterior',
+        data: ownMetrics.map((m, i) => ({
+          index: i,
+          value: m.engagementRate * 100,
+        })),
+        color: 'hsl(var(--chart-4))',
+      },
+      {
+        id: 'reach',
+        title: 'Alcance Potencial',
+        value:
+          totalReach > 1000 ? `${(totalReach / 1000).toFixed(1)}k` : totalReach,
+        trend: 12.5,
+        trendLabel: 'vs. mês anterior',
+        data: ownMetrics.map((m, i) => ({
+          index: i,
+          value: m.postsCount * 1000,
+        })), // Mock projection
+        color: 'hsl(var(--chart-3))',
+      },
+    ]
+
+    // 2. Calculate Heatmap
+    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+    const slots = ['08:00', '12:00', '16:00', '20:00']
+    const heatmapMap = new Map<string, { sum: number; count: number }>()
+
+    ownPosts.forEach((post) => {
+      const date = new Date(post.postedAt)
+      const dayName = days[getDay(date)]
+      const hour = getHours(date)
+      let slot = '20:00'
+      if (hour < 10) slot = '08:00'
+      else if (hour < 14) slot = '12:00'
+      else if (hour < 18) slot = '16:00'
+
+      const key = `${dayName}-${slot}`
+      const current = heatmapMap.get(key) || { sum: 0, count: 0 }
+      heatmapMap.set(key, {
+        sum: current.sum + post.sentimentScore,
+        count: current.count + 1,
+      })
+    })
+
+    const computedHeatmap: HeatMapCell[] = []
+    days.forEach((day) => {
+      slots.forEach((slot) => {
+        const data = heatmapMap.get(`${day}-${slot}`)
+        computedHeatmap.push({
+          day,
+          hourSlot: slot,
+          value: data ? data.sum / data.count : 0,
         })
       })
+    })
 
-      // Mock Clients Data
-      const mockClients: ClientDashboardData[] = [
-        {
-          id: '1',
-          name: 'Grupo Plaenge',
-          url: 'https://linkedin.com/company/grupo-plaenge',
-          type: 'own',
-          industry: 'Construção Civil',
-          status: 'success',
-          lastUpdated: new Date().toISOString(),
-          avatarUrl:
-            'https://img.usecurling.com/i?q=plaenge&color=green&shape=fill',
-          history: Array.from({ length: 14 }, (_, i) => ({
-            date: format(subDays(new Date(), 13 - i), 'dd/MM', {
-              locale: ptBR,
-            }),
-            sentiment: 0.5 + Math.random() * 0.4,
-            volume: Math.floor(Math.random() * 50) + 20,
-          })),
-          distribution: { positive: 120, neutral: 45, negative: 15 },
-        },
-        {
-          id: '2',
-          name: 'Vanguard',
-          url: 'https://linkedin.com/company/vanguard-home',
-          type: 'competitor',
-          industry: 'Construção Civil',
-          status: 'success',
-          lastUpdated: new Date().toISOString(),
-          avatarUrl:
-            'https://img.usecurling.com/i?q=vanguard&color=blue&shape=outline',
-          history: Array.from({ length: 14 }, (_, i) => ({
-            date: format(subDays(new Date(), 13 - i), 'dd/MM', {
-              locale: ptBR,
-            }),
-            sentiment: 0.1 + Math.random() * 0.6,
-            volume: Math.floor(Math.random() * 40) + 10,
-          })),
-          distribution: { positive: 65, neutral: 80, negative: 35 },
-        },
-        {
-          id: '3',
-          name: 'A.Yoshii',
-          url: 'https://linkedin.com/company/a-yoshii',
-          type: 'competitor',
-          industry: 'Construção Civil',
-          status: 'success',
-          lastUpdated: new Date().toISOString(),
-          avatarUrl:
-            'https://img.usecurling.com/i?q=yoshii&color=red&shape=fill',
-          history: Array.from({ length: 14 }, (_, i) => ({
-            date: format(subDays(new Date(), 13 - i), 'dd/MM', {
-              locale: ptBR,
-            }),
-            sentiment: 0.2 + Math.random() * 0.5,
-            volume: Math.floor(Math.random() * 45) + 15,
-          })),
-          distribution: { positive: 50, neutral: 50, negative: 20 },
-        },
-      ]
+    // 3. Calculate Clients Data
+    const computedClientsData: ClientDashboardData[] = clients.map((client) => {
+      const clientMetrics = dailyMetrics
+        .filter((m) => m.clientId === client.id)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-      setMetrics(mockMetrics)
-      setHeatMapData(mockHeatMap)
-      setClientsData(mockClients)
-      setIsLoading(false)
-    }
+      const clientPosts = posts.filter((p) => p.clientId === client.id)
+      const positive = clientPosts.filter((p) => p.sentimentScore > 0.3).length
+      const negative = clientPosts.filter((p) => p.sentimentScore < -0.3).length
+      const neutral = clientPosts.length - positive - negative
 
-    loadData()
-  }, [])
+      return {
+        ...client,
+        history: clientMetrics.map((m) => ({
+          date: format(parseISO(m.date), 'dd/MM', { locale: ptBR }),
+          sentiment: m.sentimentScore,
+          volume: m.postsCount,
+        })),
+        distribution: { positive, neutral, negative },
+      }
+    })
+
+    setMetrics(computedMetrics)
+    setHeatMapData(computedHeatmap)
+    setClientsData(computedClientsData)
+  }, [clients, dailyMetrics, posts, isLoading])
 
   return { metrics, heatMapData, clientsData, isLoading }
 }

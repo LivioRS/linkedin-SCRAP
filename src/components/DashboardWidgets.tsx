@@ -165,16 +165,28 @@ const FALLBACK_SENTIMENT_DATA = Array.from({ length: 15 }).map((_, i) => {
     .split('T')[0]
   return {
     date,
-    'Grupo Plaenge': Math.sin((i / 15) * Math.PI * 2) * 0.4 + 0.2 + (Math.random() - 0.5) * 0.2,
-    'Vanguard': Math.sin((i / 15) * Math.PI * 2 + Math.PI / 3) * 0.3 + 0.1 + (Math.random() - 0.5) * 0.2,
-    'A.Yoshii Engenharia': Math.sin((i / 15) * Math.PI * 2 - Math.PI / 3) * 0.35 + 0.15 + (Math.random() - 0.5) * 0.2,
+    'Grupo Plaenge':
+      Math.sin((i / 15) * Math.PI * 2) * 0.4 +
+      0.2 +
+      (Math.random() - 0.5) * 0.2,
+    Vanguard:
+      Math.sin((i / 15) * Math.PI * 2 + Math.PI / 3) * 0.3 +
+      0.1 +
+      (Math.random() - 0.5) * 0.2,
+    'A.Yoshii Engenharia':
+      Math.sin((i / 15) * Math.PI * 2 - Math.PI / 3) * 0.35 +
+      0.15 +
+      (Math.random() - 0.5) * 0.2,
   }
 })
 
 const FALLBACK_SENTIMENT_CONFIG = {
   'Grupo Plaenge': { label: 'Grupo Plaenge', color: 'hsl(var(--chart-1))' },
-  'Vanguard': { label: 'Vanguard', color: 'hsl(var(--chart-2))' },
-  'A.Yoshii Engenharia': { label: 'A.Yoshii Engenharia', color: 'hsl(var(--chart-3))' },
+  Vanguard: { label: 'Vanguard', color: 'hsl(var(--chart-2))' },
+  'A.Yoshii Engenharia': {
+    label: 'A.Yoshii Engenharia',
+    color: 'hsl(var(--chart-3))',
+  },
 }
 
 export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
@@ -184,7 +196,7 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
       .toISOString()
       .split('T')[0]
     const data: any = { date }
-    
+
     if (clients.length > 0 && metrics.length > 0) {
       clients.forEach((client) => {
         const dayMetric = metrics.find(
@@ -196,41 +208,49 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
       // Usar dados de fallback
       Object.keys(FALLBACK_SENTIMENT_DATA[0] || {}).forEach((key) => {
         if (key !== 'date') {
-          data[key] = FALLBACK_SENTIMENT_DATA[i]?.[key as keyof typeof FALLBACK_SENTIMENT_DATA[0]] || 0
+          data[key] =
+            FALLBACK_SENTIMENT_DATA[i]?.[
+              key as keyof (typeof FALLBACK_SENTIMENT_DATA)[0]
+            ] || 0
         }
       })
     }
-    
+
     return data
   })
 
-  const lineChartConfig = clients.length > 0
-    ? clients.reduce((acc, client, index) => {
-        acc[client.name] = {
-          label: client.name,
-          color: `hsl(var(--chart-${(index % 5) + 1}))`,
-        }
-        return acc
-      }, {} as any)
-    : FALLBACK_SENTIMENT_CONFIG
+  const lineChartConfig =
+    clients.length > 0
+      ? clients.reduce((acc, client, index) => {
+          acc[client.name] = {
+            label: client.name,
+            color: `hsl(var(--chart-${(index % 5) + 1}))`,
+          }
+          return acc
+        }, {} as any)
+      : FALLBACK_SENTIMENT_CONFIG
 
-  const chartClients = clients.length > 0 
-    ? clients 
-    : [
-        { id: '1', name: 'Grupo Plaenge' },
-        { id: '2', name: 'Vanguard' },
-        { id: '3', name: 'A.Yoshii Engenharia' },
-      ] as any[]
+  const chartClients =
+    clients.length > 0
+      ? clients
+      : ([
+          { id: '1', name: 'Grupo Plaenge' },
+          { id: '2', name: 'Vanguard' },
+          { id: '3', name: 'A.Yoshii Engenharia' },
+        ] as any[])
 
   const hasData = metrics.length > 0 && clients.length > 0
   const usingFallback = !hasData
 
   // Debug
   if (usingFallback) {
-    console.warn('⚠️ ChartSentimentTrendWidget: Usando dados de exemplo - dados reais não disponíveis', {
-      clientsCount: clients.length,
-      metricsCount: metrics.length,
-    })
+    console.warn(
+      '⚠️ ChartSentimentTrendWidget: Usando dados de exemplo - dados reais não disponíveis',
+      {
+        clientsCount: clients.length,
+        metricsCount: metrics.length,
+      },
+    )
   }
 
   return (
@@ -244,7 +264,8 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
       <CardContent>
         {usingFallback && (
           <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-lg mb-4 text-sm">
-            ⚠️ Dados de exemplo - Execute "Global Scrape" para coletar dados reais
+            ⚠️ Dados de exemplo - Execute "Global Scrape" para coletar dados
+            reais
           </div>
         )}
         <ChartContainer
@@ -274,7 +295,9 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
               }
             />
             <YAxis hide domain={[-1, 1]} />
-            <ChartTooltip content={<ChartTooltipContent indicator="line" payload={[]} />} />
+            <ChartTooltip
+              content={<ChartTooltipContent indicator="line" payload={[]} />}
+            />
             <ChartLegend content={<ChartLegendContent />} />
             {chartClients.map((client: any, index: number) => (
               <Line
@@ -304,9 +327,12 @@ const FALLBACK_SOV_DATA = [
 
 const FALLBACK_SOV_CONFIG = {
   'Grupo Plaenge': { label: 'Grupo Plaenge', color: 'hsl(var(--chart-1))' },
-  'Vanguard': { label: 'Vanguard', color: 'hsl(var(--chart-2))' },
-  'A.Yoshii Engenharia': { label: 'A.Yoshii Engenharia', color: 'hsl(var(--chart-3))' },
-  'Outros': { label: 'Outros', color: 'hsl(var(--chart-4))' },
+  Vanguard: { label: 'Vanguard', color: 'hsl(var(--chart-2))' },
+  'A.Yoshii Engenharia': {
+    label: 'A.Yoshii Engenharia',
+    color: 'hsl(var(--chart-3))',
+  },
+  Outros: { label: 'Outros', color: 'hsl(var(--chart-4))' },
 }
 
 export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
@@ -325,26 +351,31 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
     }))
     .filter((item) => item.value > 0)
 
-  const usingFallback = shareOfVoiceData.length === 0 || clients.length === 0 || posts.length === 0
+  const usingFallback =
+    shareOfVoiceData.length === 0 || clients.length === 0 || posts.length === 0
 
   if (usingFallback) {
     shareOfVoiceData = FALLBACK_SOV_DATA
-    console.warn('⚠️ ChartShareOfVoiceWidget: Usando dados de exemplo - dados reais não disponíveis', {
-      clientsCount: clients.length,
-      postsCount: posts.length,
-      shareOfVoiceDataCount: shareOfVoiceData.length,
-    })
+    console.warn(
+      '⚠️ ChartShareOfVoiceWidget: Usando dados de exemplo - dados reais não disponíveis',
+      {
+        clientsCount: clients.length,
+        postsCount: posts.length,
+        shareOfVoiceDataCount: shareOfVoiceData.length,
+      },
+    )
   }
 
-  const pieChartConfig = clients.length > 0
-    ? clients.reduce((acc, client, index) => {
-        acc[client.name] = {
-          label: client.name,
-          color: `hsl(var(--chart-${(index % 5) + 1}))`,
-        }
-        return acc
-      }, {} as any)
-    : FALLBACK_SOV_CONFIG
+  const pieChartConfig =
+    clients.length > 0
+      ? clients.reduce((acc, client, index) => {
+          acc[client.name] = {
+            label: client.name,
+            color: `hsl(var(--chart-${(index % 5) + 1}))`,
+          }
+          return acc
+        }, {} as any)
+      : FALLBACK_SOV_CONFIG
 
   return (
     <Card className="col-span-1 h-full">
@@ -357,7 +388,8 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
       <CardContent>
         {usingFallback && (
           <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-lg mb-4 text-sm">
-            ⚠️ Dados de exemplo - Execute "Global Scrape" para coletar dados reais
+            ⚠️ Dados de exemplo - Execute "Global Scrape" para coletar dados
+            reais
           </div>
         )}
         <ChartContainer
@@ -381,7 +413,9 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
                 />
               ))}
             </Pie>
-            <ChartTooltip content={<ChartTooltipContent hideLabel payload={[]} />} />
+            <ChartTooltip
+              content={<ChartTooltipContent hideLabel payload={[]} />}
+            />
             <ChartLegend
               content={<ChartLegendContent nameKey="name" />}
               className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"

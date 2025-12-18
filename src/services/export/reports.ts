@@ -93,9 +93,10 @@ export function exportToCSV(data: ReportData, filename?: string): void {
 function generateReportHTML(data: ReportData): string {
   const { clients, posts, metrics, alerts } = data
   const ownClient = clients.find((c) => c.type === 'own')
+  const ownMetrics = metrics.filter((m) => m.clientId === ownClient?.id)
   const avgSentiment =
-    metrics.reduce((acc, m) => acc + m.sentimentScore, 0) /
-    (metrics.length || 1)
+    ownMetrics.reduce((acc, m) => acc + m.sentimentScore, 0) /
+    (ownMetrics.length || 1)
   const totalPosts = posts.length
   const totalAlerts = alerts.length
 
@@ -139,7 +140,7 @@ function generateReportHTML(data: ReportData): string {
       <div class="summary-item"><div class="summary-value">${totalAlerts}</div><div class="summary-label">Alertas Gerados</div></div>
     </div>
   </div>
-  <h2>Posts Analisados</h2>
+  <h2>Posts Analisados (Recentes)</h2>
   <table>
     <thead><tr><th>Cliente</th><th>Conteúdo</th><th>Engajamento</th><th>Sentimento</th><th>Data</th></tr></thead>
     <tbody>
@@ -171,7 +172,16 @@ function generateReportHTML(data: ReportData): string {
         .join('')}
     </tbody>
   </table>
-  ${alerts.length > 0 ? `<h2>Alertas</h2><table><thead><tr><th>Tipo</th><th>Mensagem</th><th>Severidade</th><th>Data</th></tr></thead><tbody>${alerts.map((alert) => `<tr class="alert-${alert.severity}"><td>${alert.type}</td><td>${alert.message}</td><td>${alert.severity}</td><td>${format(new Date(alert.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</td></tr>`).join('')}</tbody></table>` : ''}
+  ${
+    alerts.length > 0
+      ? `<h2>Alertas</h2><table><thead><tr><th>Tipo</th><th>Mensagem</th><th>Severidade</th><th>Data</th></tr></thead><tbody>${alerts
+          .map(
+            (alert) =>
+              `<tr class="alert-${alert.severity}"><td>${alert.type}</td><td>${alert.message}</td><td>${alert.severity}</td><td>${format(new Date(alert.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</td></tr>`,
+          )
+          .join('')}</tbody></table>`
+      : ''
+  }
   <div class="footer"><p>Relatório gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p></div>
 </body>
 </html>`

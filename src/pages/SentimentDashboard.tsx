@@ -4,10 +4,34 @@ import { SentimentHeatMap } from '@/components/SentimentHeatMap'
 import { ClientSentimentCharts } from '@/components/ClientSentimentCharts'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import { Download, Share2 } from 'lucide-react'
+import { Download, Share2, FileText } from 'lucide-react'
+import { exportToPDF, exportToCSV } from '@/services/export/reports'
+import useAppStore from '@/stores/useAppStore'
+import { subDays } from 'date-fns'
 
 export default function SentimentDashboard() {
   const { metrics, heatMapData, clientsData, isLoading } = useDashboardData()
+  const { clients, posts, metrics: rawMetrics, alerts } = useAppStore()
+
+  const handleExportPDF = () => {
+    exportToPDF({
+      clients,
+      posts,
+      metrics: rawMetrics,
+      alerts,
+      period: { start: subDays(new Date(), 30), end: new Date() },
+    })
+  }
+
+  const handleExportCSV = () => {
+    exportToCSV({
+      clients,
+      posts,
+      metrics: rawMetrics,
+      alerts,
+      period: { start: subDays(new Date(), 30), end: new Date() },
+    })
+  }
 
   if (isLoading) {
     return (
@@ -37,10 +61,13 @@ export default function SentimentDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
-            <Share2 className="h-4 w-4" /> Compartilhar
+          <Button variant="outline" className="gap-2" onClick={handleExportCSV}>
+            <FileText className="h-4 w-4" /> CSV
           </Button>
-          <Button className="gap-2 bg-primary hover:bg-primary/90">
+          <Button
+            className="gap-2 bg-primary hover:bg-primary/90"
+            onClick={handleExportPDF}
+          >
             <Download className="h-4 w-4" /> Exportar PDF
           </Button>
         </div>
