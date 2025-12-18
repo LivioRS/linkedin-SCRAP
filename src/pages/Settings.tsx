@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -13,13 +12,6 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Eye,
   EyeOff,
@@ -36,6 +28,7 @@ import {
   Instagram,
   Twitter,
   Youtube,
+  Wifi,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -53,18 +46,26 @@ import { toast } from '@/hooks/use-toast'
 
 // Form Schemas
 const apiSchema = z.object({
-  apify: z.string().min(10, 'Token Apify inválido'),
-  anthropic: z.string().min(10, 'Chave API Claude inválida'),
-  telegramBot: z.string().min(10, 'Token do Bot Telegram inválido'),
+  apify: z.string().min(5, 'Token Apify muito curto'),
+  anthropic: z.string().min(5, 'Chave API Claude muito curta'),
+  telegramBot: z.string().min(5, 'Token do Bot Telegram muito curto'),
   supabaseUrl: z.string().url('URL Supabase inválida'),
-  supabaseKey: z.string().min(10, 'Chave Supabase inválida'),
+  supabaseKey: z.string().min(5, 'Chave Supabase muito curta'),
 })
 
 export default function Settings() {
-  const { settings, updateSettings, testTelegramConnection } = useAppStore()
+  const {
+    settings,
+    updateSettings,
+    testTelegramConnection,
+    testApifyConnection,
+    testClaudeConnection,
+  } = useAppStore()
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({})
   const [isSaving, setIsSaving] = useState(false)
-  const [isTestingTelegram, setIsTestingTelegram] = useState(false)
+  const [testingStatus, setTestingStatus] = useState<Record<string, boolean>>(
+    {},
+  )
 
   const apiForm = useForm<z.infer<typeof apiSchema>>({
     resolver: zodResolver(apiSchema),
@@ -83,10 +84,13 @@ export default function Settings() {
     }, 1000)
   }
 
-  const handleTestTelegram = async () => {
-    setIsTestingTelegram(true)
-    await testTelegramConnection()
-    setIsTestingTelegram(false)
+  const handleTest = async (
+    service: 'telegram' | 'apify' | 'claude',
+    testFn: () => Promise<boolean>,
+  ) => {
+    setTestingStatus((prev) => ({ ...prev, [service]: true }))
+    await testFn()
+    setTestingStatus((prev) => ({ ...prev, [service]: false }))
   }
 
   const handleExport = (format: 'csv' | 'pdf') => {
@@ -137,112 +141,179 @@ export default function Settings() {
                   className="space-y-6"
                 >
                   <div className="grid gap-6 md:grid-cols-2">
-                    <FormField
-                      control={apiForm.control}
-                      name="apify"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Apify Token</FormLabel>
-                          <div className="relative">
-                            <FormControl>
-                              <Input
-                                type={showSecrets.apify ? 'text' : 'password'}
-                                placeholder="apify_api_..."
-                                {...field}
-                              />
-                            </FormControl>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                              onClick={() => toggleSecret('apify')}
-                            >
-                              {showSecrets.apify ? (
-                                <EyeOff className="h-4 w-4 text-muted-foreground" />
-                              ) : (
-                                <Eye className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </Button>
-                          </div>
-                          <FormDescription>
-                            Usado para autenticar o scraper do LinkedIn.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={apiForm.control}
-                      name="anthropic"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Claude API Key</FormLabel>
-                          <div className="relative">
-                            <FormControl>
-                              <Input
-                                type={
-                                  showSecrets.anthropic ? 'text' : 'password'
+                    {/* APIfy Section */}
+                    <div className="space-y-2">
+                      <FormField
+                        control={apiForm.control}
+                        name="apify"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Apify Token</FormLabel>
+                            <div className="flex gap-2">
+                              <div className="relative flex-1">
+                                <FormControl>
+                                  <Input
+                                    type={
+                                      showSecrets.apify ? 'text' : 'password'
+                                    }
+                                    placeholder="apify_api_..."
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                  onClick={() => toggleSecret('apify')}
+                                >
+                                  {showSecrets.apify ? (
+                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() =>
+                                  handleTest('apify', testApifyConnection)
                                 }
-                                placeholder="sk-ant-..."
-                                {...field}
-                              />
-                            </FormControl>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                              onClick={() => toggleSecret('anthropic')}
-                            >
-                              {showSecrets.anthropic ? (
-                                <EyeOff className="h-4 w-4 text-muted-foreground" />
-                              ) : (
-                                <Eye className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </Button>
-                          </div>
-                          <FormDescription>
-                            Necessário para análise de sentimento e insights.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={apiForm.control}
-                      name="telegramBot"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telegram Bot Token</FormLabel>
-                          <div className="relative">
-                            <FormControl>
-                              <Input
-                                type={
-                                  showSecrets.telegramBot ? 'text' : 'password'
+                                disabled={testingStatus.apify}
+                              >
+                                {testingStatus.apify ? (
+                                  <Wifi className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  'Testar'
+                                )}
+                              </Button>
+                            </div>
+                            <FormDescription>
+                              Usado para autenticar o scraper do LinkedIn.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Claude Section */}
+                    <div className="space-y-2">
+                      <FormField
+                        control={apiForm.control}
+                        name="anthropic"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Claude API Key</FormLabel>
+                            <div className="flex gap-2">
+                              <div className="relative flex-1">
+                                <FormControl>
+                                  <Input
+                                    type={
+                                      showSecrets.anthropic
+                                        ? 'text'
+                                        : 'password'
+                                    }
+                                    placeholder="sk-ant-..."
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                  onClick={() => toggleSecret('anthropic')}
+                                >
+                                  {showSecrets.anthropic ? (
+                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() =>
+                                  handleTest('claude', testClaudeConnection)
                                 }
-                                placeholder="123456:ABC-..."
-                                {...field}
-                              />
-                            </FormControl>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                              onClick={() => toggleSecret('telegramBot')}
-                            >
-                              {showSecrets.telegramBot ? (
-                                <EyeOff className="h-4 w-4 text-muted-foreground" />
-                              ) : (
-                                <Eye className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </Button>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                                disabled={testingStatus.claude}
+                              >
+                                {testingStatus.claude ? (
+                                  <Wifi className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  'Testar'
+                                )}
+                              </Button>
+                            </div>
+                            <FormDescription>
+                              Necessário para análise de sentimento.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Telegram Section */}
+                    <div className="space-y-2">
+                      <FormField
+                        control={apiForm.control}
+                        name="telegramBot"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telegram Bot Token</FormLabel>
+                            <div className="flex gap-2">
+                              <div className="relative flex-1">
+                                <FormControl>
+                                  <Input
+                                    type={
+                                      showSecrets.telegramBot
+                                        ? 'text'
+                                        : 'password'
+                                    }
+                                    placeholder="123456:ABC-..."
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                  onClick={() => toggleSecret('telegramBot')}
+                                >
+                                  {showSecrets.telegramBot ? (
+                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() =>
+                                  handleTest('telegram', testTelegramConnection)
+                                }
+                                disabled={testingStatus.telegram}
+                              >
+                                {testingStatus.telegram ? (
+                                  <Wifi className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  'Testar'
+                                )}
+                              </Button>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Supabase Section */}
                     <div className="space-y-4">
                       <FormField
                         control={apiForm.control}
@@ -404,32 +475,18 @@ export default function Settings() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Telegram Chat ID</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={settings.notifications.telegramChatId}
-                      onChange={(e) =>
-                        updateSettings({
-                          notifications: {
-                            ...settings.notifications,
-                            telegramChatId: e.target.value,
-                          },
-                        })
-                      }
-                      placeholder="Ex: 123456789"
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={handleTestTelegram}
-                      disabled={isTestingTelegram}
-                    >
-                      {isTestingTelegram ? (
-                        <Send className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="mr-2 h-4 w-4" />
-                      )}
-                      Testar
-                    </Button>
-                  </div>
+                  <Input
+                    value={settings.notifications.telegramChatId}
+                    onChange={(e) =>
+                      updateSettings({
+                        notifications: {
+                          ...settings.notifications,
+                          telegramChatId: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="Ex: 123456789"
+                  />
                   <p className="text-xs text-muted-foreground">
                     Envie /start para o seu bot para obter este ID.
                   </p>
@@ -517,7 +574,7 @@ export default function Settings() {
                 <div className="space-y-2">
                   <Label>Frequência de Coleta Automática</Label>
                   <Select
-                    value={settings.scraping.frequency}
+                    defaultValue={settings.scraping.frequency}
                     onValueChange={(val: any) =>
                       updateSettings({
                         scraping: { ...settings.scraping, frequency: val },
