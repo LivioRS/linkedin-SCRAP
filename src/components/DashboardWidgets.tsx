@@ -16,6 +16,7 @@ import {
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
+  ChartConfig,
 } from '@/components/ui/chart'
 import {
   PieChart,
@@ -26,6 +27,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
+  ResponsiveContainer,
 } from 'recharts'
 import {
   TrendingUp,
@@ -40,6 +42,8 @@ import { SentimentBadge } from '@/components/SentimentBadge'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
 import { Client, Post, DailyMetric, Alert } from '@/types'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
 interface WidgetProps {
   clients: Client[]
@@ -165,35 +169,34 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
       const dayMetric = metrics.find(
         (m) => m.clientId === client.id && m.date === date,
       )
-      data[client.name] = dayMetric?.sentimentScore || 0
+      data[client.id] = dayMetric?.sentimentScore || 0
     })
     return data
   })
 
-  const lineChartConfig = clients.reduce((acc, client, index) => {
-    acc[client.name] = {
+  const chartConfig: ChartConfig = clients.reduce((acc, client, index) => {
+    acc[client.id] = {
       label: client.name,
       color: `hsl(var(--chart-${(index % 5) + 1}))`,
     }
     return acc
-  }, {} as any)
+  }, {} as ChartConfig)
 
   const hasData = metrics.length > 0 && clients.length > 0
 
   return (
-    <Card className="w-full">
+    <Card className="flex flex-col h-full shadow-planin border-none">
       <CardHeader>
-        <CardTitle>Tendências de Sentimento</CardTitle>
+        <CardTitle className="text-xl font-bold text-primary">
+          Tendências de Sentimento
+        </CardTitle>
         <CardDescription>
           Evolução do score de sentimento (-1 a 1) nos últimos 15 dias.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         {hasData ? (
-          <ChartContainer
-            config={lineChartConfig}
-            className="min-h-[300px] w-full"
-          >
+          <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
             <LineChart
               data={sentimentTrendData}
               margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
@@ -210,13 +213,17 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
                 tickMargin={12}
                 tick={{ fill: '#6B7280', fontSize: 12 }}
                 tickFormatter={(value) =>
-                  new Date(value).toLocaleDateString('pt-BR', {
-                    day: 'numeric',
-                    month: 'short',
-                  })
+                  format(new Date(value), 'dd MMM', { locale: ptBR })
                 }
               />
-              <YAxis hide domain={[-1, 1]} />
+              <YAxis
+                hide={false}
+                domain={[-1, 1]}
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: '#6B7280', fontSize: 12 }}
+                tickFormatter={(value) => value.toFixed(1)}
+              />
               <ChartTooltip
                 content={<ChartTooltipContent indicator="line" />}
               />
@@ -225,8 +232,9 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
                 <Line
                   key={client.id}
                   type="monotone"
-                  dataKey={client.name}
-                  stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
+                  dataKey={client.id}
+                  name={client.name}
+                  stroke={`var(--color-${client.id})`}
                   strokeWidth={3}
                   dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
                   activeDot={{ r: 6, strokeWidth: 0 }}
@@ -235,7 +243,7 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
             </LineChart>
           </ChartContainer>
         ) : (
-          <div className="flex items-center justify-center min-h-[300px] text-muted-foreground">
+          <div className="flex items-center justify-center min-h-[300px] text-muted-foreground bg-muted/20 rounded-lg">
             <p className="text-sm">Sem dados disponíveis para exibir</p>
           </div>
         )}
@@ -254,59 +262,53 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
   const shareOfVoiceData = clients
     .filter((c) => c.industry === ownClient?.industry)
     .map((client) => ({
+      id: client.id,
       name: client.name,
       value: industryPosts.filter((p) => p.clientId === client.id).length,
+      fill: `var(--color-${client.id})`,
     }))
-    .filter((item) => item.value > 0) // Filtrar apenas itens com valor > 0
+    .filter((item) => item.value > 0)
 
-  const pieChartConfig = clients.reduce((acc, client, index) => {
-    acc[client.name] = {
+  const chartConfig: ChartConfig = clients.reduce((acc, client, index) => {
+    acc[client.id] = {
       label: client.name,
       color: `hsl(var(--chart-${(index % 5) + 1}))`,
     }
     return acc
-  }, {} as any)
+  }, {} as ChartConfig)
 
   return (
-    <Card className="col-span-1 h-full">
+    <Card className="flex flex-col h-full shadow-planin border-none">
       <CardHeader>
-        <CardTitle>Share of Voice (SoV)</CardTitle>
+        <CardTitle className="text-xl font-bold text-primary">
+          Share of Voice (SoV)
+        </CardTitle>
         <CardDescription>
           Presença de mercado baseada em volume de publicações no setor.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         {shareOfVoiceData.length > 0 ? (
-          <ChartContainer
-            config={pieChartConfig}
-            className="min-h-[250px] w-full"
-          >
+          <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
             <PieChart>
               <Pie
                 data={shareOfVoiceData}
                 dataKey="value"
-                nameKey="name"
-                innerRadius={70}
+                nameKey="id"
+                innerRadius={60}
                 paddingAngle={2}
                 strokeWidth={2}
                 stroke="#fff"
-              >
-                {shareOfVoiceData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={`hsl(var(--chart-${(index % 5) + 1}))`}
-                  />
-                ))}
-              </Pie>
+              ></Pie>
               <ChartTooltip content={<ChartTooltipContent hideLabel />} />
               <ChartLegend
-                content={<ChartLegendContent nameKey="name" />}
-                className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                content={<ChartLegendContent nameKey="id" />}
+                className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/2 [&>*]:justify-center"
               />
             </PieChart>
           </ChartContainer>
         ) : (
-          <div className="flex items-center justify-center min-h-[250px] text-muted-foreground">
+          <div className="flex items-center justify-center min-h-[250px] text-muted-foreground bg-muted/20 rounded-lg">
             <p className="text-sm">Sem dados disponíveis para exibir</p>
           </div>
         )}
@@ -324,9 +326,9 @@ export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
     .slice(0, 5)
 
   return (
-    <Card className="h-full">
+    <Card className="h-full shadow-planin border-none">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-destructive">
+        <CardTitle className="flex items-center gap-2 text-destructive font-bold">
           <AlertCircle className="h-5 w-5" />
           Posts Críticos Recentes
         </CardTitle>
@@ -361,7 +363,7 @@ export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
                       variant="ghost"
                       size="sm"
                       asChild
-                      className="text-destructive hover:text-destructive hover:bg-red-100"
+                      className="text-destructive hover:text-destructive hover:bg-red-100 h-8"
                     >
                       <Link
                         to={`/feed?search=${encodeURIComponent(post.content.substring(0, 20))}`}
@@ -394,9 +396,9 @@ export function ListRecentAlertsWidget({ alerts }: WidgetProps) {
     .slice(0, 5)
 
   return (
-    <Card className="h-full">
+    <Card className="h-full shadow-planin border-none">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 font-bold text-primary">
           <AlertCircle className="h-5 w-5 text-accent" />
           Alertas Recentes
         </CardTitle>

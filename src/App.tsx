@@ -11,27 +11,30 @@ import Alerts from './pages/Alerts'
 import Settings from './pages/Settings'
 import SentimentDashboard from './pages/SentimentDashboard'
 import NotFound from './pages/NotFound'
+import { AppProvider } from '@/stores/useAppStore'
 
 const App = () => (
   <BrowserRouter
     future={{ v7_startTransition: false, v7_relativeSplatPath: false }}
   >
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Index />} />
-          <Route path="/sentiment" element={<SentimentDashboard />} />
-          <Route path="/clients" element={<Clients />} />
-          <Route path="/feed" element={<Feed />} />
-          <Route path="/analysis" element={<Analysis />} />
-          <Route path="/alerts" element={<Alerts />} />
-          <Route path="/settings" element={<Settings />} />
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </TooltipProvider>
+    <AppProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/sentiment" element={<SentimentDashboard />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/analysis" element={<Analysis />} />
+            <Route path="/alerts" element={<Alerts />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </TooltipProvider>
+    </AppProvider>
   </BrowserRouter>
 )
 
