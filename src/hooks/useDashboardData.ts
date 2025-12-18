@@ -4,6 +4,7 @@ import { subDays, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 export interface SparklineData {
+  index: number
   value: number
 }
 
@@ -19,7 +20,7 @@ export interface MetricCardData {
 
 export interface HeatMapCell {
   day: string
-  hourSlot: string // e.g., "Manhã", "Tarde"
+  hourSlot: string // e.g., "08:00", "12:00"
   value: number // -1 to 1
 }
 
@@ -45,11 +46,11 @@ export function useDashboardData() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate API fetch
+    // Simulate API fetch with comprehensive mock data
     const loadData = async () => {
       await new Promise((resolve) => setTimeout(resolve, 800))
 
-      // Mock Metrics
+      // Mock Metrics with Sparkline Data
       const mockMetrics: MetricCardData[] = [
         {
           id: 'sentiment',
@@ -57,8 +58,9 @@ export function useDashboardData() {
           value: '0.68',
           trend: 12.5,
           trendLabel: 'vs. mês anterior',
-          data: Array.from({ length: 20 }, () => ({
-            value: 0.4 + Math.random() * 0.4,
+          data: Array.from({ length: 20 }, (_, i) => ({
+            index: i,
+            value: 0.4 + Math.random() * 0.4 + i / 40, // Slight upward trend
           })),
           color: 'hsl(var(--primary))',
         },
@@ -68,8 +70,9 @@ export function useDashboardData() {
           value: '1,284',
           trend: 8.2,
           trendLabel: 'vs. mês anterior',
-          data: Array.from({ length: 20 }, () => ({
-            value: 50 + Math.random() * 100,
+          data: Array.from({ length: 20 }, (_, i) => ({
+            index: i,
+            value: 50 + Math.random() * 50,
           })),
           color: 'hsl(var(--accent))',
         },
@@ -79,10 +82,11 @@ export function useDashboardData() {
           value: '4.2%',
           trend: -2.1,
           trendLabel: 'vs. mês anterior',
-          data: Array.from({ length: 20 }, () => ({
+          data: Array.from({ length: 20 }, (_, i) => ({
+            index: i,
             value: 3 + Math.random() * 3,
           })),
-          color: 'hsl(var(--secondary))',
+          color: 'hsl(var(--chart-4))',
         },
         {
           id: 'reach',
@@ -90,23 +94,32 @@ export function useDashboardData() {
           value: '850k',
           trend: 15.3,
           trendLabel: 'vs. mês anterior',
-          data: Array.from({ length: 20 }, () => ({
-            value: 200 + Math.random() * 500,
+          data: Array.from({ length: 20 }, (_, i) => ({
+            index: i,
+            value: 200 + Math.random() * 500 + i * 10,
           })),
-          color: 'hsl(var(--chart-4))',
+          color: 'hsl(var(--chart-3))',
         },
       ]
 
-      // Mock HeatMap
+      // Mock HeatMap Data (7 days x 4 slots)
       const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
       const slots = ['08:00', '12:00', '16:00', '20:00']
       const mockHeatMap: HeatMapCell[] = []
-      days.forEach((day) => {
-        slots.forEach((slot) => {
+      days.forEach((day, dayIndex) => {
+        slots.forEach((slot, slotIndex) => {
+          // Generate somewhat realistic pattern (weekdays better than weekends, midday better)
+          const isWeekend = day === 'Dom' || day === 'Sáb'
+          const baseValue = isWeekend ? -0.1 : 0.2
+          const slotBonus = slot === '12:00' || slot === '16:00' ? 0.2 : 0
+
           mockHeatMap.push({
             day,
             hourSlot: slot,
-            value: Math.random() * 2 - 0.5, // Bias towards positive
+            value: Math.max(
+              -1,
+              Math.min(1, baseValue + slotBonus + (Math.random() * 0.4 - 0.2)),
+            ),
           })
         })
       })
@@ -128,9 +141,9 @@ export function useDashboardData() {
               locale: ptBR,
             }),
             sentiment: 0.5 + Math.random() * 0.4,
-            volume: Math.floor(Math.random() * 50) + 10,
+            volume: Math.floor(Math.random() * 50) + 20,
           })),
-          distribution: { positive: 65, neutral: 25, negative: 10 },
+          distribution: { positive: 120, neutral: 45, negative: 15 },
         },
         {
           id: '2',
@@ -138,7 +151,7 @@ export function useDashboardData() {
           url: 'https://linkedin.com/company/vanguard-home',
           type: 'competitor',
           industry: 'Construção Civil',
-          status: 'idle',
+          status: 'success',
           lastUpdated: new Date().toISOString(),
           avatarUrl:
             'https://img.usecurling.com/i?q=vanguard&color=blue&shape=outline',
@@ -146,10 +159,29 @@ export function useDashboardData() {
             date: format(subDays(new Date(), 13 - i), 'dd/MM', {
               locale: ptBR,
             }),
-            sentiment: 0.2 + Math.random() * 0.6,
-            volume: Math.floor(Math.random() * 40) + 5,
+            sentiment: 0.1 + Math.random() * 0.6,
+            volume: Math.floor(Math.random() * 40) + 10,
           })),
-          distribution: { positive: 45, neutral: 40, negative: 15 },
+          distribution: { positive: 65, neutral: 80, negative: 35 },
+        },
+        {
+          id: '3',
+          name: 'A.Yoshii',
+          url: 'https://linkedin.com/company/a-yoshii',
+          type: 'competitor',
+          industry: 'Construção Civil',
+          status: 'success',
+          lastUpdated: new Date().toISOString(),
+          avatarUrl:
+            'https://img.usecurling.com/i?q=yoshii&color=red&shape=fill',
+          history: Array.from({ length: 14 }, (_, i) => ({
+            date: format(subDays(new Date(), 13 - i), 'dd/MM', {
+              locale: ptBR,
+            }),
+            sentiment: 0.2 + Math.random() * 0.5,
+            volume: Math.floor(Math.random() * 45) + 15,
+          })),
+          distribution: { positive: 50, neutral: 50, negative: 20 },
         },
       ]
 

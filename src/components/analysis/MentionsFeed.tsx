@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ThumbsUp, MessageSquare, Share2, Calendar } from 'lucide-react'
+import { ThumbsUp, MessageSquare, Share2, Calendar, Search } from 'lucide-react'
 import { Post, Client } from '@/types'
 
 interface MentionsFeedProps {
@@ -19,43 +19,32 @@ export function MentionsFeed({ posts, clients }: MentionsFeedProps) {
   const getSentimentBadge = (score: number) => {
     if (score > 0.3) {
       return (
-        <Badge
-          variant="outline"
-          className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100"
-        >
+        <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100 px-2 py-0.5 text-[10px] uppercase font-bold">
           Positivo
         </Badge>
       )
     }
     if (score < -0.3) {
       return (
-        <Badge
-          variant="outline"
-          className="bg-red-100 text-red-700 border-red-200 hover:bg-red-100"
-        >
+        <Badge className="bg-red-100 text-red-700 border-red-200 hover:bg-red-100 px-2 py-0.5 text-[10px] uppercase font-bold">
           Negativo
         </Badge>
       )
     }
     return (
-      <Badge
-        variant="outline"
-        className="bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100"
-      >
+      <Badge className="bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100 px-2 py-0.5 text-[10px] uppercase font-bold">
         Neutro
       </Badge>
     )
   }
 
   return (
-    <Card className="shadow-planin border-none">
+    <Card className="shadow-sm border-none bg-white">
       <CardHeader>
-        <CardTitle className="text-xl font-bold text-primary">
-          Feed de Menções Detalhado
+        <CardTitle className="text-lg font-bold text-foreground">
+          Feed de Menções
         </CardTitle>
-        <CardDescription>
-          Análise individual de publicações e seus impactos.
-        </CardDescription>
+        <CardDescription>Últimas publicações analisadas.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {posts.length > 0 ? (
@@ -64,11 +53,11 @@ export function MentionsFeed({ posts, clients }: MentionsFeedProps) {
             return (
               <div
                 key={post.id}
-                className="p-5 rounded-xl border border-border/50 bg-white hover:border-accent/30 hover:shadow-md transition-all duration-300 group"
+                className="p-4 rounded-lg border border-border/50 bg-white hover:border-primary/20 hover:shadow-sm transition-all duration-300"
               >
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border shadow-sm">
+                    <Avatar className="h-9 w-9 border shadow-sm">
                       <AvatarImage src={client?.avatarUrl} />
                       <AvatarFallback>
                         {client?.name.substring(0, 2)}
@@ -79,7 +68,7 @@ export function MentionsFeed({ posts, clients }: MentionsFeedProps) {
                         {client?.name}
                       </h4>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="capitalize">
+                        <span className="capitalize font-medium">
                           {post.vehicle || 'LinkedIn'}
                         </span>
                         <span>•</span>
@@ -92,29 +81,27 @@ export function MentionsFeed({ posts, clients }: MentionsFeedProps) {
                   </div>
                   {getSentimentBadge(post.sentimentScore)}
                 </div>
-                <p className="text-sm text-gray-700 leading-relaxed mb-4 line-clamp-3">
+                <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">
                   {post.content}
                 </p>
-                <div className="flex items-center gap-6 text-xs text-muted-foreground font-medium pt-3 border-t border-gray-50">
-                  <span className="flex items-center gap-1.5 group-hover:text-primary transition-colors">
-                    <ThumbsUp className="h-3.5 w-3.5" /> {post.likes}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground font-medium pt-2 border-t border-dashed">
+                  <span className="flex items-center gap-1">
+                    <ThumbsUp className="h-3 w-3" /> {post.likes}
                   </span>
-                  <span className="flex items-center gap-1.5 group-hover:text-primary transition-colors">
-                    <MessageSquare className="h-3.5 w-3.5" /> {post.comments}
+                  <span className="flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3" /> {post.comments}
                   </span>
-                  <span className="flex items-center gap-1.5 group-hover:text-primary transition-colors">
-                    <Share2 className="h-3.5 w-3.5" /> {post.shares}
-                  </span>
-                  <span className="ml-auto text-xs text-primary/70 font-semibold">
-                    Score: {post.sentimentScore.toFixed(2)}
+                  <span className="flex items-center gap-1">
+                    <Share2 className="h-3 w-3" /> {post.shares}
                   </span>
                 </div>
               </div>
             )
           })
         ) : (
-          <div className="text-center py-12 text-muted-foreground bg-gray-50 rounded-lg border border-dashed">
-            Nenhuma menção encontrada para os filtros selecionados.
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground bg-gray-50 rounded-lg border border-dashed">
+            <Search className="h-8 w-8 mb-2 opacity-20" />
+            <p className="text-sm">Nenhuma menção encontrada.</p>
           </div>
         )}
       </CardContent>

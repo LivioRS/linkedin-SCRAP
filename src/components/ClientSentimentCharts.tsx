@@ -22,6 +22,7 @@ import {
   BarChart,
   Bar,
   Cell,
+  ResponsiveContainer,
 } from 'recharts'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -46,17 +47,17 @@ export function ClientSentimentCharts({ client }: ClientSentimentChartsProps) {
     {
       name: 'Positivo',
       value: client.distribution.positive,
-      color: 'hsl(142, 70%, 40%)',
+      color: 'hsl(142, 70%, 45%)', // Green
     },
     {
       name: 'Neutro',
       value: client.distribution.neutral,
-      color: 'hsl(220, 13%, 91%)',
+      color: 'hsl(210, 40%, 90%)', // Light Gray
     },
     {
       name: 'Negativo',
       value: client.distribution.negative,
-      color: 'hsl(0, 84%, 60%)',
+      color: 'hsl(0, 84%, 60%)', // Red
     },
   ]
 
@@ -65,45 +66,37 @@ export function ClientSentimentCharts({ client }: ClientSentimentChartsProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4 mb-4">
-        <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
+    <div className="space-y-4 bg-white p-6 rounded-xl border border-border/60 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-center gap-4 border-b pb-4 mb-2">
+        <Avatar className="h-14 w-14 border border-border shadow-sm">
           <AvatarImage src={client.avatarUrl} alt={client.name} />
-          <AvatarFallback className="bg-primary/10 text-primary font-bold">
+          <AvatarFallback className="bg-primary/5 text-primary font-bold text-lg">
             {client.name.substring(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <div>
-          <h3 className="text-xl font-bold text-primary">{client.name}</h3>
-          <div className="flex items-center gap-2">
+          <h3 className="text-xl font-bold text-foreground">{client.name}</h3>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge
+              variant={client.type === 'own' ? 'default' : 'secondary'}
+              className="text-[10px] px-2 py-0.5"
+            >
+              {client.type === 'own' ? 'Sua Marca' : 'Concorrente'}
+            </Badge>
             <span className="text-sm text-muted-foreground">
               {client.industry}
             </span>
-            <Badge
-              variant={client.type === 'own' ? 'default' : 'secondary'}
-              className="text-[10px] px-1.5 h-5"
-            >
-              {client.type === 'own' ? 'Você' : 'Concorrente'}
-            </Badge>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 shadow-planin border-none">
-          <CardHeader>
-            <CardTitle className="text-base">
-              Evolução do Sentimento (14 dias)
-            </CardTitle>
-            <CardDescription>
-              Tendência diária de reputação e volume.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={lineChartConfig}
-              className="h-[250px] w-full"
-            >
+        <div className="lg:col-span-2">
+          <h4 className="text-sm font-semibold mb-4 text-muted-foreground">
+            Evolução do Sentimento (14 dias)
+          </h4>
+          <div className="h-[200px] w-full">
+            <ChartContainer config={lineChartConfig} className="h-full w-full">
               <LineChart
                 data={client.history}
                 margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
@@ -111,13 +104,13 @@ export function ClientSentimentCharts({ client }: ClientSentimentChartsProps) {
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
-                  stroke="#e5e7eb"
+                  stroke="#f0f0f0"
                 />
                 <XAxis
                   dataKey="date"
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280' }}
+                  tick={{ fontSize: 11, fill: '#888' }}
                   dy={10}
                 />
                 <YAxis
@@ -125,60 +118,50 @@ export function ClientSentimentCharts({ client }: ClientSentimentChartsProps) {
                   domain={[0, 1]}
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280' }}
+                  tick={{ fontSize: 11, fill: '#888' }}
                 />
-                <YAxis yAxisId="right" orientation="right" hide />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
                 <Line
                   yAxisId="left"
                   type="monotone"
                   dataKey="sentiment"
                   stroke="hsl(var(--primary))"
                   strokeWidth={3}
-                  dot={{ r: 3, fill: 'hsl(var(--primary))', strokeWidth: 0 }}
-                  activeDot={{ r: 5 }}
-                  name="Score Sentimento"
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="volume"
-                  stroke="hsl(var(--accent))"
-                  strokeWidth={2}
-                  strokeDasharray="4 4"
                   dot={false}
-                  name="Volume de Posts"
-                  opacity={0.5}
+                  activeDot={{ r: 6 }}
+                  name="Score"
                 />
               </LineChart>
             </ChartContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="shadow-planin border-none">
-          <CardHeader>
-            <CardTitle className="text-base">Distribuição</CardTitle>
-            <CardDescription>Proporção de sentimento.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={distConfig} className="h-[250px] w-full">
-              <BarChart data={distData} layout="vertical" margin={{ left: 0 }}>
+        <div>
+          <h4 className="text-sm font-semibold mb-4 text-muted-foreground">
+            Distribuição Total
+          </h4>
+          <div className="h-[200px] w-full">
+            <ChartContainer config={distConfig} className="h-full w-full">
+              <BarChart
+                data={distData}
+                layout="vertical"
+                margin={{ left: 0, right: 30 }}
+              >
                 <XAxis type="number" hide />
                 <YAxis
                   dataKey="name"
                   type="category"
                   tickLine={false}
                   axisLine={false}
-                  width={70}
-                  tick={{ fontSize: 12, fontWeight: 500 }}
+                  width={60}
+                  tick={{ fontSize: 12, fontWeight: 500, fill: '#666' }}
                 />
                 <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
                 <Bar
                   dataKey="value"
                   radius={[0, 4, 4, 0]}
                   barSize={32}
-                  label={{ position: 'right', fill: '#6B7280', fontSize: 12 }}
+                  label={{ position: 'right', fill: '#666', fontSize: 12 }}
                 >
                   {distData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -186,8 +169,8 @@ export function ClientSentimentCharts({ client }: ClientSentimentChartsProps) {
                 </Bar>
               </BarChart>
             </ChartContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )

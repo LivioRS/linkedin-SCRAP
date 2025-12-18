@@ -16,6 +16,7 @@ import {
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
+  ChartConfig,
 } from '@/components/ui/chart'
 import {
   PieChart,
@@ -40,6 +41,8 @@ import { SentimentBadge } from '@/components/SentimentBadge'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
 import { Client, Post, DailyMetric, Alert } from '@/types'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
 interface WidgetProps {
   clients: Client[]
@@ -56,22 +59,22 @@ export function KPISentimentWidget({ clients, metrics }: WidgetProps) {
     (ownMetrics.length || 1)
 
   return (
-    <Card className="h-full border-t-4 border-t-primary">
+    <Card className="h-full border-t-4 border-t-primary shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
           Sentimento Médio
         </CardTitle>
-        <TrendingUp className="h-5 w-5 text-accent" />
+        <TrendingUp className="h-4 w-4 text-primary" />
       </CardHeader>
       <CardContent>
-        <div className="text-4xl font-bold text-primary mt-2">
+        <div className="text-3xl font-bold text-foreground mt-2">
           {avgSentiment.toFixed(2)}
         </div>
         <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-          <span className="text-green-600 font-medium flex items-center">
+          <span className="text-green-600 font-bold flex items-center">
             <ArrowUpRight className="h-3 w-3" /> +12%
           </span>{' '}
-          em relação ao mês anterior
+          vs mês anterior
         </p>
       </CardContent>
     </Card>
@@ -86,15 +89,15 @@ export function KPIEngagementWidget({ clients, metrics }: WidgetProps) {
     (ownMetrics.length || 1)
 
   return (
-    <Card className="h-full border-t-4 border-t-secondary">
+    <Card className="h-full border-t-4 border-t-accent shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
           Taxa de Engajamento
         </CardTitle>
-        <Activity className="h-5 w-5 text-accent" />
+        <Activity className="h-4 w-4 text-accent" />
       </CardHeader>
       <CardContent>
-        <div className="text-4xl font-bold text-secondary mt-2">
+        <div className="text-3xl font-bold text-foreground mt-2">
           {(totalEngagement * 100).toFixed(1)}%
         </div>
         <p className="text-xs text-muted-foreground mt-2">
@@ -110,19 +113,19 @@ export function KPIPostsWidget({ clients, posts }: WidgetProps) {
   const totalPosts = posts.filter((p) => p.clientId === ownClient?.id).length
 
   return (
-    <Card className="h-full border-t-4 border-t-accent">
+    <Card className="h-full border-t-4 border-t-purple-500 shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
           Posts Coletados
         </CardTitle>
-        <MessageSquare className="h-5 w-5 text-accent" />
+        <MessageSquare className="h-4 w-4 text-purple-500" />
       </CardHeader>
       <CardContent>
-        <div className="text-4xl font-bold text-gray-800 mt-2">
+        <div className="text-3xl font-bold text-foreground mt-2">
           {totalPosts}
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Base de dados própria atualizada
+          Base de dados atualizada
         </p>
       </CardContent>
     </Card>
@@ -136,19 +139,19 @@ export function KPICompetitorsWidget({ clients }: WidgetProps) {
   ).length
 
   return (
-    <Card className="h-full border-t-4 border-t-gray-400">
+    <Card className="h-full border-t-4 border-t-orange-500 shadow-sm hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
           Concorrentes
         </CardTitle>
-        <Users className="h-5 w-5 text-accent" />
+        <Users className="h-4 w-4 text-orange-500" />
       </CardHeader>
       <CardContent>
-        <div className="text-4xl font-bold text-gray-800 mt-2">
+        <div className="text-3xl font-bold text-foreground mt-2">
           {activeCompetitors}
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Monitorados no setor {ownClient?.industry}
+          Monitorados em {ownClient?.industry}
         </p>
       </CardContent>
     </Card>
@@ -239,54 +242,53 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {hasData ? (
-          <ChartContainer
-            config={lineChartConfig}
-            className="min-h-[300px] w-full"
-          >
-            <LineChart
-              data={sentimentTrendData}
-              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                stroke="#e5e7eb"
-              />
-              <XAxis
-                dataKey="date"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={12}
-                tick={{ fill: '#6B7280', fontSize: 12 }}
-                tickFormatter={(value) =>
-                  new Date(value).toLocaleDateString('pt-BR', {
-                    day: 'numeric',
-                    month: 'short',
-                  })
-                }
-              />
-              <YAxis hide domain={[-1, 1]} />
-              <ChartTooltip content={<ChartTooltipContent indicator="line" payload={[]} />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              {clients.map((client, index) => (
-                <Line
-                  key={client.id}
-                  type="monotone"
-                  dataKey={client.name}
-                  stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
-                  strokeWidth={3}
-                  dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                />
-              ))}
-            </LineChart>
-          </ChartContainer>
-        ) : (
-          <div className="flex items-center justify-center min-h-[300px] text-muted-foreground">
-            <p className="text-sm">Sem dados disponíveis para exibir</p>
+        {usingFallback && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-lg mb-4 text-sm">
+            ⚠️ Dados de exemplo - Execute "Global Scrape" para coletar dados reais
           </div>
         )}
+        <ChartContainer
+          config={lineChartConfig}
+          className="min-h-[300px] w-full"
+        >
+          <LineChart
+            data={sentimentTrendData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="#e5e7eb"
+            />
+            <XAxis
+              dataKey="date"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={12}
+              tick={{ fill: '#6B7280', fontSize: 12 }}
+              tickFormatter={(value) =>
+                new Date(value).toLocaleDateString('pt-BR', {
+                  day: 'numeric',
+                  month: 'short',
+                })
+              }
+            />
+            <YAxis hide domain={[-1, 1]} />
+            <ChartTooltip content={<ChartTooltipContent indicator="line" payload={[]} />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            {chartClients.map((client: any, index: number) => (
+              <Line
+                key={client.id || index}
+                type="monotone"
+                dataKey={client.name}
+                stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
+                strokeWidth={3}
+                dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
+                activeDot={{ r: 6, strokeWidth: 0 }}
+              />
+            ))}
+          </LineChart>
+        </ChartContainer>
       </CardContent>
     </Card>
   )
@@ -379,7 +381,7 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
                 />
               ))}
             </Pie>
-              <ChartTooltip content={<ChartTooltipContent hideLabel payload={[]} />} />
+            <ChartTooltip content={<ChartTooltipContent hideLabel payload={[]} />} />
             <ChartLegend
               content={<ChartLegendContent nameKey="name" />}
               className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
@@ -400,14 +402,14 @@ export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
     .slice(0, 5)
 
   return (
-    <Card className="h-full">
+    <Card className="h-full shadow-sm border-none bg-white">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-destructive">
+        <CardTitle className="flex items-center gap-2 text-destructive font-bold text-lg">
           <AlertCircle className="h-5 w-5" />
-          Posts Críticos Recentes
+          Posts Críticos
         </CardTitle>
         <CardDescription>
-          Monitoramento de posts com sentimento negativo.
+          Monitoramento de posts negativos recentes.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -418,26 +420,26 @@ export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
               return (
                 <div
                   key={post.id}
-                  className="flex flex-col gap-2 p-4 border border-destructive/20 rounded-lg bg-red-50/50 hover:bg-red-50 transition-colors"
+                  className="flex flex-col gap-2 p-3 border border-red-100 rounded-lg bg-red-50/50 hover:bg-red-50 transition-colors"
                 >
                   <div className="flex justify-between items-start">
-                    <span className="text-sm font-bold text-gray-800">
+                    <span className="text-xs font-bold text-gray-800">
                       {client?.name}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-[10px] text-muted-foreground">
                       {new Date(post.postedAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-sm line-clamp-2 text-gray-600 italic">
+                  <p className="text-sm line-clamp-2 text-gray-700 italic">
                     "{post.content}"
                   </p>
-                  <div className="flex justify-between items-center mt-2">
+                  <div className="flex justify-between items-center mt-1">
                     <SentimentBadge score={post.sentimentScore} />
                     <Button
-                      variant="ghost"
+                      variant="link"
                       size="sm"
                       asChild
-                      className="text-destructive hover:text-destructive hover:bg-red-100"
+                      className="text-destructive h-auto p-0 text-xs"
                     >
                       <Link
                         to={`/feed?search=${encodeURIComponent(post.content.substring(0, 20))}`}
@@ -452,7 +454,7 @@ export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
           ) : (
             <div className="text-center py-12 text-muted-foreground bg-gray-50 rounded-lg border border-dashed">
               <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2 opacity-50" />
-              <p>Nenhum post negativo detectado recentemente.</p>
+              <p>Nenhum post negativo.</p>
             </div>
           )}
         </div>
@@ -470,9 +472,9 @@ export function ListRecentAlertsWidget({ alerts }: WidgetProps) {
     .slice(0, 5)
 
   return (
-    <Card className="h-full">
+    <Card className="h-full shadow-sm border-none bg-white">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 font-bold text-foreground text-lg">
           <AlertCircle className="h-5 w-5 text-accent" />
           Alertas Recentes
         </CardTitle>
@@ -484,15 +486,15 @@ export function ListRecentAlertsWidget({ alerts }: WidgetProps) {
             recentAlerts.map((alert) => (
               <div
                 key={alert.id}
-                className={`p-4 border rounded-lg transition-all ${
+                className={`p-3 border rounded-lg transition-all ${
                   !alert.isRead
                     ? 'bg-white border-l-4 border-l-primary shadow-sm'
                     : 'bg-gray-50 border-gray-100 opacity-80'
                 }`}
               >
-                <div className="flex justify-between items-start mb-2">
+                <div className="flex justify-between items-start mb-1">
                   <span
-                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                       alert.type === 'sentiment_drop'
                         ? 'bg-red-100 text-red-700'
                         : alert.type === 'engagement_spike'
@@ -502,11 +504,11 @@ export function ListRecentAlertsWidget({ alerts }: WidgetProps) {
                   >
                     {alert.type.replace('_', ' ')}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[10px] text-muted-foreground">
                     {new Date(alert.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <p className="text-sm font-medium text-gray-800">
+                <p className="text-sm font-medium text-gray-800 leading-snug">
                   {alert.message}
                 </p>
               </div>
@@ -522,9 +524,6 @@ export function ListRecentAlertsWidget({ alerts }: WidgetProps) {
   )
 }
 
-/**
- * Renderiza um widget baseado no tipo
- */
 export function renderWidget(
   widgetId: string,
   props: WidgetProps,

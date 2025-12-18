@@ -35,7 +35,6 @@ export default function Analysis() {
 
     const filteredMetrics = metrics.filter((metric) => {
       const isDateValid = isAfter(new Date(metric.date), cutoffDate)
-      // Metrics might not have platform data in this mock structure, assuming global or checking source
       return isDateValid && metric.clientId === ownClient?.id
     })
 
@@ -75,6 +74,8 @@ export default function Analysis() {
     const dates = Array.from(
       new Set(filteredData.posts.map((p) => p.postedAt.split('T')[0])),
     ).sort()
+
+    // Fill gaps in dates if needed, for now using existing post dates
     const trendData = dates.map((date) => {
       const dayPosts = filteredData.posts.filter((p) =>
         p.postedAt.startsWith(date),
@@ -98,9 +99,9 @@ export default function Analysis() {
     ).length
     const neutral = filteredData.posts.length - positive - negative
     const distributionData = [
-      { name: 'Positivo', value: positive, color: 'hsl(var(--success))' },
-      { name: 'Neutro', value: neutral, color: 'hsl(var(--muted))' },
-      { name: 'Negativo', value: negative, color: 'hsl(var(--destructive))' },
+      { name: 'Positivo', value: positive, color: 'hsl(142, 70%, 45%)' },
+      { name: 'Neutro', value: neutral, color: 'hsl(210, 40%, 90%)' },
+      { name: 'Negativo', value: negative, color: 'hsl(0, 84%, 60%)' },
     ].filter((d) => d.value > 0)
 
     // Topic Data (Mocked based on categories for now)
@@ -118,18 +119,18 @@ export default function Analysis() {
   }, [filteredData])
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-10">
       {/* Header Section */}
       <AnalysisHeader />
 
       {/* Filter Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl border shadow-sm gap-4">
-        <h2 className="text-lg font-semibold text-primary">
-          Filtros de Análise
+      <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl border border-border/50 shadow-sm gap-4">
+        <h2 className="text-sm font-bold text-foreground uppercase tracking-wide">
+          Filtros de Dados
         </h2>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <Select value={platform} onValueChange={setPlatform}>
-            <SelectTrigger className="w-[180px] bg-gray-50 border-gray-200 focus:ring-accent">
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Plataforma" />
             </SelectTrigger>
             <SelectContent>
@@ -140,7 +141,7 @@ export default function Analysis() {
             </SelectContent>
           </Select>
           <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[180px] bg-gray-50 border-gray-200 focus:ring-accent">
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Período" />
             </SelectTrigger>
             <SelectContent>
