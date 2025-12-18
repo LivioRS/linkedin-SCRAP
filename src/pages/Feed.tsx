@@ -18,7 +18,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { Badge } from '@/components/ui/badge'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   ThumbsUp,
@@ -27,12 +32,13 @@ import {
   Eye,
   ExternalLink,
   Bot,
+  MessageSquareText,
 } from 'lucide-react'
 import { SentimentBadge } from '@/components/SentimentBadge'
 import { useSearchParams } from 'react-router-dom'
 
 export default function Feed() {
-  const { posts, clients } = useAppStore()
+  const { posts, comments, clients } = useAppStore()
   const [searchParams] = useSearchParams()
   const initialSearch = searchParams.get('search') || ''
 
@@ -51,7 +57,7 @@ export default function Feed() {
             ? post.sentimentScore > 0.3
             : sentimentFilter === 'negative'
               ? post.sentimentScore < -0.3
-              : post.sentimentScore >= -0.3 && post.sentimentScore <= 0.3 // neutral
+              : post.sentimentScore >= -0.3 && post.sentimentScore <= 0.3
       return matchesSearch && matchesSentiment
     })
     .sort(
@@ -66,7 +72,7 @@ export default function Feed() {
             Feed de Reputação
           </h2>
           <p className="text-muted-foreground">
-            Acompanhe posts e menções em tempo real.
+            Acompanhe posts e comentários analisados pela IA.
           </p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
@@ -93,6 +99,8 @@ export default function Feed() {
       <div className="grid grid-cols-1 gap-6">
         {filteredPosts.map((post) => {
           const client = clients.find((c) => c.id === post.clientId)
+          const postComments = comments.filter((c) => c.postId === post.id)
+
           return (
             <Card
               key={post.id}
@@ -132,82 +140,115 @@ export default function Feed() {
                 </p>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm font-medium text-muted-foreground">
-                    Análise de Sentimento:
+                    Sentimento (Claude AI):
                   </span>
                   <SentimentBadge score={post.sentimentScore} />
                 </div>
               </CardContent>
-              <CardFooter className="border-t pt-4 bg-gray-50 dark:bg-muted/10 flex justify-between items-center">
-                <div className="flex gap-6 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <ThumbsUp className="h-4 w-4" /> {post.likes}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MessageCircle className="h-4 w-4" /> {post.comments}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Share2 className="h-4 w-4" /> {post.shares}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Eye className="h-4 w-4" /> {post.views}
-                  </span>
+              <CardFooter className="flex-col p-0">
+                <div className="flex w-full justify-between items-center p-6 border-t bg-gray-50 dark:bg-muted/10">
+                  <div className="flex gap-6 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <ThumbsUp className="h-4 w-4" /> {post.likes}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MessageCircle className="h-4 w-4" /> {post.comments}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Share2 className="h-4 w-4" /> {post.shares}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Eye className="h-4 w-4" /> {post.views}
+                    </span>
+                  </div>
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 text-primary hover:text-primary/80"
+                      >
+                        <Bot className="h-4 w-4" /> IA Insights
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                      <SheetHeader>
+                        <SheetTitle>Análise Profunda (Claude)</SheetTitle>
+                        <SheetDescription>
+                          Detalhes processados sobre este post.
+                        </SheetDescription>
+                      </SheetHeader>
+                      <div className="mt-6 space-y-6">
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                            Score de Sentimento
+                          </h4>
+                          <div className="text-3xl font-bold flex items-center gap-3">
+                            <span
+                              className={
+                                post.sentimentScore > 0.3
+                                  ? 'text-green-600'
+                                  : post.sentimentScore < -0.3
+                                    ? 'text-red-600'
+                                    : 'text-gray-600'
+                              }
+                            >
+                              {post.sentimentScore.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                            Raciocínio da IA
+                          </h4>
+                          <div className="p-4 bg-muted rounded-md text-sm leading-relaxed border-l-4 border-primary">
+                            {post.sentimentExplanation}
+                          </div>
+                        </div>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
                 </div>
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 text-primary hover:text-primary/80"
-                    >
-                      <Bot className="h-4 w-4" /> Ver Análise Completa
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <SheetHeader>
-                      <SheetTitle>Análise de IA</SheetTitle>
-                      <SheetDescription>
-                        Detalhes processados pelo Claude sobre este post.
-                      </SheetDescription>
-                    </SheetHeader>
-                    <div className="mt-6 space-y-6">
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                          Score de Sentimento
-                        </h4>
-                        <div className="text-3xl font-bold flex items-center gap-3">
-                          {post.sentimentScore > 0
-                            ? 'Positivo'
-                            : post.sentimentScore < 0
-                              ? 'Negativo'
-                              : 'Neutro'}
-                          <span className="text-lg text-muted-foreground font-normal">
-                            ({post.sentimentScore})
-                          </span>
-                        </div>
-                      </div>
 
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                          Explicação
-                        </h4>
-                        <div className="p-4 bg-muted rounded-md text-sm leading-relaxed">
-                          {post.sentimentExplanation}
+                {/* Comments Section */}
+                {postComments.length > 0 && (
+                  <Accordion
+                    type="single"
+                    collapsible
+                    className="w-full px-6 pb-2"
+                  >
+                    <AccordionItem value="comments" className="border-none">
+                      <AccordionTrigger className="text-sm text-muted-foreground py-2 hover:no-underline hover:text-foreground">
+                        <div className="flex items-center gap-2">
+                          <MessageSquareText className="h-4 w-4" />
+                          Ver {postComments.length} comentários analisados
                         </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                          Sugestão de Ação
-                        </h4>
-                        <div className="p-4 border border-blue-100 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900 rounded-md text-sm text-blue-800 dark:text-blue-300">
-                          {post.sentimentScore < -0.3
-                            ? 'Monitorar comentários e preparar resposta oficial abordando os pontos de dor mencionados.'
-                            : 'Engajar com comentários positivos para ampliar o alcance orgânico.'}
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-3 pl-2 pt-2">
+                          {postComments.map((comment) => (
+                            <div
+                              key={comment.id}
+                              className="p-3 bg-background border rounded-md text-sm"
+                            >
+                              <div className="flex justify-between mb-1">
+                                <span className="font-semibold text-xs">
+                                  {comment.author}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(comment.postedAt).toLocaleString()}
+                                </span>
+                              </div>
+                              <p className="mb-2">{comment.content}</p>
+                              <SentimentBadge score={comment.sentimentScore} />
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                    </div>
-                  </SheetContent>
-                </Sheet>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                )}
               </CardFooter>
             </Card>
           )

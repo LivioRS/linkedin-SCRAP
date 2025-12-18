@@ -23,21 +23,22 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
-import { Trophy, TrendingDown, ArrowRight, Activity } from 'lucide-react'
+import { Trophy, TrendingDown, Activity, Lightbulb } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function Analysis() {
   const { clients, metrics, posts } = useAppStore()
 
-  const ownClient = clients.find((c) => c.type === 'own')
-  const competitors = clients.filter((c) => c.type === 'competitor')
-
-  const [selectedCompetitorId, setSelectedCompetitorId] = useState<string>(
-    competitors[0]?.id || '',
+  const [primaryId, setPrimaryId] = useState<string>(
+    clients.find((c) => c.type === 'own')?.id || '',
+  )
+  const [secondaryId, setSecondaryId] = useState<string>(
+    clients.find((c) => c.type === 'competitor')?.id || '',
   )
   const [period, setPeriod] = useState('30')
 
-  const selectedCompetitor = clients.find((c) => c.id === selectedCompetitorId)
+  const primaryClient = clients.find((c) => c.id === primaryId)
+  const secondaryClient = clients.find((c) => c.id === secondaryId)
 
   // Helpers to calc metrics
   const getMetricsForClient = (clientId: string | undefined, days: number) => {
@@ -48,7 +49,7 @@ export default function Analysis() {
       .slice(0, days)
     const clientPosts = posts
       .filter((p) => p.clientId === clientId)
-      .slice(0, days) // simple slice for mock
+      .slice(0, days) // Approximate slice for mock
 
     const sentiment =
       clientMetrics.reduce((acc, c) => acc + c.sentimentScore, 0) /
@@ -57,21 +58,20 @@ export default function Analysis() {
       clientMetrics.reduce((acc, c) => acc + c.engagementRate, 0) /
       (clientMetrics.length || 1)
 
-    // Share of voice (simple volume based)
-    const totalVolume = posts.length || 1
-    const clientVolume = clientPosts.length
-    const sov = (clientVolume / totalVolume) * 100
+    // Share of voice within industry
+    const client = clients.find((c) => c.id === clientId)
+    const industryPosts = posts.filter((p) => {
+      const c = clients.find((cl) => cl.id === p.clientId)
+      return c?.industry === client?.industry
+    })
+    const sov = (clientPosts.length / (industryPosts.length || 1)) * 100
 
-    return { sentiment, engagement, volume: clientVolume, sov }
+    return { sentiment, engagement, volume: clientPosts.length, sov }
   }
 
-  const ownMetricsData = getMetricsForClient(ownClient?.id, parseInt(period))
-  const compMetricsData = getMetricsForClient(
-    selectedCompetitorId,
-    parseInt(period),
-  )
+  const primaryData = getMetricsForClient(primaryId, parseInt(period))
+  const secondaryData = getMetricsForClient(secondaryId, parseInt(period))
 
-  // Determine winners
   const getWinnerClass = (val1: number, val2: number) =>
     val1 > val2
       ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 font-bold'
@@ -82,28 +82,45 @@ export default function Analysis() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Análise Competitiva
+            Inteligência Competitiva
           </h2>
           <p className="text-muted-foreground">
-            Comparativo direto entre sua marca e concorrentes.
+            Compare métricas de performance e reputação.
           </p>
         </div>
-        <div className="flex gap-4">
-          <Select
-            value={selectedCompetitorId}
-            onValueChange={setSelectedCompetitorId}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Selecione Concorrente" />
-            </SelectTrigger>
-            <SelectContent>
-              {competitors.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex gap-2 items-center">
+            <span className="text-sm font-medium">Primário:</span>
+            <Select value={primaryId} onValueChange={setPrimaryId}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {clients.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex gap-2 items-center">
+            <span className="text-sm font-medium">Comparar:</span>
+            <Select value={secondaryId} onValueChange={setSecondaryId}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {clients
+                  .filter((c) => c.id !== primaryId)
+                  .map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Período" />
@@ -122,7 +139,8 @@ export default function Analysis() {
           <CardHeader>
             <CardTitle>Comparativo Lado a Lado</CardTitle>
             <CardDescription>
-              Métricas de performance para o período selecionado.
+              Análise direta entre {primaryClient?.name} e{' '}
+              {secondaryClient?.name}.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -130,40 +148,40 @@ export default function Analysis() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[200px]">Métrica</TableHead>
-                  <TableHead className="text-center">
-                    {ownClient?.name} (Você)
+                  <TableHead className="text-center font-bold text-primary">
+                    {primaryClient?.name}
                   </TableHead>
                   <TableHead className="text-center">
-                    {selectedCompetitor?.name}
+                    {secondaryClient?.name}
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 <TableRow>
                   <TableCell className="font-medium">
-                    Score de Sentimento
+                    Score de Sentimento (-1 a 1)
                   </TableCell>
                   <TableCell
                     className={cn(
-                      'text-center',
+                      'text-center text-lg',
                       getWinnerClass(
-                        ownMetricsData.sentiment,
-                        compMetricsData.sentiment,
+                        primaryData.sentiment,
+                        secondaryData.sentiment,
                       ),
                     )}
                   >
-                    {ownMetricsData.sentiment.toFixed(2)}
+                    {primaryData.sentiment.toFixed(2)}
                   </TableCell>
                   <TableCell
                     className={cn(
-                      'text-center',
+                      'text-center text-lg',
                       getWinnerClass(
-                        compMetricsData.sentiment,
-                        ownMetricsData.sentiment,
+                        secondaryData.sentiment,
+                        primaryData.sentiment,
                       ),
                     )}
                   >
-                    {compMetricsData.sentiment.toFixed(2)}
+                    {secondaryData.sentiment.toFixed(2)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
@@ -172,69 +190,65 @@ export default function Analysis() {
                   </TableCell>
                   <TableCell
                     className={cn(
-                      'text-center',
+                      'text-center text-lg',
                       getWinnerClass(
-                        ownMetricsData.engagement,
-                        compMetricsData.engagement,
+                        primaryData.engagement,
+                        secondaryData.engagement,
                       ),
                     )}
                   >
-                    {(ownMetricsData.engagement * 100).toFixed(2)}%
+                    {(primaryData.engagement * 100).toFixed(2)}%
                   </TableCell>
                   <TableCell
                     className={cn(
-                      'text-center',
+                      'text-center text-lg',
                       getWinnerClass(
-                        compMetricsData.engagement,
-                        ownMetricsData.engagement,
+                        secondaryData.engagement,
+                        primaryData.engagement,
                       ),
                     )}
                   >
-                    {(compMetricsData.engagement * 100).toFixed(2)}%
+                    {(secondaryData.engagement * 100).toFixed(2)}%
                   </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className="font-medium">Volume de Posts</TableCell>
                   <TableCell
                     className={cn(
-                      'text-center',
-                      getWinnerClass(
-                        ownMetricsData.volume,
-                        compMetricsData.volume,
-                      ),
+                      'text-center text-lg',
+                      getWinnerClass(primaryData.volume, secondaryData.volume),
                     )}
                   >
-                    {ownMetricsData.volume}
+                    {primaryData.volume}
                   </TableCell>
                   <TableCell
                     className={cn(
-                      'text-center',
-                      getWinnerClass(
-                        compMetricsData.volume,
-                        ownMetricsData.volume,
-                      ),
+                      'text-center text-lg',
+                      getWinnerClass(secondaryData.volume, primaryData.volume),
                     )}
                   >
-                    {compMetricsData.volume}
+                    {secondaryData.volume}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="font-medium">Share of Voice</TableCell>
-                  <TableCell
-                    className={cn(
-                      'text-center',
-                      getWinnerClass(ownMetricsData.sov, compMetricsData.sov),
-                    )}
-                  >
-                    {ownMetricsData.sov.toFixed(1)}%
+                  <TableCell className="font-medium">
+                    Share of Voice (Indústria)
                   </TableCell>
                   <TableCell
                     className={cn(
-                      'text-center',
-                      getWinnerClass(compMetricsData.sov, ownMetricsData.sov),
+                      'text-center text-lg',
+                      getWinnerClass(primaryData.sov, secondaryData.sov),
                     )}
                   >
-                    {compMetricsData.sov.toFixed(1)}%
+                    {primaryData.sov.toFixed(1)}%
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      'text-center text-lg',
+                      getWinnerClass(secondaryData.sov, primaryData.sov),
+                    )}
+                  >
+                    {secondaryData.sov.toFixed(1)}%
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -243,64 +257,84 @@ export default function Analysis() {
         </Card>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200 dark:from-yellow-950/20 dark:to-orange-950/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-blue-600" />
-                Detecção de Movimentos
+              <CardTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-400">
+                <Lightbulb className="h-5 w-5" />
+                Insights Automáticos
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {ownMetricsData.sentiment < compMetricsData.sentiment ? (
-                <Alert variant="destructive">
-                  <TrendingDown className="h-4 w-4" />
-                  <AlertTitle>Alerta de Crise</AlertTitle>
-                  <AlertDescription>
-                    Seu sentimento está inferior ao concorrente. Analise os
-                    posts negativos recentes.
-                  </AlertDescription>
-                </Alert>
+              {primaryData.sentiment < secondaryData.sentiment ? (
+                <div className="text-sm p-3 bg-white dark:bg-card rounded shadow-sm border border-yellow-100">
+                  <p className="font-semibold text-yellow-800 dark:text-yellow-400 mb-1">
+                    Atenção à Reputação
+                  </p>
+                  <p>
+                    Seu score de sentimento está inferior ao concorrente.
+                    Analise os comentários negativos recentes para identificar
+                    pontos de dor.
+                  </p>
+                </div>
               ) : (
-                <Alert className="border-green-200 bg-green-50 text-green-800">
-                  <Trophy className="h-4 w-4 text-green-600" />
-                  <AlertTitle>Liderança de Sentimento</AlertTitle>
-                  <AlertDescription>
+                <div className="text-sm p-3 bg-white dark:bg-card rounded shadow-sm border border-yellow-100">
+                  <p className="font-semibold text-yellow-800 dark:text-yellow-400 mb-1">
+                    Liderança de Percepção
+                  </p>
+                  <p>
                     Sua marca mantém uma percepção mais positiva no mercado
-                    atualmente.
-                  </AlertDescription>
-                </Alert>
+                    atualmente. Continue engajando!
+                  </p>
+                </div>
               )}
 
-              <div className="text-sm text-muted-foreground p-3 bg-muted rounded-md border">
-                "O concorrente {selectedCompetitor?.name} aumentou o volume de
-                postagens em 20% na última semana."
-              </div>
+              {primaryData.sov < secondaryData.sov && (
+                <div className="text-sm p-3 bg-white dark:bg-card rounded shadow-sm border border-yellow-100">
+                  <p className="font-semibold text-yellow-800 dark:text-yellow-400 mb-1">
+                    Oportunidade de Alcance
+                  </p>
+                  <p>
+                    O concorrente domina o Share of Voice. Considere aumentar a
+                    frequência de postagens para recuperar visibilidade.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Ranking de Engajamento</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Ranking da Indústria
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {[ownClient, ...competitors]
-                  .filter(Boolean)
+                {clients
+                  .filter((c) => c.industry === primaryClient?.industry)
                   .map((c) => ({
                     ...c,
-                    eng: getMetricsForClient(c?.id, 30).engagement,
+                    eng: getMetricsForClient(c.id, 30).engagement,
                   }))
                   .sort((a, b) => b.eng - a.eng)
                   .map((c, idx) => (
                     <div
-                      key={c?.id}
-                      className="flex items-center justify-between p-2 rounded hover:bg-muted/50"
+                      key={c.id}
+                      className="flex items-center justify-between p-2 rounded hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="font-bold text-muted-foreground w-4">
+                        <span
+                          className={cn(
+                            'font-bold w-4 text-center',
+                            idx === 0
+                              ? 'text-yellow-500'
+                              : 'text-muted-foreground',
+                          )}
+                        >
                           {idx + 1}
                         </span>
-                        <span className="font-medium text-sm">{c?.name}</span>
+                        <span className="font-medium text-sm">{c.name}</span>
                       </div>
                       <span className="font-bold text-sm">
                         {(c.eng * 100).toFixed(1)}%

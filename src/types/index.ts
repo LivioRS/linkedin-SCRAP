@@ -48,3 +48,11 @@ export interface DailyMetric {
   engagementRate: number
   postsCount: number
 }
+
+export interface ScrapingLog {
+  id: string
+  date: string
+  status: 'success' | 'failed'
+  itemsCollected: number
+  durationMs: number
+}

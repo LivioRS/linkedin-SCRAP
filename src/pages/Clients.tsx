@@ -88,10 +88,11 @@ export default function Clients() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Clientes Monitorados
+            Gestão de Clientes
           </h2>
           <p className="text-muted-foreground">
-            Gerencie as empresas e perfis rastreados pelo sistema.
+            Configure as marcas e concorrentes que serão monitorados pelo
+            scraper.
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -102,9 +103,9 @@ export default function Clients() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Adicionar Novo Cliente</DialogTitle>
+              <DialogTitle>Novo Monitoramento</DialogTitle>
               <DialogDescription>
-                Insira os detalhes da empresa para iniciar o monitoramento.
+                Adicione uma empresa para iniciar a coleta automática de dados.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -141,52 +142,49 @@ export default function Clients() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Monitoramento</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tipo</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="own">Próprio (Own)</SelectItem>
+                            <SelectItem value="competitor">
+                              Concorrente
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="industry"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Indústria</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o tipo" />
-                          </SelectTrigger>
+                          <Input placeholder="Ex: Software" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="own">
-                            Cliente Próprio (Own)
-                          </SelectItem>
-                          <SelectItem value="competitor">
-                            Concorrente
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="industry"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Indústria</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Ex: Varejo, Software, Saúde"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <div className="flex justify-end pt-4">
-                  <Button type="submit">Salvar Cliente</Button>
+                  <Button type="submit">Iniciar Monitoramento</Button>
                 </div>
               </form>
             </Form>
@@ -196,7 +194,7 @@ export default function Clients() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Clientes</CardTitle>
+          <CardTitle>Base de Monitoramento</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -205,8 +203,8 @@ export default function Clients() {
                 <TableHead>Empresa</TableHead>
                 <TableHead>Indústria</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Última Atualização</TableHead>
+                <TableHead>Status Coleta</TableHead>
+                <TableHead>Última Sincronização</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -255,7 +253,7 @@ export default function Clients() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm">
-                      Editar
+                      Configurar
                     </Button>
                   </TableCell>
                 </TableRow>

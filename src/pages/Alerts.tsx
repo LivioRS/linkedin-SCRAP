@@ -51,18 +51,18 @@ export default function Alerts() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">
-          Central de Alertas
+          Central de Alertas (Telegram)
         </h2>
         <p className="text-muted-foreground">
-          Notificações automáticas sobre anomalias e mudanças de mercado.
+          Notificações automáticas enviadas para o bot configurado.
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Histórico de Alertas</CardTitle>
+          <CardTitle>Histórico de Notificações</CardTitle>
           <CardDescription>
-            Mostrando todos os alertas dos últimos 30 dias.
+            Mostrando todos os alertas gerados pelo motor de IA.
           </CardDescription>
         </CardHeader>
         <CardContent>

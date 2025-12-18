@@ -11,7 +11,7 @@ import {
   Users,
   MessageSquare,
   AlertCircle,
-  TrendingDown,
+  Activity,
 } from 'lucide-react'
 import {
   ChartContainer,
@@ -29,7 +29,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  ResponsiveContainer,
 } from 'recharts'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
@@ -38,7 +37,7 @@ import { SentimentBadge } from '@/components/SentimentBadge'
 export default function Index() {
   const { clients, posts, metrics } = useAppStore()
 
-  // Calculate Global KPIs
+  // Calculate Global KPIs for "Own" client
   const ownClient = clients.find((c) => c.type === 'own')
   const ownMetrics = metrics.filter((m) => m.clientId === ownClient?.id)
 
@@ -61,14 +60,21 @@ export default function Index() {
     )
     .slice(0, 5)
 
-  // Chart Data Preparation
-  const shareOfVoiceData = clients.map((client) => ({
-    name: client.name,
-    value: posts.filter((p) => p.clientId === client.id).length,
-  }))
+  // Chart Data Preparation: Share of Voice
+  const industryPosts = posts.filter((p) => {
+    const client = clients.find((c) => c.id === p.clientId)
+    return client?.industry === ownClient?.industry
+  })
 
-  const sentimentTrendData = Array.from({ length: 30 }).map((_, i) => {
-    const date = new Date(Date.now() - (29 - i) * 86400000)
+  const shareOfVoiceData = clients
+    .filter((c) => c.industry === ownClient?.industry)
+    .map((client) => ({
+      name: client.name,
+      value: industryPosts.filter((p) => p.clientId === client.id).length,
+    }))
+
+  const sentimentTrendData = Array.from({ length: 15 }).map((_, i) => {
+    const date = new Date(Date.now() - (14 - i) * 86400000)
       .toISOString()
       .split('T')[0]
     const data: any = { date }
@@ -100,7 +106,6 @@ export default function Index() {
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -112,7 +117,7 @@ export default function Index() {
           <CardContent>
             <div className="text-2xl font-bold">{avgSentiment.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-              Global (Últimos 30 dias)
+              Sua marca (últimos 30 dias)
             </p>
           </CardContent>
         </Card>
@@ -121,13 +126,15 @@ export default function Index() {
             <CardTitle className="text-sm font-medium">
               Taxa de Engajamento
             </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {(totalEngagement * 100).toFixed(1)}%
             </div>
-            <p className="text-xs text-muted-foreground">Média por post</p>
+            <p className="text-xs text-muted-foreground">
+              Média (Likes+Comentários/Views)
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -140,21 +147,19 @@ export default function Index() {
           <CardContent>
             <div className="text-2xl font-bold">{totalPosts}</div>
             <p className="text-xs text-muted-foreground">
-              +12% desde o mês passado
+              Base de dados própria
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Concorrentes Ativos
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Concorrentes</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeCompetitors}</div>
             <p className="text-xs text-muted-foreground">
-              Monitorados em tempo real
+              Monitorados no setor {ownClient?.industry}
             </p>
           </CardContent>
         </Card>
@@ -164,9 +169,9 @@ export default function Index() {
         {/* Share of Voice */}
         <Card className="col-span-1">
           <CardHeader>
-            <CardTitle>Share of Voice</CardTitle>
+            <CardTitle>Share of Voice (SoV)</CardTitle>
             <CardDescription>
-              Participação de mercado baseada em volume de posts.
+              Presença de mercado baseada em volume de publicações no setor.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -204,7 +209,7 @@ export default function Index() {
           <CardHeader>
             <CardTitle>Tendências de Sentimento</CardTitle>
             <CardDescription>
-              Comparativo de score de sentimento (30 dias).
+              Evolução do score de sentimento (-1 a 1) nos últimos 15 dias.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -251,14 +256,15 @@ export default function Index() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Recent Negative Posts */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-destructive" />
-              Posts com Sentimento Negativo
+              Posts Críticos Recentes
             </CardTitle>
-            <CardDescription>Atenção prioritária recomendada.</CardDescription>
+            <CardDescription>
+              Monitoramento de posts com sentimento negativo.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -285,7 +291,7 @@ export default function Index() {
                           <Link
                             to={`/feed?search=${encodeURIComponent(post.content.substring(0, 20))}`}
                           >
-                            Ver no Feed
+                            Ver Detalhes
                           </Link>
                         </Button>
                       </div>
@@ -306,31 +312,33 @@ export default function Index() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
               <TrendingUp className="h-5 w-5" />
-              Insights Automáticos
+              Insights de IA (Claude)
             </CardTitle>
+            <CardDescription className="text-indigo-600/80 dark:text-indigo-400/80">
+              Análise automatizada de padrões de mercado.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="p-4 bg-white dark:bg-card rounded-lg shadow-sm border border-indigo-100/50">
               <p className="text-sm text-foreground">
-                "O engajamento da <strong>{ownClient?.name}</strong> está{' '}
-                <strong>2.5x maior</strong> que a média da indústria esta
-                semana, impulsionado pelo post sobre Inovação."
+                "O engajamento da <strong>{ownClient?.name}</strong> superou a
+                média do setor em <strong>15%</strong> esta semana,
+                correlacionado com tópicos de Inovação."
               </p>
             </div>
             <div className="p-4 bg-white dark:bg-card rounded-lg shadow-sm border border-indigo-100/50">
               <p className="text-sm text-foreground">
-                "
+                "Detectado aumento de volume de postagens do concorrente{' '}
                 <strong>
                   {clients.find((c) => c.type === 'competitor')?.name}
-                </strong>{' '}
-                teve uma queda de sentimento de 15% após reclamações sobre
-                suporte."
+                </strong>
+                . Possível campanha de lançamento."
               </p>
             </div>
             <div className="p-4 bg-white dark:bg-card rounded-lg shadow-sm border border-indigo-100/50">
               <p className="text-sm text-foreground">
-                "Recomendação: Aumentar a frequência de postagens às
-                terças-feiras, horário de pico de engajamento do seu público."
+                "Sugestão: Monitorar a palavra-chave 'Suporte' nos próximos dias
+                devido a leve tendência de queda no sentimento geral do setor."
               </p>
             </div>
           </CardContent>
