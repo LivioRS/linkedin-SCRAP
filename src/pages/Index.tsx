@@ -60,19 +60,6 @@ export default function Index() {
         </div>
       </div>
 
-<<<<<<< HEAD
-      {sortedWidgets.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
-          {sortedWidgets.map((widget) => {
-            const colSpanClass = `lg:col-span-${widget.position.w}`
-            return (
-              <div key={widget.id} className={colSpanClass}>
-                {renderWidget(widget.id, { clients, posts, metrics, alerts })}
-              </div>
-            )
-          })}
-        </div>
-=======
       {visibleWidgets.length > 0 ? (
         <>
           {/* KPIs - Grid de 4 colunas */}
@@ -115,7 +102,6 @@ export default function Index() {
             </div>
           )}
         </>
->>>>>>> 3b79a64 (fix: Remover nome do usuÃ¡rio, adicionar logo planin e melhorar alinhamento)
       ) : (
         <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-gray-200 rounded-xl bg-white/50">
           <div className="p-4 rounded-full bg-gray-100 mb-4">

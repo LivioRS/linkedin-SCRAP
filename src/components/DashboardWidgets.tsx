@@ -179,11 +179,7 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
   }, {} as any)
 
   return (
-<<<<<<< HEAD
-    <Card className="col-span-1 lg:col-span-2 h-full">
-=======
     <Card className="w-full">
->>>>>>> 3b79a64 (fix: Remover nome do usuÃ¡rio, adicionar logo planin e melhorar alinhamento)
       <CardHeader>
         <CardTitle>Tendências de Sentimento</CardTitle>
         <CardDescription>
