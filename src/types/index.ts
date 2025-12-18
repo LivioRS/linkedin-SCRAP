@@ -57,6 +57,14 @@ export interface ScrapingLog {
   durationMs: number
 }
 
+export interface TargetUrl {
+  id: string
+  url: string
+  description?: string
+  platform: string
+  createdAt: string
+}
+
 export interface Settings {
   apiKeys: {
     apify: string
@@ -82,6 +90,7 @@ export interface Settings {
     frequency: 'hourly' | 'daily' | 'weekly'
     retentionDays: number
   }
+  targetUrls: TargetUrl[]
 }
 
 export interface DashboardWidget {

@@ -108,6 +108,7 @@ const DEFAULT_SETTINGS: Settings = {
     alertOnSpike: false,
   },
   scraping: { frequency: 'daily', retentionDays: 90 },
+  targetUrls: [],
 }
 
 const GENERATE_MOCK_METRICS = (clients: Client[]): DailyMetric[] => {
@@ -210,10 +211,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const updateSettings = (newSettings: Partial<Settings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }))
-    toast({
-      title: 'Configurações Salvas',
-      description: 'As alterações foram aplicadas com sucesso.',
-    })
+    // Don't toast for everything, sometimes it's internal update
+    if (Object.keys(newSettings).length > 0) {
+      toast({
+        title: 'Configurações Salvas',
+        description: 'As alterações foram aplicadas com sucesso.',
+      })
+    }
   }
 
   const testTelegramConnection = async () => {
@@ -331,10 +335,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       .filter(([, isEnabled]) => isEnabled)
       .map(([platform]) => platform)
 
-    if (activePlatforms.length === 0) {
+    const hasTargets = settings.targetUrls && settings.targetUrls.length > 0
+
+    if (activePlatforms.length === 0 && !hasTargets) {
       toast({
-        title: 'Nenhuma plataforma ativa',
-        description: 'Ative pelo menos uma rede social nas configurações.',
+        title: 'Nada para monitorar',
+        description: 'Ative uma rede social ou adicione URLs alvo.',
         variant: 'destructive',
       })
       return
@@ -344,7 +350,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setClients((prev) => prev.map((c) => ({ ...c, status: 'processing' })))
     toast({
       title: 'Iniciando Global Scrape',
-      description: `Buscando dados para ${clients.length} empresas monitoradas...`,
+      description: `Buscando dados para ${clients.length} empresas e ${settings.targetUrls.length} URLs alvo...`,
     })
 
     const initialStatus: ScrapingStatus = {}
@@ -407,6 +413,31 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     })
 
+    // Simulate processing specific target URLs
+    if (settings.targetUrls.length > 0) {
+      settings.targetUrls.forEach((target) => {
+        // 30% chance of finding something new on target URLs
+        if (Math.random() > 0.7) {
+          const client =
+            clients.find((c) => c.type === 'own') || MOCK_CLIENTS[0]
+          newPosts.push({
+            id: Math.random().toString(36).substr(2, 9),
+            clientId: client.id,
+            content: `Conteúdo monitorado da URL: ${target.url}. Análise de impacto e reputação realizada.`,
+            likes: Math.floor(Math.random() * 200),
+            comments: Math.floor(Math.random() * 20),
+            shares: Math.floor(Math.random() * 5),
+            views: Math.floor(Math.random() * 1000),
+            sentimentScore: 0.2,
+            sentimentExplanation:
+              'Monitoramento de URL específica detectou atividade relevante.',
+            postedAt: new Date().toISOString(),
+            url: target.url,
+          })
+        }
+      })
+    }
+
     setTimeout(() => {
       setPosts((prev) => [...newPosts, ...prev])
       if (newAlerts.length > 0) {
@@ -440,7 +471,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setIsScraping(false)
       toast({
         title: 'Ciclo Global Concluído',
-        description: `Coleta finalizada. ${newPosts.length} novos posts processados.`,
+        description: `Coleta finalizada. ${newPosts.length} novos items processados (incluindo URLs alvo).`,
       })
     }, 1000)
   }

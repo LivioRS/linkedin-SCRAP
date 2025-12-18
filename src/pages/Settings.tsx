@@ -32,6 +32,8 @@ import {
   Target,
   Plus,
   Trash2,
+  ListPlus,
+  Link2,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -53,6 +55,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import { Client } from '@/types'
 
 const apiSchema = z.object({
@@ -86,6 +97,10 @@ export default function Settings() {
   const ownClient = clients.find((c) => c.type === 'own')
   const competitors = clients.filter((c) => c.type === 'competitor')
   const [newCompetitorName, setNewCompetitorName] = useState('')
+
+  // Target URLs State
+  const [newTargetUrl, setNewTargetUrl] = useState('')
+  const [newTargetDesc, setNewTargetDesc] = useState('')
 
   const apiForm = useForm<z.infer<typeof apiSchema>>({
     resolver: zodResolver(apiSchema),
@@ -146,6 +161,55 @@ export default function Settings() {
     setNewCompetitorName('')
   }
 
+  const getPlatformFromUrl = (url: string) => {
+    if (url.includes('linkedin.com')) return 'linkedin'
+    if (url.includes('instagram.com')) return 'instagram'
+    if (url.includes('facebook.com')) return 'facebook'
+    if (url.includes('twitter.com') || url.includes('x.com')) return 'twitter'
+    if (url.includes('youtube.com')) return 'youtube'
+    return 'other'
+  }
+
+  const handleAddTargetUrl = () => {
+    if (!newTargetUrl) return
+
+    try {
+      new URL(newTargetUrl) // Validate URL format
+    } catch {
+      toast({
+        title: 'URL Inválida',
+        description: 'Por favor insira uma URL válida (ex: https://...)',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    const newTarget = {
+      id: Math.random().toString(36).substr(2, 9),
+      url: newTargetUrl,
+      description: newTargetDesc,
+      platform: getPlatformFromUrl(newTargetUrl),
+      createdAt: new Date().toISOString(),
+    }
+
+    updateSettings({
+      targetUrls: [...(settings.targetUrls || []), newTarget],
+    })
+
+    setNewTargetUrl('')
+    setNewTargetDesc('')
+    toast({
+      title: 'URL Adicionada',
+      description: 'Fonte adicionada à fila de monitoramento.',
+    })
+  }
+
+  const handleRemoveTargetUrl = (id: string) => {
+    updateSettings({
+      targetUrls: (settings.targetUrls || []).filter((t) => t.id !== id),
+    })
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
@@ -155,9 +219,12 @@ export default function Settings() {
         </p>
       </div>
       <Tabs defaultValue="monitoring" className="space-y-6">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="monitoring" className="gap-2">
             <Target className="h-4 w-4" /> Monitoramento
+          </TabsTrigger>
+          <TabsTrigger value="targets" className="gap-2">
+            <ListPlus className="h-4 w-4" /> Fontes Alvo
           </TabsTrigger>
           <TabsTrigger value="integrations" className="gap-2">
             <Key className="h-4 w-4" /> Integrações API
@@ -269,6 +336,104 @@ export default function Settings() {
                     Nenhum concorrente cadastrado.
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="targets">
+          <Card>
+            <CardHeader>
+              <CardTitle>URLs Específicas</CardTitle>
+              <CardDescription>
+                Adicione perfis de redes sociais, posts ou páginas específicas
+                para monitoramento prioritário.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
+                <div className="space-y-2">
+                  <Label>URL Alvo</Label>
+                  <Input
+                    placeholder="https://instagram.com/perfil..."
+                    value={newTargetUrl}
+                    onChange={(e) => setNewTargetUrl(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Descrição (Opcional)</Label>
+                  <Input
+                    placeholder="Ex: Campanha de Verão"
+                    value={newTargetDesc}
+                    onChange={(e) => setNewTargetDesc(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddTargetUrl()}
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button onClick={handleAddTargetUrl}>
+                    <Plus className="h-4 w-4 mr-2" /> Adicionar
+                  </Button>
+                </div>
+              </div>
+
+              <div className="border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Plataforma</TableHead>
+                      <TableHead>URL</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Data Adição</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {settings.targetUrls && settings.targetUrls.length > 0 ? (
+                      settings.targetUrls.map((target) => (
+                        <TableRow key={target.id}>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              {target.platform}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate">
+                            <a
+                              href={target.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1 hover:underline text-blue-600"
+                            >
+                              <Link2 className="h-3 w-3" /> {target.url}
+                            </a>
+                          </TableCell>
+                          <TableCell>{target.description || '-'}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {new Date(target.createdAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleRemoveTargetUrl(target.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={5}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          Nenhuma URL específica adicionada.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>
