@@ -44,6 +44,7 @@ interface AppState {
   testTelegramConnection: () => Promise<boolean>
   testApifyConnection: () => Promise<boolean>
   testClaudeConnection: () => Promise<boolean>
+  testSupabaseConnection: () => Promise<boolean>
 }
 
 const AppContext = createContext<AppState | undefined>(undefined)
@@ -264,30 +265,76 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return isValid
   }
 
+  const testSupabaseConnection = async () => {
+    if (!settings.apiKeys.supabaseUrl || !settings.apiKeys.supabaseKey) {
+      toast({
+        title: 'Configuração Incompleta',
+        description: 'Preencha a URL e a Chave do Supabase.',
+        variant: 'destructive',
+      })
+      return false
+    }
+    // Simulate Supabase connection test
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // Basic validation for URL format
+      new URL(settings.apiKeys.supabaseUrl)
+      if (settings.apiKeys.supabaseKey.length < 10) {
+        throw new Error('Chave muito curta')
+      }
+      toast({
+        title: 'Conectado ao Supabase',
+        description: 'Credenciais validadas com sucesso.',
+      })
+      return true
+    } catch (error) {
+      toast({
+        title: 'Erro na Conexão',
+        description: 'URL inválida ou credenciais incorretas.',
+        variant: 'destructive',
+      })
+      return false
+    }
+  }
+
   const triggerGlobalScrape = async () => {
+    const activePlatforms = Object.entries(settings.platforms)
+      .filter(([, isEnabled]) => isEnabled)
+      .map(([platform]) => platform)
+
+    if (activePlatforms.length === 0) {
+      toast({
+        title: 'Nenhuma plataforma ativa',
+        description: 'Ative pelo menos uma rede social nas configurações.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setIsScraping(true)
     setClients((prev) => prev.map((c) => ({ ...c, status: 'processing' })))
     toast({
       title: 'Iniciando Global Scrape',
-      description: 'Conectando aos scrapers configurados...',
+      description: `Coletando dados de: ${activePlatforms.join(', ')}...`,
     })
 
     const initialStatus: ScrapingStatus = {}
+    // Reset statuses
     Object.keys(settings.platforms).forEach((p) => {
-      initialStatus[p] = settings.platforms[
-        p as keyof typeof settings.platforms
-      ]
-        ? 'loading'
-        : 'idle'
+      initialStatus[p] = 'idle'
+    })
+    // Set active ones to loading
+    activePlatforms.forEach((p) => {
+      initialStatus[p] = 'loading'
     })
     setScrapingStatus(initialStatus)
 
-    const platforms = Object.keys(initialStatus).filter(
-      (p) => initialStatus[p] === 'loading',
-    )
-
-    for (const platform of platforms) {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+    // Simulate async scraping for each platform
+    for (const platform of activePlatforms) {
+      // Simulate delay random between 1.5s and 3s
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1500 + Math.random() * 1500),
+      )
       setScrapingStatus((prev) => ({ ...prev, [platform]: 'success' }))
     }
 
@@ -309,7 +356,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           date: new Date().toISOString(),
           status: 'success',
           itemsCollected: Math.floor(Math.random() * 150) + 20,
-          durationMs: platforms.length * 1500 + 2000,
+          durationMs: activePlatforms.length * 2000 + 2000,
         },
         ...prev,
       ])
@@ -318,7 +365,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         title: 'Ciclo Global Concluído',
         description: 'Todos os dados foram sincronizados.',
       })
-    }, 1000)
+    }, 1500)
   }
 
   const markAlertRead = (id: string) => {
@@ -352,6 +399,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         testTelegramConnection,
         testApifyConnection,
         testClaudeConnection,
+        testSupabaseConnection,
       }}
     >
       {children}

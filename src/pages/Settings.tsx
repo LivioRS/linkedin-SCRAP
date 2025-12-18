@@ -65,6 +65,7 @@ export default function Settings() {
     testTelegramConnection,
     testApifyConnection,
     testClaudeConnection,
+    testSupabaseConnection,
   } = useAppStore()
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({})
   const [isSaving, setIsSaving] = useState(false)
@@ -90,7 +91,7 @@ export default function Settings() {
   }
 
   const handleTest = async (
-    service: 'telegram' | 'apify' | 'claude',
+    service: 'telegram' | 'apify' | 'claude' | 'supabase',
     testFn: () => Promise<boolean>,
   ) => {
     setTestingStatus((prev) => ({ ...prev, [service]: true }))
@@ -333,29 +334,45 @@ export default function Settings() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Supabase Anon Key</FormLabel>
-                            <div className="relative">
-                              <FormControl>
-                                <Input
-                                  type={
-                                    showSecrets.supabaseKey
-                                      ? 'text'
-                                      : 'password'
-                                  }
-                                  placeholder="eyJ..."
-                                  {...field}
-                                />
-                              </FormControl>
+                            <div className="flex gap-2">
+                              <div className="relative flex-1">
+                                <FormControl>
+                                  <Input
+                                    type={
+                                      showSecrets.supabaseKey
+                                        ? 'text'
+                                        : 'password'
+                                    }
+                                    placeholder="eyJ..."
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                  onClick={() => toggleSecret('supabaseKey')}
+                                >
+                                  {showSecrets.supabaseKey ? (
+                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </div>
                               <Button
                                 type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                onClick={() => toggleSecret('supabaseKey')}
+                                variant="outline"
+                                onClick={() =>
+                                  handleTest('supabase', testSupabaseConnection)
+                                }
+                                disabled={testingStatus.supabase}
                               >
-                                {showSecrets.supabaseKey ? (
-                                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                {testingStatus.supabase ? (
+                                  <Wifi className="h-4 w-4 animate-spin" />
                                 ) : (
-                                  <Eye className="h-4 w-4 text-muted-foreground" />
+                                  'Testar'
                                 )}
                               </Button>
                             </div>
