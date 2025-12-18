@@ -34,6 +34,7 @@ import {
   AlertCircle,
   Activity,
   ArrowUpRight,
+  CheckCircle2,
 } from 'lucide-react'
 import { SentimentBadge } from '@/components/SentimentBadge'
 import { Button } from '@/components/ui/button'
