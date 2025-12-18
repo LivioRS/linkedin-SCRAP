@@ -33,30 +33,18 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  ResponsiveContainer,
 } from 'recharts'
 import { Lightbulb, Activity } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 export default function Analysis() {
   const { clients, metrics, posts } = useAppStore()
-
   const [period, setPeriod] = useState('30')
 
-  // -- Charts Data Preparation --
-
-  // 1. Share of Voice (Pie Chart)
-  // Calculate total posts per client
   const shareOfVoiceData = clients
-    .map((client) => {
-      const clientPostsCount = posts.filter(
-        (p) => p.clientId === client.id,
-      ).length
-      return {
-        name: client.name,
-        value: clientPostsCount,
-      }
-    })
+    .map((client) => ({
+      name: client.name,
+      value: posts.filter((p) => p.clientId === client.id).length,
+    }))
     .filter((d) => d.value > 0)
 
   const pieChartConfig: ChartConfig = clients.reduce((acc, client, index) => {
@@ -67,8 +55,6 @@ export default function Analysis() {
     return acc
   }, {} as ChartConfig)
 
-  // 2. Sentiment Trends (Line Chart)
-  // Get unique dates from metrics
   const dates = Array.from(new Set(metrics.map((m) => m.date))).sort()
   const trendData = dates
     .map((date) => {
@@ -83,20 +69,14 @@ export default function Analysis() {
     })
     .slice(-parseInt(period))
 
-  const trendChartConfig: ChartConfig = {
-    ...pieChartConfig,
-  }
+  const trendChartConfig: ChartConfig = { ...pieChartConfig }
 
-  // 3. Engagement Comparison (Bar Chart)
   const engagementData = clients.map((client) => {
     const clientMetrics = metrics.filter((m) => m.clientId === client.id)
     const avgEngagement =
       clientMetrics.reduce((sum, m) => sum + m.engagementRate, 0) /
       (clientMetrics.length || 1)
-    return {
-      name: client.name,
-      engagement: avgEngagement * 100, // Percentage
-    }
+    return { name: client.name, engagement: avgEngagement * 100 }
   })
 
   const barChartConfig: ChartConfig = {
@@ -107,18 +87,16 @@ export default function Analysis() {
     ...pieChartConfig,
   }
 
-  // Insights Logic
   const ownClient = clients.find((c) => c.type === 'own')
   const competitors = clients.filter((c) => c.type === 'competitor')
-
   const ownEngagement =
     engagementData.find((d) => d.name === ownClient?.name)?.engagement || 0
   const avgCompEngagement =
-    competitors.reduce((sum, c) => {
-      return (
-        sum + (engagementData.find((d) => d.name === c.name)?.engagement || 0)
-      )
-    }, 0) / (competitors.length || 1)
+    competitors.reduce(
+      (sum, c) =>
+        sum + (engagementData.find((d) => d.name === c.name)?.engagement || 0),
+      0,
+    ) / (competitors.length || 1)
 
   return (
     <div className="space-y-6">
@@ -145,9 +123,7 @@ export default function Analysis() {
           </Select>
         </div>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Share of Voice */}
         <Card>
           <CardHeader>
             <CardTitle>Share of Voice</CardTitle>
@@ -184,8 +160,6 @@ export default function Analysis() {
             </ChartContainer>
           </CardContent>
         </Card>
-
-        {/* Engagement Comparison */}
         <Card>
           <CardHeader>
             <CardTitle>Comparativo de Engajamento</CardTitle>
@@ -228,8 +202,6 @@ export default function Analysis() {
             </ChartContainer>
           </CardContent>
         </Card>
-
-        {/* Sentiment Trends - Full Width */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Evolução de Sentimento</CardTitle>
@@ -279,13 +251,10 @@ export default function Analysis() {
           </CardContent>
         </Card>
       </div>
-
-      {/* AI Insights Block */}
       <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-100 dark:from-indigo-950/30 dark:to-purple-950/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-indigo-800 dark:text-indigo-300">
-            <Lightbulb className="h-5 w-5" />
-            Insights Competitivos (Claude AI)
+            <Lightbulb className="h-5 w-5" /> Insights Competitivos (Claude AI)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -316,7 +285,6 @@ export default function Analysis() {
               </div>
             </div>
           )}
-
           <div className="p-3 bg-white/60 dark:bg-black/20 rounded-lg">
             <p className="text-sm text-muted-foreground">
               "A análise de tendências mostra que{' '}

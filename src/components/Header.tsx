@@ -34,7 +34,6 @@ export function AppHeader({ title }: { title: string }) {
   return (
     <header className="h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b flex items-center justify-between px-6 sticky top-0 z-20">
       <h1 className="text-xl font-semibold text-foreground">{title}</h1>
-
       <div className="flex items-center gap-4">
         <div className="relative hidden sm:block w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -44,7 +43,6 @@ export function AppHeader({ title }: { title: string }) {
             className="pl-9 h-9 bg-secondary border-none"
           />
         </div>
-
         <HoverCard openDelay={0} closeDelay={200}>
           <HoverCardTrigger asChild>
             <Button

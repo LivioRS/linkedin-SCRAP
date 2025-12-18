@@ -34,7 +34,7 @@ export interface Comment {
 
 export interface Alert {
   id: string
-  type: 'sentiment_drop' | 'engagement_spike' | 'competitor_move'
+  type: 'sentiment_drop' | 'engagement_spike' | 'competitor_move' | 'custom'
   message: string
   severity: 'low' | 'medium' | 'high'
   createdAt: string
@@ -82,4 +82,19 @@ export interface Settings {
     frequency: 'hourly' | 'daily' | 'weekly'
     retentionDays: number
   }
+}
+
+export interface DashboardWidget {
+  id: string
+  type: 'kpi' | 'chart' | 'list' | 'table'
+  title: string
+  config: Record<string, any>
+  position: { x: number; y: number; w: number; h: number }
+  visible: boolean
+}
+
+export interface ApiConfig {
+  apifyApiKey?: string
+  telegramBotToken?: string
+  telegramChatId?: string
 }

@@ -104,69 +104,7 @@ const DEFAULT_SETTINGS: Settings = {
     alertOnCompetitor: true,
     alertOnSpike: false,
   },
-  scraping: {
-    frequency: 'daily',
-    retentionDays: 90,
-  },
-}
-
-const GENERATE_COMMENTS = (postId: string, count: number): Comment[] => {
-  return Array.from({ length: count }).map((_, i) => ({
-    id: `comment-${postId}-${i}`,
-    postId,
-    author: `User ${Math.floor(Math.random() * 1000)}`,
-    content:
-      i % 2 === 0
-        ? 'Ótima iniciativa! Parabéns pela inovação.'
-        : 'Acho que poderiam melhorar o suporte neste aspecto.',
-    sentimentScore: i % 2 === 0 ? 0.8 : -0.3,
-    postedAt: new Date(Date.now() - Math.random() * 86400000).toISOString(),
-  }))
-}
-
-const GENERATE_MOCK_POSTS = (
-  clientId: string,
-): {
-  posts: Post[]
-  comments: Comment[]
-} => {
-  const posts: Post[] = []
-  const comments: Comment[] = []
-
-  Array.from({ length: 15 }).forEach((_, i) => {
-    const postId = `${clientId}-post-${i}`
-    const sentimentScore = i % 3 === 0 ? 0.8 : i % 3 === 1 ? -0.4 : 0.1
-    const postComments = GENERATE_COMMENTS(
-      postId,
-      Math.floor(Math.random() * 8),
-    )
-
-    posts.push({
-      id: postId,
-      clientId,
-      content:
-        i % 2 === 0
-          ? `Estamos expandindo nossas operações em IA para melhor atender o mercado! #Tech #Growth 🚀`
-          : `Lamentamos a instabilidade recente. Nossa equipe técnica já resolveu o incidente. 🛠️`,
-      likes: Math.floor(Math.random() * 500) + 10,
-      comments: postComments.length,
-      shares: Math.floor(Math.random() * 20),
-      views: Math.floor(Math.random() * 5000) + 1000,
-      sentimentScore,
-      sentimentExplanation:
-        sentimentScore > 0.5
-          ? 'O conteúdo destaca crescimento e inovação, gerando reações positivas sobre o futuro da empresa.'
-          : sentimentScore < -0.3
-            ? 'O reconhecimento de falhas técnicas gerou frustração, embora a transparência tenha sido notada.'
-            : 'Conteúdo informativo com recepção neutra pela audiência.',
-      postedAt: new Date(Date.now() - i * 86400000).toISOString(),
-      url: '#',
-    })
-
-    comments.push(...postComments)
-  })
-
-  return { posts, comments }
+  scraping: { frequency: 'daily', retentionDays: 90 },
 }
 
 const GENERATE_MOCK_METRICS = (clients: Client[]): DailyMetric[] => {
@@ -179,7 +117,7 @@ const GENERATE_MOCK_METRICS = (clients: Client[]): DailyMetric[] => {
           .toISOString()
           .split('T')[0],
         clientId: client.id,
-        sentimentScore: Math.random() * 1.5 - 0.5, // range -0.5 to 1
+        sentimentScore: Math.random() * 1.5 - 0.5,
         engagementRate: Math.random() * 0.08 + 0.01,
         postsCount: Math.floor(Math.random() * 4),
       })
@@ -216,19 +154,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     youtube: 'idle',
   })
 
-  // Initialize data
   useEffect(() => {
-    let allPosts: Post[] = []
-    let allComments: Comment[] = []
-
-    clients.forEach((c) => {
-      const data = GENERATE_MOCK_POSTS(c.id)
-      allPosts = [...allPosts, ...data.posts]
-      allComments = [...allComments, ...data.comments]
-    })
-
-    setPosts(allPosts)
-    setComments(allComments)
     setMetrics(GENERATE_MOCK_METRICS(clients))
   }, [])
 
@@ -243,13 +169,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       avatarUrl: `https://img.usecurling.com/i?q=${newClientData.industry}&shape=outline`,
     }
     setClients((prev) => [...prev, newClient])
-
-    // Generate initial data for new client
-    const data = GENERATE_MOCK_POSTS(newClient.id)
-    setPosts((prev) => [...prev, ...data.posts])
-    setComments((prev) => [...prev, ...data.comments])
     setMetrics((prev) => [...prev, ...GENERATE_MOCK_METRICS([newClient])])
-
     toast({
       title: 'Cliente Adicionado',
       description: `${newClient.name} foi adicionado ao monitoramento.`,
@@ -258,7 +178,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const updateSettings = (newSettings: Partial<Settings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }))
-    console.log('Settings persisted:', newSettings)
     toast({
       title: 'Configurações Salvas',
       description: 'As alterações foram aplicadas com sucesso.',
@@ -277,12 +196,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       })
       return false
     }
-
     const result = await validateTelegramConfig({
       botToken: settings.apiKeys.telegramBot,
       chatId: settings.notifications.telegramChatId,
     })
-
     if (result.valid) {
       toast({
         title: 'Sucesso',
@@ -309,18 +226,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       return false
     }
     const isValid = await validateApifyKey(settings.apiKeys.apify)
-    if (isValid) {
+    if (isValid)
       toast({
         title: 'Conectado ao Apify',
         description: 'Token validado com sucesso.',
       })
-    } else {
+    else
       toast({
         title: 'Erro de Autenticação',
         description: 'Token do Apify inválido.',
         variant: 'destructive',
       })
-    }
     return isValid
   }
 
@@ -334,18 +250,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       return false
     }
     const isValid = await validateClaudeKey(settings.apiKeys.anthropic)
-    if (isValid) {
+    if (isValid)
       toast({
         title: 'Conectado ao Claude',
         description: 'Chave API validada com sucesso.',
       })
-    } else {
+    else
       toast({
         title: 'Erro de Autenticação',
         description: 'Chave API do Claude inválida.',
         variant: 'destructive',
       })
-    }
     return isValid
   }
 
@@ -357,41 +272,30 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       description: 'Conectando aos scrapers configurados...',
     })
 
-    // Reset status
     const initialStatus: ScrapingStatus = {}
     Object.keys(settings.platforms).forEach((p) => {
-      if (settings.platforms[p as keyof typeof settings.platforms]) {
-        initialStatus[p] = 'loading'
-      } else {
-        initialStatus[p] = 'idle'
-      }
+      initialStatus[p] = settings.platforms[
+        p as keyof typeof settings.platforms
+      ]
+        ? 'loading'
+        : 'idle'
     })
     setScrapingStatus(initialStatus)
 
-    // Simulate process per platform
     const platforms = Object.keys(initialStatus).filter(
       (p) => initialStatus[p] === 'loading',
     )
 
     for (const platform of platforms) {
-      // Fake delay per platform
       await new Promise((resolve) => setTimeout(resolve, 1500))
       setScrapingStatus((prev) => ({ ...prev, [platform]: 'success' }))
-      toast({
-        title: `Coleta ${platform.charAt(0).toUpperCase() + platform.slice(1)}`,
-        description: 'Dados recebidos e processados.',
-      })
     }
 
-    // Finish
     setTimeout(() => {
-      // Simulate Step 2: Analysis
       toast({
         title: 'Análise de IA (Claude)',
         description: 'Processando sentimento e contexto...',
       })
-
-      // Simulate Data Updates
       setClients((prev) =>
         prev.map((c) => ({
           ...c,
@@ -399,27 +303,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           lastUpdated: new Date().toISOString(),
         })),
       )
-
-      // Add new post for random client
-      const randomClient = clients[Math.floor(Math.random() * clients.length)]
-      if (randomClient) {
-        const newPost: Post = {
-          id: `new-post-${Date.now()}`,
-          clientId: randomClient.id,
-          content: `Novo post detectado durante o scrape global! Análise em tempo real. #Update`,
-          likes: Math.floor(Math.random() * 100),
-          comments: 5,
-          shares: 2,
-          views: 150,
-          sentimentScore: 0.75,
-          sentimentExplanation:
-            'Post capturado recentemente demonstrando alta relevância.',
-          postedAt: new Date().toISOString(),
-          url: '#',
-        }
-        setPosts((prev) => [newPost, ...prev])
-      }
-
       setScrapingLogs((prev) => [
         {
           id: Math.random().toString(),
@@ -430,7 +313,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         },
         ...prev,
       ])
-
       setIsScraping(false)
       toast({
         title: 'Ciclo Global Concluído',
@@ -445,10 +327,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     )
   }
 
-  const getMetricsByClient = (clientId: string) => {
-    return metrics.filter((m) => m.clientId === clientId)
-  }
-
+  const getMetricsByClient = (clientId: string) =>
+    metrics.filter((m) => m.clientId === clientId)
   const getClientById = (id: string) => clients.find((c) => c.id === id)
 
   return (
@@ -481,8 +361,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
 export default function useAppStore() {
   const context = useContext(AppContext)
-  if (!context) {
+  if (!context)
     throw new Error('useAppStore must be used within an AppProvider')
-  }
   return context
 }

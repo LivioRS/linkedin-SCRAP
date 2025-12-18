@@ -41,7 +41,6 @@ export default function Feed() {
   const { posts, comments, clients } = useAppStore()
   const [searchParams] = useSearchParams()
   const initialSearch = searchParams.get('search') || ''
-
   const [searchTerm, setSearchTerm] = useState(initialSearch)
   const [sentimentFilter, setSentimentFilter] = useState('all')
 
@@ -95,12 +94,10 @@ export default function Feed() {
           </Select>
         </div>
       </div>
-
       <div className="grid grid-cols-1 gap-6">
         {filteredPosts.map((post) => {
           const client = clients.find((c) => c.id === post.clientId)
           const postComments = comments.filter((c) => c.postId === post.id)
-
           return (
             <Card
               key={post.id}
@@ -197,7 +194,6 @@ export default function Feed() {
                             </span>
                           </div>
                         </div>
-
                         <div className="space-y-2">
                           <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                             Raciocínio da IA
@@ -210,8 +206,6 @@ export default function Feed() {
                     </SheetContent>
                   </Sheet>
                 </div>
-
-                {/* Comments Section */}
                 {postComments.length > 0 && (
                   <Accordion
                     type="single"
@@ -221,8 +215,8 @@ export default function Feed() {
                     <AccordionItem value="comments" className="border-none">
                       <AccordionTrigger className="text-sm text-muted-foreground py-2 hover:no-underline hover:text-foreground">
                         <div className="flex items-center gap-2">
-                          <MessageSquareText className="h-4 w-4" />
-                          Ver {postComments.length} comentários analisados
+                          <MessageSquareText className="h-4 w-4" /> Ver{' '}
+                          {postComments.length} comentários analisados
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>

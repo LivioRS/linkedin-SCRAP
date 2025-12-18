@@ -222,7 +222,6 @@ export default function Clients() {
           </DialogContent>
         </Dialog>
       </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Base de Monitoramento</CardTitle>

@@ -1,9 +1,5 @@
-/**
- * Módulos de monitoramento para diferentes plataformas sociais
- */
-
-import { scrapeLinkedIn, ApifyScrapeResult } from '../api/apify'
-import { analyzeSentiment, AnalyzeContentParams } from '../api/claude'
+import { scrapeLinkedIn } from '../api/apify'
+import { analyzeSentiment } from '../api/claude'
 import { sendAlert, TelegramConfig } from '../api/telegram'
 import { Post, Client } from '@/types'
 
@@ -21,17 +17,6 @@ export interface PlatformScraper {
   ) => Promise<{ success: boolean; posts: Post[]; error?: string }>
 }
 
-export interface PlatformConfig {
-  platform: Platform
-  apiKey?: string
-  accessToken?: string
-  taskId?: string
-  enabled: boolean
-}
-
-/**
- * Módulo de monitoramento do LinkedIn
- */
 export class LinkedInMonitor implements PlatformScraper {
   async scrape(
     client: Client,
@@ -39,26 +24,15 @@ export class LinkedInMonitor implements PlatformScraper {
   ): Promise<{ success: boolean; posts: Post[]; error?: string }> {
     try {
       const result = await scrapeLinkedIn(
-        {
-          apiKey: config.apifyApiKey,
-          taskId: config.apifyTaskId,
-        },
+        { apiKey: config.apifyApiKey, taskId: config.apifyTaskId },
         client.url,
-        {
-          maxPosts: 50,
-          maxComments: 10,
-        },
+        { maxPosts: 50, maxComments: 10 },
       )
 
       if (!result.success || !result.data) {
-        return {
-          success: false,
-          posts: [],
-          error: result.error,
-        }
+        return { success: false, posts: [], error: result.error }
       }
 
-      // Converter dados do Apify para formato interno
       const posts: Post[] = result.data.map((item: any, index: number) => ({
         id: `linkedin-${client.id}-${index}`,
         clientId: client.id,
@@ -67,7 +41,7 @@ export class LinkedInMonitor implements PlatformScraper {
         comments: item.comments || 0,
         shares: item.shares || 0,
         views: item.views || 0,
-        sentimentScore: 0, // Será preenchido pela análise
+        sentimentScore: 0,
         sentimentExplanation: '',
         postedAt: item.postedAt || item.createdAt || new Date().toISOString(),
         url: item.url || item.link || '#',
@@ -78,22 +52,18 @@ export class LinkedInMonitor implements PlatformScraper {
       return {
         success: false,
         posts: [],
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        error: error instanceof Error ? error.message : 'Erro',
       }
     }
   }
 }
 
-/**
- * Módulo de monitoramento do Instagram
- */
 export class InstagramMonitor implements PlatformScraper {
   async scrape(
     client: Client,
     config: { apifyApiKey: string; apifyTaskId?: string },
   ): Promise<{ success: boolean; posts: Post[]; error?: string }> {
     try {
-      // Usar Apify com actor específico do Instagram
       const result = await scrapeLinkedIn(
         {
           apiKey: config.apifyApiKey,
@@ -101,18 +71,11 @@ export class InstagramMonitor implements PlatformScraper {
           taskId: config.apifyTaskId,
         },
         client.url,
-        {
-          maxPosts: 30,
-          maxComments: 5,
-        },
+        { maxPosts: 30, maxComments: 5 },
       )
 
       if (!result.success || !result.data) {
-        return {
-          success: false,
-          posts: [],
-          error: result.error,
-        }
+        return { success: false, posts: [], error: result.error }
       }
 
       const posts: Post[] = result.data.map((item: any, index: number) => ({
@@ -121,7 +84,7 @@ export class InstagramMonitor implements PlatformScraper {
         content: item.caption || item.text || '',
         likes: item.likesCount || item.likes || 0,
         comments: item.commentsCount || item.comments || 0,
-        shares: 0, // Instagram não tem shares
+        shares: 0,
         views: item.viewsCount || item.views || 0,
         sentimentScore: 0,
         sentimentExplanation: '',
@@ -134,39 +97,26 @@ export class InstagramMonitor implements PlatformScraper {
       return {
         success: false,
         posts: [],
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        error: error instanceof Error ? error.message : 'Erro',
       }
     }
   }
 }
 
-/**
- * Módulo de monitoramento do Facebook
- */
 export class FacebookMonitor implements PlatformScraper {
   async scrape(
     client: Client,
-    config: { apifyApiKey: string; accessToken?: string },
+    config: { apifyApiKey: string },
   ): Promise<{ success: boolean; posts: Post[]; error?: string }> {
     try {
-      // Usar Apify com actor específico do Facebook
       const result = await scrapeLinkedIn(
-        {
-          apiKey: config.apifyApiKey,
-          actorId: 'apify/facebook-scraper',
-        },
+        { apiKey: config.apifyApiKey, actorId: 'apify/facebook-scraper' },
         client.url,
-        {
-          maxPosts: 30,
-        },
+        { maxPosts: 30 },
       )
 
       if (!result.success || !result.data) {
-        return {
-          success: false,
-          posts: [],
-          error: result.error,
-        }
+        return { success: false, posts: [], error: result.error }
       }
 
       const posts: Post[] = result.data.map((item: any, index: number) => ({
@@ -189,39 +139,26 @@ export class FacebookMonitor implements PlatformScraper {
       return {
         success: false,
         posts: [],
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        error: error instanceof Error ? error.message : 'Erro',
       }
     }
   }
 }
 
-/**
- * Módulo de monitoramento do X (Twitter)
- */
 export class TwitterMonitor implements PlatformScraper {
   async scrape(
     client: Client,
-    config: { apifyApiKey: string; accessToken?: string },
+    config: { apifyApiKey: string },
   ): Promise<{ success: boolean; posts: Post[]; error?: string }> {
     try {
-      // Usar Apify com actor específico do Twitter/X
       const result = await scrapeLinkedIn(
-        {
-          apiKey: config.apifyApiKey,
-          actorId: 'apify/twitter-scraper',
-        },
+        { apiKey: config.apifyApiKey, actorId: 'apify/twitter-scraper' },
         client.url,
-        {
-          maxPosts: 50,
-        },
+        { maxPosts: 50 },
       )
 
       if (!result.success || !result.data) {
-        return {
-          success: false,
-          posts: [],
-          error: result.error,
-        }
+        return { success: false, posts: [], error: result.error }
       }
 
       const posts: Post[] = result.data.map((item: any, index: number) => ({
@@ -243,39 +180,26 @@ export class TwitterMonitor implements PlatformScraper {
       return {
         success: false,
         posts: [],
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        error: error instanceof Error ? error.message : 'Erro',
       }
     }
   }
 }
 
-/**
- * Módulo de monitoramento do YouTube
- */
 export class YouTubeMonitor implements PlatformScraper {
   async scrape(
     client: Client,
-    config: { apifyApiKey: string; apiKey?: string },
+    config: { apifyApiKey: string },
   ): Promise<{ success: boolean; posts: Post[]; error?: string }> {
     try {
-      // Usar Apify com actor específico do YouTube
       const result = await scrapeLinkedIn(
-        {
-          apiKey: config.apifyApiKey,
-          actorId: 'apify/youtube-scraper',
-        },
+        { apiKey: config.apifyApiKey, actorId: 'apify/youtube-scraper' },
         client.url,
-        {
-          maxPosts: 20,
-        },
+        { maxPosts: 20 },
       )
 
       if (!result.success || !result.data) {
-        return {
-          success: false,
-          posts: [],
-          error: result.error,
-        }
+        return { success: false, posts: [], error: result.error }
       }
 
       const posts: Post[] = result.data.map((item: any, index: number) => ({
@@ -298,15 +222,12 @@ export class YouTubeMonitor implements PlatformScraper {
       return {
         success: false,
         posts: [],
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        error: error instanceof Error ? error.message : 'Erro',
       }
     }
   }
 }
 
-/**
- * Factory para obter o monitor correto baseado na plataforma
- */
 export function getPlatformMonitor(platform: Platform): PlatformScraper {
   switch (platform) {
     case 'linkedin':
@@ -324,9 +245,6 @@ export function getPlatformMonitor(platform: Platform): PlatformScraper {
   }
 }
 
-/**
- * Processa posts coletados: analisa sentimento e envia alertas se necessário
- */
 export async function processPosts(
   posts: Post[],
   config: {
@@ -342,12 +260,10 @@ export async function processPosts(
     telegramConfig,
     alertThreshold = -0.3,
   } = config
-
   const processedPosts: Post[] = []
 
   for (const post of posts) {
     try {
-      // Analisar sentimento
       const analysis = await analyzeSentiment(
         { apiKey: claudeApiKey, model: claudeModel },
         {
@@ -367,10 +283,8 @@ export async function processPosts(
         sentimentScore: analysis.sentimentScore,
         sentimentExplanation: analysis.sentimentExplanation,
       }
-
       processedPosts.push(processedPost)
 
-      // Enviar alerta se necessário
       if (telegramConfig && processedPost.sentimentScore < alertThreshold) {
         await sendAlert(telegramConfig, {
           type: 'sentiment_drop',
@@ -380,15 +294,11 @@ export async function processPosts(
           url: processedPost.url,
         })
       }
-
-      // Aguardar um pouco para evitar rate limits
       await new Promise((resolve) => setTimeout(resolve, 500))
     } catch (error) {
       console.error(`Erro ao processar post ${post.id}:`, error)
-      // Adicionar post mesmo com erro, mas sem análise
       processedPosts.push(post)
     }
   }
-
   return processedPosts
 }

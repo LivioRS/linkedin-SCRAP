@@ -57,7 +57,6 @@ export default function Alerts() {
           Notificações automáticas enviadas para o bot configurado.
         </p>
       </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Histórico de Notificações</CardTitle>
@@ -106,7 +105,6 @@ export default function Alerts() {
                       </span>
                     </div>
                   </div>
-
                   <div className="flex gap-2 self-end md:self-center">
                     {!alert.isRead && (
                       <Button

@@ -1,7 +1,3 @@
-/**
- * Serviço de integração com Apify para coleta de dados
- */
-
 export interface ApifyConfig {
   apiKey: string
   actorId?: string
@@ -28,9 +24,6 @@ export interface LinkedInPost {
   postedAt: string
 }
 
-/**
- * Executa scraping do LinkedIn usando Apify
- */
 export async function scrapeLinkedIn(
   config: ApifyConfig,
   companyUrl: string,
@@ -47,7 +40,6 @@ export async function scrapeLinkedIn(
       throw new Error('API Key do Apify não configurada')
     }
 
-    // Se tiver taskId, usar task existente
     if (taskId) {
       const runResponse = await fetch(
         `https://api.apify.com/v2/actor-tasks/${taskId}/runs`,
@@ -73,13 +65,12 @@ export async function scrapeLinkedIn(
       const runData = await runResponse.json()
       const runId = runData.data.id
 
-      // Aguardar conclusão do run
       let status = 'RUNNING'
       let attempts = 0
-      const maxAttempts = 60 // 5 minutos máximo
+      const maxAttempts = 60
 
       while (status === 'RUNNING' && attempts < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, 5000)) // Aguardar 5s
+        await new Promise((resolve) => setTimeout(resolve, 5000))
 
         const statusResponse = await fetch(
           `https://api.apify.com/v2/actor-runs/${runId}`,
@@ -100,7 +91,6 @@ export async function scrapeLinkedIn(
         throw new Error(`Scraping falhou com status: ${status}`)
       }
 
-      // Buscar resultados
       const resultsResponse = await fetch(
         `https://api.apify.com/v2/actor-runs/${runId}/dataset/items`,
         {
@@ -120,7 +110,6 @@ export async function scrapeLinkedIn(
       }
     }
 
-    // Usar actor diretamente
     const runResponse = await fetch(
       `https://api.apify.com/v2/acts/${actorId}/runs`,
       {
@@ -145,7 +134,6 @@ export async function scrapeLinkedIn(
     const runData = await runResponse.json()
     const runId = runData.data.id
 
-    // Aguardar conclusão
     let status = 'RUNNING'
     let attempts = 0
     const maxAttempts = 60
@@ -171,7 +159,6 @@ export async function scrapeLinkedIn(
       throw new Error(`Scraping falhou com status: ${status}`)
     }
 
-    // Buscar resultados
     const resultsResponse = await fetch(
       `https://api.apify.com/v2/actor-runs/${runId}/dataset/items`,
       {
@@ -199,9 +186,6 @@ export async function scrapeLinkedIn(
   }
 }
 
-/**
- * Valida a API Key do Apify
- */
 export async function validateApifyKey(apiKey: string): Promise<boolean> {
   try {
     const response = await fetch('https://api.apify.com/v2/users/me', {

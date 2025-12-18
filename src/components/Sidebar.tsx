@@ -15,7 +15,6 @@ import useAppStore from '@/stores/useAppStore'
 export function AppSidebar() {
   const { pathname } = useLocation()
   const { alerts } = useAppStore()
-
   const unreadAlerts = alerts.filter((a) => !a.isRead).length
 
   const menuItems = [
@@ -40,7 +39,6 @@ export function AppSidebar() {
           ReputaMonitor
         </span>
       </div>
-
       <div className="flex-1 py-6 px-4 space-y-1">
         {menuItems.map((item) => (
           <Link
@@ -73,7 +71,6 @@ export function AppSidebar() {
           </Link>
         ))}
       </div>
-
       <div className="p-4 border-t border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">

@@ -32,17 +32,13 @@ function LayoutContent() {
   const title = getPageTitle(pathname)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsMobileOpen(false)
   }, [pathname])
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      {/* Desktop Sidebar */}
       <AppSidebar />
-
-      {/* Mobile Sidebar */}
       <div className="md:hidden fixed top-4 left-4 z-50">
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
           <SheetTrigger asChild>
@@ -55,7 +51,6 @@ function LayoutContent() {
           </SheetContent>
         </Sheet>
       </div>
-
       <div className="flex-1 md:ml-[260px] flex flex-col min-h-screen transition-all duration-300 ease-in-out">
         <AppHeader title={title} />
         <main className="flex-1 p-6 overflow-y-auto">

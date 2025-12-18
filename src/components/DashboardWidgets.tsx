@@ -27,7 +27,13 @@ import {
   YAxis,
   CartesianGrid,
 } from 'recharts'
-import { TrendingUp, Users, MessageSquare, AlertCircle, Activity } from 'lucide-react'
+import {
+  TrendingUp,
+  Users,
+  MessageSquare,
+  AlertCircle,
+  Activity,
+} from 'lucide-react'
 import { SentimentBadge } from '@/components/SentimentBadge'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
@@ -55,7 +61,9 @@ export function KPISentimentWidget({ clients, metrics }: WidgetProps) {
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{avgSentiment.toFixed(2)}</div>
-        <p className="text-xs text-muted-foreground">Sua marca (últimos 30 dias)</p>
+        <p className="text-xs text-muted-foreground">
+          Sua marca (últimos 30 dias)
+        </p>
       </CardContent>
     </Card>
   )
@@ -71,14 +79,18 @@ export function KPIEngagementWidget({ clients, metrics }: WidgetProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Taxa de Engajamento</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          Taxa de Engajamento
+        </CardTitle>
         <Activity className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">
           {(totalEngagement * 100).toFixed(1)}%
         </div>
-        <p className="text-xs text-muted-foreground">Média (Likes+Comentários/Views)</p>
+        <p className="text-xs text-muted-foreground">
+          Média (Likes+Comentários/Views)
+        </p>
       </CardContent>
     </Card>
   )
@@ -104,7 +116,9 @@ export function KPIPostsWidget({ clients, posts }: WidgetProps) {
 
 export function KPICompetitorsWidget({ clients }: WidgetProps) {
   const ownClient = clients.find((c) => c.type === 'own')
-  const activeCompetitors = clients.filter((c) => c.type === 'competitor').length
+  const activeCompetitors = clients.filter(
+    (c) => c.type === 'competitor',
+  ).length
 
   return (
     <Card>
@@ -272,7 +286,9 @@ export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
           <AlertCircle className="h-5 w-5 text-destructive" />
           Posts Críticos Recentes
         </CardTitle>
-        <CardDescription>Monitoramento de posts com sentimento negativo.</CardDescription>
+        <CardDescription>
+          Monitoramento de posts com sentimento negativo.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -285,7 +301,9 @@ export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
                   className="flex flex-col gap-2 p-3 border rounded-md bg-muted/20"
                 >
                   <div className="flex justify-between items-start">
-                    <span className="text-sm font-semibold">{client?.name}</span>
+                    <span className="text-sm font-semibold">
+                      {client?.name}
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       {new Date(post.postedAt).toLocaleDateString()}
                     </span>
@@ -318,7 +336,8 @@ export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
 export function ListRecentAlertsWidget({ alerts }: WidgetProps) {
   const recentAlerts = alerts
     .sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )
     .slice(0, 5)
 
@@ -338,7 +357,9 @@ export function ListRecentAlertsWidget({ alerts }: WidgetProps) {
               <div
                 key={alert.id}
                 className={`p-3 border rounded-md ${
-                  !alert.isRead ? 'bg-card border-l-4 border-l-primary' : 'bg-muted/20'
+                  !alert.isRead
+                    ? 'bg-card border-l-4 border-l-primary'
+                    : 'bg-muted/20'
                 }`}
               >
                 <div className="flex justify-between items-start mb-1">
@@ -391,4 +412,3 @@ export function renderWidget(
       return null
   }
 }
-

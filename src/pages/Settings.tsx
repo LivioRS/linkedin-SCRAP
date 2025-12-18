@@ -20,9 +20,8 @@ import {
   Globe,
   Bell,
   Database,
-  Send,
-  Download,
   FileText,
+  Download,
   Linkedin,
   Facebook,
   Instagram,
@@ -43,8 +42,14 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { toast } from '@/hooks/use-toast'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
-// Form Schemas
 const apiSchema = z.object({
   apify: z.string().min(5, 'Token Apify muito curto'),
   anthropic: z.string().min(5, 'Chave API Claude muito curta'),
@@ -108,7 +113,6 @@ export default function Settings() {
           Gerencie integrações, notificações e preferências do sistema.
         </p>
       </div>
-
       <Tabs defaultValue="integrations" className="space-y-6">
         <TabsList>
           <TabsTrigger value="integrations" className="gap-2">
@@ -125,7 +129,6 @@ export default function Settings() {
           </TabsTrigger>
         </TabsList>
 
-        {/* API Keys Tab */}
         <TabsContent value="integrations">
           <Card>
             <CardHeader>
@@ -141,7 +144,6 @@ export default function Settings() {
                   className="space-y-6"
                 >
                   <div className="grid gap-6 md:grid-cols-2">
-                    {/* APIfy Section */}
                     <div className="space-y-2">
                       <FormField
                         control={apiForm.control}
@@ -197,8 +199,6 @@ export default function Settings() {
                         )}
                       />
                     </div>
-
-                    {/* Claude Section */}
                     <div className="space-y-2">
                       <FormField
                         control={apiForm.control}
@@ -256,8 +256,6 @@ export default function Settings() {
                         )}
                       />
                     </div>
-
-                    {/* Telegram Section */}
                     <div className="space-y-2">
                       <FormField
                         control={apiForm.control}
@@ -312,8 +310,6 @@ export default function Settings() {
                         )}
                       />
                     </div>
-
-                    {/* Supabase Section */}
                     <div className="space-y-4">
                       <FormField
                         control={apiForm.control}
@@ -371,10 +367,11 @@ export default function Settings() {
                   </div>
                   <div className="flex justify-end">
                     <Button type="submit" disabled={isSaving}>
-                      {isSaving && (
+                      {isSaving ? (
                         <Save className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      {!isSaving && <Save className="mr-2 h-4 w-4" />}
+                      ) : (
+                        <Save className="mr-2 h-4 w-4" />
+                      )}{' '}
                       Salvar Alterações
                     </Button>
                   </div>
@@ -384,7 +381,6 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        {/* Platforms Tab */}
         <TabsContent value="platforms">
           <Card>
             <CardHeader>
@@ -462,7 +458,6 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        {/* Notifications Tab */}
         <TabsContent value="notifications">
           <Card>
             <CardHeader>
@@ -492,7 +487,6 @@ export default function Settings() {
                   </p>
                 </div>
               </div>
-
               <div className="space-y-4">
                 <h3 className="text-sm font-medium">Gatilhos de Notificação</h3>
                 <div className="space-y-4">
@@ -560,7 +554,6 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        {/* System Tab */}
         <TabsContent value="system">
           <Card>
             <CardHeader>
@@ -610,7 +603,6 @@ export default function Settings() {
                   </p>
                 </div>
               </div>
-
               <div className="space-y-4">
                 <h3 className="text-sm font-medium">Exportação de Dados</h3>
                 <div className="flex gap-4">

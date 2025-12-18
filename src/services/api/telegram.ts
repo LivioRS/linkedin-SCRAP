@@ -1,7 +1,3 @@
-/**
- * Serviço de integração com Telegram para envio de alertas
- */
-
 export interface TelegramConfig {
   botToken: string
   chatId: string
@@ -22,16 +18,12 @@ export interface AlertMessage {
   url?: string
 }
 
-/**
- * Envia uma mensagem para o Telegram
- */
 export async function sendTelegramMessage(
   config: TelegramConfig,
   message: TelegramMessage,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { botToken, chatId } = config
-
     if (!botToken || !chatId) {
       throw new Error('Bot Token ou Chat ID do Telegram não configurados')
     }
@@ -40,9 +32,7 @@ export async function sendTelegramMessage(
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: chatId,
         text: message.text,
@@ -71,16 +61,12 @@ export async function sendTelegramMessage(
   }
 }
 
-/**
- * Formata e envia um alerta para o Telegram
- */
 export async function sendAlert(
   config: TelegramConfig,
   alert: AlertMessage,
 ): Promise<{ success: boolean; error?: string }> {
   const { type, severity, title, message, clientName, url } = alert
 
-  // Emojis por tipo de alerta
   const typeEmojis: Record<string, string> = {
     sentiment_drop: '📉',
     engagement_spike: '⚡',
@@ -88,7 +74,6 @@ export async function sendAlert(
     custom: '📢',
   }
 
-  // Emojis por severidade
   const severityEmojis: Record<string, string> = {
     high: '🔴',
     medium: '🟡',
@@ -102,13 +87,8 @@ export async function sendAlert(
   formattedMessage += `${severityEmoji} <b>Severidade:</b> ${severity.toUpperCase()}\n\n`
   formattedMessage += `${message}\n`
 
-  if (clientName) {
-    formattedMessage += `\n<b>Cliente:</b> ${clientName}`
-  }
-
-  if (url) {
-    formattedMessage += `\n\n🔗 <a href="${url}">Ver detalhes</a>`
-  }
+  if (clientName) formattedMessage += `\n<b>Cliente:</b> ${clientName}`
+  if (url) formattedMessage += `\n\n🔗 <a href="${url}">Ver detalhes</a>`
 
   return sendTelegramMessage(config, {
     text: formattedMessage,
@@ -117,23 +97,15 @@ export async function sendAlert(
   })
 }
 
-/**
- * Valida a configuração do Telegram
- */
 export async function validateTelegramConfig(
   config: TelegramConfig,
 ): Promise<{ valid: boolean; error?: string }> {
   try {
     const { botToken, chatId } = config
-
     if (!botToken || !chatId) {
-      return {
-        valid: false,
-        error: 'Bot Token ou Chat ID não configurados',
-      }
+      return { valid: false, error: 'Bot Token ou Chat ID não configurados' }
     }
 
-    // Testar enviando uma mensagem de teste
     const testMessage: TelegramMessage = {
       text: '✅ Teste de conexão - Sistema de Monitoramento',
       parseMode: 'HTML',
@@ -152,39 +124,7 @@ export async function validateTelegramConfig(
   } catch (error) {
     return {
       valid: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Erro desconhecido na validação',
-    }
-  }
-}
-
-/**
- * Obtém informações do bot
- */
-export async function getBotInfo(
-  botToken: string,
-): Promise<{ success: boolean; data?: any; error?: string }> {
-  try {
-    const response = await fetch(
-      `https://api.telegram.org/bot${botToken}/getMe`,
-    )
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.description || 'Erro ao obter informações do bot')
-    }
-
-    const data = await response.json()
-    return { success: true, data: data.result }
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Erro desconhecido ao obter info',
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
     }
   }
 }

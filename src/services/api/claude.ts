@@ -1,18 +1,14 @@
-/**
- * Serviço de integração com Claude (Anthropic) para análise de sentimento
- */
-
 export interface ClaudeConfig {
   apiKey: string
   model?: string
 }
 
 export interface SentimentAnalysis {
-  sentimentScore: number // -1 a 1
+  sentimentScore: number
   sentimentExplanation: string
-  positive: number // 0-100
-  neutral: number // 0-100
-  negative: number // 0-100
+  positive: number
+  neutral: number
+  negative: number
   themes: string[]
   riskLevel: 'low' | 'medium' | 'high'
   recommendations?: string[]
@@ -30,9 +26,6 @@ export interface AnalyzeContentParams {
   }
 }
 
-/**
- * Analisa o sentimento de um conteúdo usando Claude
- */
 export async function analyzeSentiment(
   config: ClaudeConfig,
   params: AnalyzeContentParams,
@@ -46,44 +39,29 @@ export async function analyzeSentiment(
     }
 
     const prompt = `Você é um especialista em análise de sentimento e reputação online.
-
 Analise o seguinte conteúdo do ${platform}${author ? ` publicado por ${author}` : ''}:
-
 "${content}"
-
 ${
   metadata
-    ? `
-Métricas de engajamento:
+    ? `Métricas de engajamento:
 - Curtidas: ${metadata.likes || 0}
 - Comentários: ${metadata.comments || 0}
 - Compartilhamentos: ${metadata.shares || 0}
-${metadata.views ? `- Visualizações: ${metadata.views}` : ''}
-`
+${metadata.views ? `- Visualizações: ${metadata.views}` : ''}`
     : ''
 }
-
-Forneça uma análise detalhada respondendo em JSON puro (sem markdown, sem blocos de código) com a seguinte estrutura EXATA:
-
+Forneça uma análise detalhada respondendo em JSON puro com a seguinte estrutura EXATA:
 {
-  "sentimentScore": <número de -1 a 1, onde -1 é muito negativo e 1 é muito positivo>,
+  "sentimentScore": <número de -1 a 1>,
   "sentimentExplanation": "<explicação detalhada do sentimento em português>",
-  "positive": <porcentagem de 0 a 100>,
-  "neutral": <porcentagem de 0 a 100>,
-  "negative": <porcentagem de 0 a 100>,
-  "themes": ["<tema1>", "<tema2>", "<tema3>"],
-  "riskLevel": "<low, medium ou high>",
-  "recommendations": ["<recomendação1>", "<recomendação2>"]
+  "positive": <porcentagem 0-100>,
+  "neutral": <porcentagem 0-100>,
+  "negative": <porcentagem 0-100>,
+  "themes": ["<tema1>", "<tema2>"],
+  "riskLevel": "<low, medium, high>",
+  "recommendations": ["<recomendação1>"]
 }
-
-Critérios:
-- sentimentScore: -1 (muito negativo) a 1 (muito positivo)
-- positive + neutral + negative deve somar 100
-- riskLevel: low (score > 0.3), medium (-0.3 a 0.3), high (< -0.3)
-- themes: principais temas/tópicos identificados no conteúdo
-- recommendations: ações práticas para melhorar ou manter a reputação (se aplicável)
-
-Responda APENAS com o JSON, sem texto adicional.`
+Responda APENAS com o JSON.`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -95,12 +73,7 @@ Responda APENAS com o JSON, sem texto adicional.`
       body: JSON.stringify({
         model,
         max_tokens: 2000,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
+        messages: [{ role: 'user', content: prompt }],
       }),
     })
 
@@ -111,9 +84,8 @@ Responda APENAS com o JSON, sem texto adicional.`
 
     const data = await response.json()
     const contentText = data.content[0].text
-
-    // Extrair JSON da resposta
     const jsonMatch = contentText.match(/\{[\s\S]*\}/)
+
     if (!jsonMatch) {
       throw new Error('Resposta do Claude não contém JSON válido')
     }
@@ -139,36 +111,6 @@ Responda APENAS com o JSON, sem texto adicional.`
   }
 }
 
-/**
- * Analisa múltiplos conteúdos em batch
- */
-export async function analyzeBatch(
-  config: ClaudeConfig,
-  contents: AnalyzeContentParams[],
-): Promise<SentimentAnalysis[]> {
-  const results: SentimentAnalysis[] = []
-
-  // Processar em lotes para evitar rate limits
-  const batchSize = 5
-  for (let i = 0; i < contents.length; i += batchSize) {
-    const batch = contents.slice(i, i + batchSize)
-    const batchResults = await Promise.all(
-      batch.map((content) => analyzeSentiment(config, content)),
-    )
-    results.push(...batchResults)
-
-    // Aguardar entre lotes para evitar rate limits
-    if (i + batchSize < contents.length) {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-    }
-  }
-
-  return results
-}
-
-/**
- * Valida a API Key do Claude
- */
 export async function validateClaudeKey(apiKey: string): Promise<boolean> {
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -179,14 +121,11 @@ export async function validateClaudeKey(apiKey: string): Promise<boolean> {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-haiku-20240307',
         max_tokens: 10,
         messages: [{ role: 'user', content: 'test' }],
       }),
     })
-
-    // Se retornar erro de autenticação, a chave é inválida
-    // Se retornar outro erro (como validação), a chave é válida
     return response.status !== 401
   } catch {
     return false

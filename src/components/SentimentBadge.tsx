@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
 interface SentimentBadgeProps {
-  score: number // -1 to 1
+  score: number
 }
 
 export function SentimentBadge({ score }: SentimentBadgeProps) {
@@ -10,10 +10,10 @@ export function SentimentBadge({ score }: SentimentBadgeProps) {
 
   if (score > 0.3) {
     label = 'Positivo'
-    colorClass = 'bg-success-light text-green-700 border-green-200'
+    colorClass = 'bg-green-100 text-green-700 border-green-200'
   } else if (score < -0.3) {
     label = 'Negativo'
-    colorClass = 'bg-destructive-light text-red-700 border-red-200'
+    colorClass = 'bg-red-100 text-red-700 border-red-200'
   }
 
   return (
@@ -23,8 +23,7 @@ export function SentimentBadge({ score }: SentimentBadgeProps) {
         colorClass,
       )}
     >
-      {label}
-      <span className="ml-1 opacity-75">({score.toFixed(2)})</span>
+      {label} <span className="ml-1 opacity-75">({score.toFixed(2)})</span>
     </span>
   )
 }

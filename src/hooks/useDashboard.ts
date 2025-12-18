@@ -1,7 +1,3 @@
-/**
- * Hook para gerenciar dashboards personalizáveis
- */
-
 import { useState, useEffect } from 'react'
 import { DashboardWidget } from '@/types'
 
@@ -79,7 +75,6 @@ export function useDashboard() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Carregar widgets salvos
     const saved = localStorage.getItem(DASHBOARD_STORAGE_KEY)
     if (saved) {
       try {
@@ -124,10 +119,7 @@ export function useDashboard() {
   }
 
   const addWidget = (widget: Omit<DashboardWidget, 'id'>) => {
-    const newWidget: DashboardWidget = {
-      ...widget,
-      id: `widget-${Date.now()}`,
-    }
+    const newWidget: DashboardWidget = { ...widget, id: `widget-${Date.now()}` }
     saveWidgets([...widgets, newWidget])
   }
 
