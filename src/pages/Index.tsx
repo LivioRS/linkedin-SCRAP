@@ -33,9 +33,39 @@ import {
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
 import { SentimentBadge } from '@/components/SentimentBadge'
+import { DashboardCustomizer } from '@/components/DashboardCustomizer'
+import { exportToPDF, exportToCSV } from '@/services/export/reports'
+import { Download, FileDown } from 'lucide-react'
+import { subDays } from 'date-fns'
 
 export default function Index() {
-  const { clients, posts, metrics } = useAppStore()
+  const { clients, posts, metrics, alerts } = useAppStore()
+
+  const handleExportPDF = () => {
+    exportToPDF({
+      clients,
+      posts,
+      metrics,
+      alerts,
+      period: {
+        start: subDays(new Date(), 30),
+        end: new Date(),
+      },
+    })
+  }
+
+  const handleExportCSV = () => {
+    exportToCSV({
+      clients,
+      posts,
+      metrics,
+      alerts,
+      period: {
+        start: subDays(new Date(), 30),
+        end: new Date(),
+      },
+    })
+  }
 
   // Calculate Global KPIs for "Own" client
   const ownClient = clients.find((c) => c.type === 'own')
@@ -106,6 +136,26 @@ export default function Index() {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Visão geral do monitoramento de reputação
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <DashboardCustomizer />
+          <Button variant="outline" onClick={handleExportCSV}>
+            <FileDown className="h-4 w-4 mr-2" />
+            Exportar CSV
+          </Button>
+          <Button variant="outline" onClick={handleExportPDF}>
+            <Download className="h-4 w-4 mr-2" />
+            Exportar PDF
+          </Button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

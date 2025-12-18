@@ -7,6 +7,13 @@ export interface Client {
   status: 'idle' | 'processing' | 'success' | 'error'
   lastUpdated: string
   avatarUrl: string
+  platform?: 'linkedin' | 'instagram' | 'facebook' | 'twitter' | 'youtube'
+  platformConfig?: {
+    enabled: boolean
+    apiKey?: string
+    accessToken?: string
+    taskId?: string
+  }
 }
 
 export interface Post {
@@ -55,4 +62,25 @@ export interface ScrapingLog {
   status: 'success' | 'failed'
   itemsCollected: number
   durationMs: number
+  platform?: string
+  clientId?: string
+  error?: string
+}
+
+export interface ApiConfig {
+  apifyApiKey?: string
+  apifyTaskId?: string
+  claudeApiKey?: string
+  claudeModel?: string
+  telegramBotToken?: string
+  telegramChatId?: string
+}
+
+export interface DashboardWidget {
+  id: string
+  type: 'kpi' | 'chart' | 'table' | 'list'
+  title: string
+  config: any
+  position: { x: number; y: number; w: number; h: number }
+  visible: boolean
 }

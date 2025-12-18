@@ -6,6 +6,7 @@ import {
   BarChart2,
   Bell,
   ShieldCheck,
+  Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -28,6 +29,7 @@ export function AppSidebar() {
       path: '/alerts',
       badge: unreadAlerts > 0 ? unreadAlerts : null,
     },
+    { label: 'Configurações', icon: Settings, path: '/settings' },
   ]
 
   return (
