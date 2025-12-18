@@ -36,6 +36,8 @@ interface AppState {
   addClient: (
     client: Omit<Client, 'id' | 'status' | 'lastUpdated' | 'avatarUrl'>,
   ) => void
+  updateClient: (id: string, data: Partial<Client>) => void
+  removeClient: (id: string) => void
   triggerGlobalScrape: () => Promise<void>
   markAlertRead: (id: string) => void
   getMetricsByClient: (clientId: string) => DailyMetric[]
@@ -52,35 +54,35 @@ const AppContext = createContext<AppState | undefined>(undefined)
 const MOCK_CLIENTS: Client[] = [
   {
     id: '1',
-    name: 'TechFlow Solutions',
-    url: 'https://linkedin.com/company/techflow',
+    name: 'Grupo Plaenge',
+    url: 'https://linkedin.com/company/grupo-plaenge',
     type: 'own',
-    industry: 'Technology',
+    industry: 'Construção Civil',
     status: 'success',
     lastUpdated: new Date().toISOString(),
-    avatarUrl: 'https://img.usecurling.com/i?q=tech&color=blue&shape=fill',
+    avatarUrl: 'https://img.usecurling.com/i?q=plaenge&color=green&shape=fill',
   },
   {
     id: '2',
-    name: 'Innovate Corp',
-    url: 'https://linkedin.com/company/innovate',
+    name: 'Vanguard',
+    url: 'https://linkedin.com/company/vanguard-home',
     type: 'competitor',
-    industry: 'Technology',
+    industry: 'Construção Civil',
     status: 'idle',
     lastUpdated: new Date(Date.now() - 86400000).toISOString(),
     avatarUrl:
-      'https://img.usecurling.com/i?q=innovation&color=red&shape=outline',
+      'https://img.usecurling.com/i?q=vanguard&color=blue&shape=outline',
   },
   {
     id: '3',
-    name: 'NextGen Systems',
-    url: 'https://linkedin.com/company/nextgen',
+    name: 'A.Yoshii Engenharia',
+    url: 'https://linkedin.com/company/a-yoshii-engenharia',
     type: 'competitor',
-    industry: 'Technology',
+    industry: 'Construção Civil',
     status: 'success',
     lastUpdated: new Date(Date.now() - 172800000).toISOString(),
     avatarUrl:
-      'https://img.usecurling.com/i?q=systems&color=green&shape=lineal-color',
+      'https://img.usecurling.com/i?q=building&color=orange&shape=lineal-color',
   },
 ]
 
@@ -130,12 +132,20 @@ const GENERATE_MOCK_METRICS = (clients: Client[]): DailyMetric[] => {
 const MOCK_ALERTS: Alert[] = [
   {
     id: '1',
-    type: 'sentiment_drop',
-    message: 'Queda súbita de sentimento detectada para Innovate Corp (-20%).',
-    severity: 'high',
+    type: 'competitor_move',
+    message: 'A.Yoshii lançou novo empreendimento de alto padrão em Londrina.',
+    severity: 'medium',
     createdAt: new Date().toISOString(),
     isRead: false,
   },
+]
+
+const SAMPLE_POST_TEMPLATES = [
+  'Lançamento incrível do novo decorado! Venha conhecer o futuro do seu lar. #Luxo #Conforto',
+  'Orgulho de entregar mais uma obra antes do prazo. Compromisso com a qualidade.',
+  'Nossa equipe de engenharia inova mais uma vez com tecnologias sustentáveis.',
+  'O mercado imobiliário segue aquecido neste trimestre, ótima oportunidade para investir.',
+  'Evento de inauguração foi um sucesso absoluto. Obrigado a todos os parceiros!',
 ]
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
@@ -167,13 +177,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       id: Math.random().toString(36).substr(2, 9),
       status: 'idle',
       lastUpdated: new Date().toISOString(),
-      avatarUrl: `https://img.usecurling.com/i?q=${newClientData.industry}&shape=outline`,
+      avatarUrl: `https://img.usecurling.com/i?q=${newClientData.name.split(' ')[0]}&shape=outline`,
     }
     setClients((prev) => [...prev, newClient])
     setMetrics((prev) => [...prev, ...GENERATE_MOCK_METRICS([newClient])])
     toast({
       title: 'Cliente Adicionado',
       description: `${newClient.name} foi adicionado ao monitoramento.`,
+    })
+  }
+
+  const updateClient = (id: string, data: Partial<Client>) => {
+    setClients((prev) =>
+      prev.map((client) =>
+        client.id === id ? { ...client, ...data } : client,
+      ),
+    )
+    toast({
+      title: 'Cliente Atualizado',
+      description: 'As informações foram salvas com sucesso.',
+    })
+  }
+
+  const removeClient = (id: string) => {
+    setClients((prev) => prev.filter((client) => client.id !== id))
+    setMetrics((prev) => prev.filter((m) => m.clientId !== id))
+    toast({
+      title: 'Cliente Removido',
+      description: 'A empresa foi removida do monitoramento.',
     })
   }
 
@@ -274,10 +305,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       })
       return false
     }
-    // Simulate Supabase connection test
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      // Basic validation for URL format
       new URL(settings.apiKeys.supabaseUrl)
       if (settings.apiKeys.supabaseKey.length < 10) {
         throw new Error('Chave muito curta')
@@ -315,34 +344,80 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setClients((prev) => prev.map((c) => ({ ...c, status: 'processing' })))
     toast({
       title: 'Iniciando Global Scrape',
-      description: `Coletando dados de: ${activePlatforms.join(', ')}...`,
+      description: `Buscando dados para ${clients.length} empresas monitoradas...`,
     })
 
     const initialStatus: ScrapingStatus = {}
-    // Reset statuses
     Object.keys(settings.platforms).forEach((p) => {
       initialStatus[p] = 'idle'
     })
-    // Set active ones to loading
     activePlatforms.forEach((p) => {
       initialStatus[p] = 'loading'
     })
     setScrapingStatus(initialStatus)
 
-    // Simulate async scraping for each platform
     for (const platform of activePlatforms) {
-      // Simulate delay random between 1.5s and 3s
       await new Promise((resolve) =>
-        setTimeout(resolve, 1500 + Math.random() * 1500),
+        setTimeout(resolve, 1500 + Math.random() * 1000),
       )
       setScrapingStatus((prev) => ({ ...prev, [platform]: 'success' }))
     }
 
+    // Generate new mock data
+    const newPosts: Post[] = []
+    const newAlerts: Alert[] = []
+
+    clients.forEach((client) => {
+      const numNewPosts = Math.floor(Math.random() * 3) + 1
+      for (let i = 0; i < numNewPosts; i++) {
+        const template =
+          SAMPLE_POST_TEMPLATES[
+            Math.floor(Math.random() * SAMPLE_POST_TEMPLATES.length)
+          ]
+        const sentiment = Math.random() * 1.6 - 0.6 // bias slightly positive
+        const isNegative = sentiment < -0.3
+
+        newPosts.push({
+          id: Math.random().toString(36).substr(2, 9),
+          clientId: client.id,
+          content: `${template} - ${client.name}`,
+          likes: Math.floor(Math.random() * 500),
+          comments: Math.floor(Math.random() * 50),
+          shares: Math.floor(Math.random() * 20),
+          views: Math.floor(Math.random() * 5000),
+          sentimentScore: sentiment,
+          sentimentExplanation:
+            'Análise simulada pela IA indicando tom ' +
+            (sentiment > 0 ? 'positivo' : 'negativo') +
+            '.',
+          postedAt: new Date().toISOString(),
+          url: 'https://linkedin.com',
+        })
+
+        if (isNegative && client.type === 'own') {
+          newAlerts.push({
+            id: Math.random().toString(),
+            type: 'sentiment_drop',
+            message: `Post negativo detectado para ${client.name}: "${template.substring(0, 30)}..."`,
+            severity: 'high',
+            createdAt: new Date().toISOString(),
+            isRead: false,
+          })
+        }
+      }
+    })
+
     setTimeout(() => {
-      toast({
-        title: 'Análise de IA (Claude)',
-        description: 'Processando sentimento e contexto...',
-      })
+      setPosts((prev) => [...newPosts, ...prev])
+      if (newAlerts.length > 0) {
+        setAlerts((prev) => [...newAlerts, ...prev])
+        toast({
+          title: 'Alertas Gerados',
+          description: `${newAlerts.length} novos alertas críticos detectados.`,
+          variant: 'destructive',
+        })
+      }
+
       setClients((prev) =>
         prev.map((c) => ({
           ...c,
@@ -350,22 +425,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           lastUpdated: new Date().toISOString(),
         })),
       )
+
       setScrapingLogs((prev) => [
         {
           id: Math.random().toString(),
           date: new Date().toISOString(),
           status: 'success',
-          itemsCollected: Math.floor(Math.random() * 150) + 20,
-          durationMs: activePlatforms.length * 2000 + 2000,
+          itemsCollected: newPosts.length,
+          durationMs: activePlatforms.length * 1500,
         },
         ...prev,
       ])
+
       setIsScraping(false)
       toast({
         title: 'Ciclo Global Concluído',
-        description: 'Todos os dados foram sincronizados.',
+        description: `Coleta finalizada. ${newPosts.length} novos posts processados.`,
       })
-    }, 1500)
+    }, 1000)
   }
 
   const markAlertRead = (id: string) => {
@@ -391,6 +468,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         isScraping,
         scrapingStatus,
         addClient,
+        updateClient,
+        removeClient,
         triggerGlobalScrape,
         markAlertRead,
         getMetricsByClient,

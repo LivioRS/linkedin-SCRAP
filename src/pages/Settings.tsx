@@ -6,6 +6,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -28,6 +29,9 @@ import {
   Twitter,
   Youtube,
   Wifi,
+  Target,
+  Plus,
+  Trash2,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -49,6 +53,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Client } from '@/types'
 
 const apiSchema = z.object({
   apify: z.string().min(5, 'Token Apify muito curto'),
@@ -61,7 +66,11 @@ const apiSchema = z.object({
 export default function Settings() {
   const {
     settings,
+    clients,
     updateSettings,
+    updateClient,
+    addClient,
+    removeClient,
     testTelegramConnection,
     testApifyConnection,
     testClaudeConnection,
@@ -72,6 +81,11 @@ export default function Settings() {
   const [testingStatus, setTestingStatus] = useState<Record<string, boolean>>(
     {},
   )
+
+  // Monitoring State
+  const ownClient = clients.find((c) => c.type === 'own')
+  const competitors = clients.filter((c) => c.type === 'competitor')
+  const [newCompetitorName, setNewCompetitorName] = useState('')
 
   const apiForm = useForm<z.infer<typeof apiSchema>>({
     resolver: zodResolver(apiSchema),
@@ -106,6 +120,32 @@ export default function Settings() {
     })
   }
 
+  const handleUpdateOwnClient = (e: React.FormEvent) => {
+    e.preventDefault()
+    const form = e.target as HTMLFormElement
+    const name = (form.elements.namedItem('brandName') as HTMLInputElement)
+      .value
+    const url = (form.elements.namedItem('brandUrl') as HTMLInputElement).value
+    const industry = (
+      form.elements.namedItem('brandIndustry') as HTMLInputElement
+    ).value
+
+    if (ownClient) {
+      updateClient(ownClient.id, { name, url, industry })
+    }
+  }
+
+  const handleAddCompetitor = () => {
+    if (!newCompetitorName) return
+    addClient({
+      name: newCompetitorName,
+      url: `https://linkedin.com/company/${newCompetitorName.toLowerCase().replace(/\s/g, '-')}`,
+      type: 'competitor',
+      industry: ownClient?.industry || 'Outros',
+    })
+    setNewCompetitorName('')
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
@@ -114,8 +154,11 @@ export default function Settings() {
           Gerencie integrações, notificações e preferências do sistema.
         </p>
       </div>
-      <Tabs defaultValue="integrations" className="space-y-6">
+      <Tabs defaultValue="monitoring" className="space-y-6">
         <TabsList>
+          <TabsTrigger value="monitoring" className="gap-2">
+            <Target className="h-4 w-4" /> Monitoramento
+          </TabsTrigger>
           <TabsTrigger value="integrations" className="gap-2">
             <Key className="h-4 w-4" /> Integrações API
           </TabsTrigger>
@@ -129,6 +172,107 @@ export default function Settings() {
             <Database className="h-4 w-4" /> Sistema & Dados
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="monitoring">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuração da Marca Principal</CardTitle>
+              <CardDescription>
+                Defina a empresa foco do monitoramento (Você).
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdateOwnClient} className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="brandName">Nome da Empresa</Label>
+                    <Input
+                      id="brandName"
+                      defaultValue={ownClient?.name}
+                      placeholder="Ex: Grupo Plaenge"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="brandIndustry">Setor de Atuação</Label>
+                    <Input
+                      id="brandIndustry"
+                      defaultValue={ownClient?.industry}
+                      placeholder="Ex: Construção Civil"
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="brandUrl">URL Principal (LinkedIn)</Label>
+                    <Input
+                      id="brandUrl"
+                      defaultValue={ownClient?.url}
+                      placeholder="https://linkedin.com/company/..."
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button type="submit">Atualizar Marca</Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Gestão de Concorrentes</CardTitle>
+              <CardDescription>
+                Adicione empresas para comparação direta nos gráficos de
+                análise.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex gap-4">
+                <Input
+                  placeholder="Nome do Concorrente"
+                  value={newCompetitorName}
+                  onChange={(e) => setNewCompetitorName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddCompetitor()}
+                />
+                <Button onClick={handleAddCompetitor}>
+                  <Plus className="h-4 w-4 mr-2" /> Adicionar
+                </Button>
+              </div>
+              <div className="border rounded-md divide-y">
+                {competitors.length > 0 ? (
+                  competitors.map((comp) => (
+                    <div
+                      key={comp.id}
+                      className="flex items-center justify-between p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
+                          {comp.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium">{comp.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {comp.url}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => removeClient(comp.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-muted-foreground">
+                    Nenhum concorrente cadastrado.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="integrations">
           <Card>
