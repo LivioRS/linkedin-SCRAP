@@ -34,9 +34,8 @@ import {
   Download,
 } from 'lucide-react'
 import { SentimentBadge } from '@/components/SentimentBadge'
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { subDays } from 'date-fns'
+import { format, subDays } from 'date-fns'
+import { ptBR } from 'date-fns/locale/pt-BR'
 
 const VEHICLES = [
   'InfoMoney',
