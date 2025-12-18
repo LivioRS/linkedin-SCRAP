@@ -20,7 +20,7 @@
     --primary: 200 100% 18%; /* #003D5C - Dark Blue */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 100% 26%; /* #005A87 - Medium Blue */
+    --secondary: 200 100% 26.5%; /* #005A87 - Medium Blue */
     --secondary-foreground: 0 0% 100%;
 
     --muted: 210 20% 96.1%;
@@ -46,15 +46,15 @@
     --sidebar-foreground: 0 0% 100%; /* White */
     --sidebar-primary: 195 100% 40%; /* Accent Blue */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 100% 26%; /* Secondary Blue for hover */
+    --sidebar-accent: 200 100% 26.5%; /* Secondary Blue for hover */
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 200 100% 22%; /* Slightly lighter than bg */
     --sidebar-ring: 195 100% 40%;
 
     /* Charts - Planin Palette */
     --chart-1: 200 100% 18%; /* #003D5C */
-    --chart-2: 195 100% 40%; /* #0099CC */
-    --chart-3: 200 100% 26%; /* #005A87 */
+    --chart-2: 200 100% 26.5%; /* #005A87 */
+    --chart-3: 195 100% 40%; /* #0099CC */
     --chart-4: 199 80% 65%; /* Lighter Blue */
     --chart-5: 199 60% 85%; /* Pale Blue */
   }

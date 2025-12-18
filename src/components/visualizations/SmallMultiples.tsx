@@ -16,7 +16,7 @@ interface SmallMultiplesProps {
 }
 
 export function SmallMultiples({ clientsData }: SmallMultiplesProps) {
-  const hasData = clientsData.some(client => client.data.length > 0)
+  const hasData = clientsData.some((client) => client.data.length > 0)
 
   if (!hasData) {
     return (
