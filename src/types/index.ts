@@ -13,6 +13,7 @@ export interface Post {
   id: string
   clientId: string
   content: string
+  title?: string // Título do post (se disponível)
   likes: number
   comments: number
   shares: number
@@ -21,6 +22,10 @@ export interface Post {
   sentimentExplanation: string
   postedAt: string
   url: string
+  vehicle?: string // Veículo/fonte (ex: InfoMoney, Folha de Curitiba, etc.)
+  region?: string // Região (ex: Corporativo, Regional, etc.)
+  category?: string // Categoria (ex: Operacional, Financeiro, etc.)
+  urgency?: 'baixa' | 'media' | 'alta' // Urgência do post
 }
 
 export interface Comment {

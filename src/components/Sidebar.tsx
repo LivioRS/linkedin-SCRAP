@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Users,
   MessageSquare,
+  Table2,
   BarChart2,
   Bell,
   ShieldCheck,
@@ -21,6 +22,7 @@ export function AppSidebar() {
     { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
     { label: 'Clientes', icon: Users, path: '/clients' },
     { label: 'Feed de Reputação', icon: MessageSquare, path: '/feed' },
+    { label: 'Tracker de Posts', icon: Table2, path: '/tracker' },
     { label: 'Análise Competitiva', icon: BarChart2, path: '/analysis' },
     {
       label: 'Central de Alertas',

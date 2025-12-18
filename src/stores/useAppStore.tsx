@@ -252,14 +252,32 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             Date.now() - dayOffset * 86400000 - randomHour * 3600000 - randomMinute * 60000
           )
 
+          const vehicles = ['InfoMoney', 'Folha de Curitiba', 'Money Times', 'Bing News', 'LinkedIn', 'Instagram', 'Facebook', 'Twitter']
+          const regions = ['Corporativo', 'Regional', 'Nacional', 'Internacional']
+          const categories = ['Operacional', 'Financeiro', 'Marketing', 'RH', 'Sustentabilidade', 'Inovação']
+          
+          const content = SAMPLE_POST_TEMPLATES[
+            Math.floor(Math.random() * SAMPLE_POST_TEMPLATES.length)
+          ]
+          const vehicle = vehicles[Math.floor(Math.random() * vehicles.length)]
+          const region = regions[Math.floor(Math.random() * regions.length)]
+          const category = categories[Math.floor(Math.random() * categories.length)]
+          
+          // Calcular urgência baseada no sentimento e engajamento
+          const likes = Math.floor(Math.random() * 500) + 10
+          let urgency: 'baixa' | 'media' | 'alta' = 'baixa'
+          if (sentimentScore < -0.5 || likes > 1000) urgency = 'alta'
+          else if (sentimentScore < -0.3 || likes > 500) urgency = 'media'
+
+          // Gerar título baseado no conteúdo e cliente
+          const title = `${client.name} ${content.substring(0, 40)}...`
+
           posts.push({
             id: postId,
             clientId: client.id,
-            content:
-              SAMPLE_POST_TEMPLATES[
-                Math.floor(Math.random() * SAMPLE_POST_TEMPLATES.length)
-              ],
-            likes: Math.floor(Math.random() * 500) + 10,
+            title,
+            content,
+            likes,
             comments: postComments.length,
             shares: Math.floor(Math.random() * 20),
             views: Math.floor(Math.random() * 5000) + 1000,
@@ -272,6 +290,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                   : 'Conteúdo informativo com recepção neutra pela audiência.',
             postedAt: postedAt.toISOString(),
             url: '#',
+            vehicle,
+            region,
+            category,
+            urgency,
           })
 
           comments.push(...postComments)
@@ -503,11 +525,28 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const sentiment = Math.random() * 1.6 - 0.6 // bias slightly positive
         const isNegative = sentiment < -0.3
 
+        const vehicles = ['InfoMoney', 'Folha de Curitiba', 'Money Times', 'Bing News', 'LinkedIn', 'Instagram', 'Facebook', 'Twitter']
+        const regions = ['Corporativo', 'Regional', 'Nacional', 'Internacional']
+        const categories = ['Operacional', 'Financeiro', 'Marketing', 'RH', 'Sustentabilidade', 'Inovação']
+        
+        const vehicle = vehicles[Math.floor(Math.random() * vehicles.length)]
+        const region = regions[Math.floor(Math.random() * regions.length)]
+        const category = categories[Math.floor(Math.random() * categories.length)]
+        const likes = Math.floor(Math.random() * 500)
+        
+        let urgency: 'baixa' | 'media' | 'alta' = 'baixa'
+        if (sentiment < -0.5 || likes > 1000) urgency = 'alta'
+        else if (sentiment < -0.3 || likes > 500) urgency = 'media'
+
+        const content = `${template} - ${client.name}`
+        const title = `${client.name}: ${template.substring(0, 50)}...`
+
         newPosts.push({
           id: Math.random().toString(36).substr(2, 9),
           clientId: client.id,
-          content: `${template} - ${client.name}`,
-          likes: Math.floor(Math.random() * 500),
+          title,
+          content,
+          likes,
           comments: Math.floor(Math.random() * 50),
           shares: Math.floor(Math.random() * 20),
           views: Math.floor(Math.random() * 5000),
@@ -518,6 +557,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             '.',
           postedAt: new Date().toISOString(),
           url: 'https://linkedin.com',
+          vehicle,
+          region,
+          category,
+          urgency,
         })
 
         if (isNegative && client.type === 'own') {
@@ -540,10 +583,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (Math.random() > 0.7) {
           const client =
             clients.find((c) => c.type === 'own') || MOCK_CLIENTS[0]
+          const vehicles = ['InfoMoney', 'Folha de Curitiba', 'Money Times', 'Bing News', 'LinkedIn', 'Instagram', 'Facebook', 'Twitter']
+          const regions = ['Corporativo', 'Regional', 'Nacional', 'Internacional']
+          const categories = ['Operacional', 'Financeiro', 'Marketing', 'RH', 'Sustentabilidade', 'Inovação']
+          
+          const vehicle = vehicles[Math.floor(Math.random() * vehicles.length)]
+          const region = regions[Math.floor(Math.random() * regions.length)]
+          const category = categories[Math.floor(Math.random() * categories.length)]
+          const content = `Conteúdo monitorado da URL: ${target.url}. Análise de impacto e reputação realizada.`
+          const title = `${client.name}: Conteúdo monitorado da URL específica`
+
           newPosts.push({
             id: Math.random().toString(36).substr(2, 9),
             clientId: client.id,
-            content: `Conteúdo monitorado da URL: ${target.url}. Análise de impacto e reputação realizada.`,
+            title,
+            content,
             likes: Math.floor(Math.random() * 200),
             comments: Math.floor(Math.random() * 20),
             shares: Math.floor(Math.random() * 5),
@@ -553,6 +607,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
               'Monitoramento de URL específica detectou atividade relevante.',
             postedAt: new Date().toISOString(),
             url: target.url,
+            vehicle,
+            region,
+            category,
+            urgency: 'baixa',
           })
         }
       })

@@ -6,6 +6,7 @@ import Layout from './components/Layout'
 import Index from './pages/Index'
 import Clients from './pages/Clients'
 import Feed from './pages/Feed'
+import Tracker from './pages/Tracker'
 import Analysis from './pages/Analysis'
 import Alerts from './pages/Alerts'
 import Settings from './pages/Settings'
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/clients" element={<Clients />} />
           <Route path="/feed" element={<Feed />} />
+          <Route path="/tracker" element={<Tracker />} />
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/settings" element={<Settings />} />
