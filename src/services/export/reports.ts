@@ -25,7 +25,17 @@ export function exportToCSV(data: ReportData, filename?: string): void {
 
   // Criar CSV de Posts
   const postsCSV = [
-    ['ID', 'Cliente', 'Conteúdo', 'Curtidas', 'Comentários', 'Compartilhamentos', 'Visualizações', 'Score Sentimento', 'Data'],
+    [
+      'ID',
+      'Cliente',
+      'Conteúdo',
+      'Curtidas',
+      'Comentários',
+      'Compartilhamentos',
+      'Visualizações',
+      'Score Sentimento',
+      'Data',
+    ],
     ...posts.map((post) => {
       const client = clients.find((c) => c.id === post.clientId)
       return [
@@ -76,17 +86,23 @@ export function exportToCSV(data: ReportData, filename?: string): void {
     .join('\n')
 
   // Combinar todos os CSVs
-  const fullCSV = `RELATÓRIO DE MONITORAMENTO\nPeríodo: ${format(data.period.start, 'dd/MM/yyyy', { locale: ptBR })} a ${format(data.period.end, 'dd/MM/yyyy', { locale: ptBR })}\n\n` +
+  const fullCSV =
+    `RELATÓRIO DE MONITORAMENTO\nPeríodo: ${format(data.period.start, 'dd/MM/yyyy', { locale: ptBR })} a ${format(data.period.end, 'dd/MM/yyyy', { locale: ptBR })}\n\n` +
     `=== POSTS ===\n${postsCSV}\n\n` +
     `=== MÉTRICAS ===\n${metricsCSV}\n\n` +
     `=== ALERTAS ===\n${alertsCSV}`
 
   // Criar blob e fazer download
-  const blob = new Blob(['\ufeff' + fullCSV], { type: 'text/csv;charset=utf-8;' })
+  const blob = new Blob(['\ufeff' + fullCSV], {
+    type: 'text/csv;charset=utf-8;',
+  })
   const link = document.createElement('a')
   const url = URL.createObjectURL(blob)
   link.setAttribute('href', url)
-  link.setAttribute('download', filename || `relatorio-${format(new Date(), 'yyyy-MM-dd')}.csv`)
+  link.setAttribute(
+    'download',
+    filename || `relatorio-${format(new Date(), 'yyyy-MM-dd')}.csv`,
+  )
   link.style.visibility = 'hidden'
   document.body.appendChild(link)
   link.click()
@@ -294,7 +310,9 @@ function generateReportHTML(data: ReportData): string {
     </tbody>
   </table>
 
-  ${alerts.length > 0 ? `
+  ${
+    alerts.length > 0
+      ? `
   <h2>Alertas</h2>
   <table>
     <thead>
@@ -306,9 +324,10 @@ function generateReportHTML(data: ReportData): string {
       </tr>
     </thead>
     <tbody>
-      ${alerts.map((alert) => {
-        const alertClass = `alert-${alert.severity}`
-        return `
+      ${alerts
+        .map((alert) => {
+          const alertClass = `alert-${alert.severity}`
+          return `
         <tr class="${alertClass}">
           <td>${alert.type.replace('_', ' ').toUpperCase()}</td>
           <td>${alert.message}</td>
@@ -316,10 +335,13 @@ function generateReportHTML(data: ReportData): string {
           <td>${format(new Date(alert.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</td>
         </tr>
       `
-      }).join('')}
+        })
+        .join('')}
     </tbody>
   </table>
-  ` : ''}
+  `
+      : ''
+  }
 
   <div class="footer">
     <p>Relatório gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
@@ -368,7 +390,17 @@ export function exportPostsToCSV(
   filename?: string,
 ): void {
   const csv = [
-    ['ID', 'Cliente', 'Conteúdo', 'Curtidas', 'Comentários', 'Compartilhamentos', 'Visualizações', 'Score Sentimento', 'Data'],
+    [
+      'ID',
+      'Cliente',
+      'Conteúdo',
+      'Curtidas',
+      'Comentários',
+      'Compartilhamentos',
+      'Visualizações',
+      'Score Sentimento',
+      'Data',
+    ],
     ...posts.map((post) => {
       const client = clients.find((c) => c.id === post.clientId)
       return [
@@ -391,10 +423,12 @@ export function exportPostsToCSV(
   const link = document.createElement('a')
   const url = URL.createObjectURL(blob)
   link.setAttribute('href', url)
-  link.setAttribute('download', filename || `posts-${format(new Date(), 'yyyy-MM-dd')}.csv`)
+  link.setAttribute(
+    'download',
+    filename || `posts-${format(new Date(), 'yyyy-MM-dd')}.csv`,
+  )
   link.style.visibility = 'hidden'
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
 }
-

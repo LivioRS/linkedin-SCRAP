@@ -97,9 +97,7 @@ export function useDashboard() {
   }
 
   const updateWidget = (id: string, updates: Partial<DashboardWidget>) => {
-    const updated = widgets.map((w) =>
-      w.id === id ? { ...w, ...updates } : w,
-    )
+    const updated = widgets.map((w) => (w.id === id ? { ...w, ...updates } : w))
     saveWidgets(updated)
   }
 
@@ -108,11 +106,21 @@ export function useDashboard() {
   }
 
   const moveWidget = (id: string, position: { x: number; y: number }) => {
-    updateWidget(id, { position: { ...widgets.find((w) => w.id === id)?.position, ...position } as any })
+    updateWidget(id, {
+      position: {
+        ...widgets.find((w) => w.id === id)?.position,
+        ...position,
+      } as any,
+    })
   }
 
   const resizeWidget = (id: string, size: { w: number; h: number }) => {
-    updateWidget(id, { position: { ...widgets.find((w) => w.id === id)?.position, ...size } as any })
+    updateWidget(id, {
+      position: {
+        ...widgets.find((w) => w.id === id)?.position,
+        ...size,
+      } as any,
+    })
   }
 
   const addWidget = (widget: Omit<DashboardWidget, 'id'>) => {
@@ -146,4 +154,3 @@ export function useDashboard() {
     resetDashboard,
   }
 }
-

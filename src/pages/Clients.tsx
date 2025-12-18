@@ -48,7 +48,9 @@ const formSchema = z.object({
   url: z.string().url({ message: 'URL inválida.' }),
   type: z.enum(['own', 'competitor']),
   industry: z.string().min(2, { message: 'Indústria é obrigatória.' }),
-  platform: z.enum(['linkedin', 'instagram', 'facebook', 'twitter', 'youtube']).optional(),
+  platform: z
+    .enum(['linkedin', 'instagram', 'facebook', 'twitter', 'youtube'])
+    .optional(),
 })
 
 export default function Clients() {

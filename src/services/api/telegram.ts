@@ -53,7 +53,9 @@ export async function sendTelegramMessage(
 
     if (!response.ok) {
       const error = await response.json()
-      throw new Error(error.description || 'Erro ao enviar mensagem para Telegram')
+      throw new Error(
+        error.description || 'Erro ao enviar mensagem para Telegram',
+      )
     }
 
     return { success: true }
@@ -62,7 +64,9 @@ export async function sendTelegramMessage(
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : 'Erro desconhecido no Telegram',
+        error instanceof Error
+          ? error.message
+          : 'Erro desconhecido no Telegram',
     }
   }
 }
@@ -149,7 +153,9 @@ export async function validateTelegramConfig(
     return {
       valid: false,
       error:
-        error instanceof Error ? error.message : 'Erro desconhecido na validação',
+        error instanceof Error
+          ? error.message
+          : 'Erro desconhecido na validação',
     }
   }
 }
@@ -176,8 +182,9 @@ export async function getBotInfo(
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : 'Erro desconhecido ao obter info',
+        error instanceof Error
+          ? error.message
+          : 'Erro desconhecido ao obter info',
     }
   }
 }
-

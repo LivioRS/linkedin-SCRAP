@@ -7,13 +7,6 @@ export interface Client {
   status: 'idle' | 'processing' | 'success' | 'error'
   lastUpdated: string
   avatarUrl: string
-  platform?: 'linkedin' | 'instagram' | 'facebook' | 'twitter' | 'youtube'
-  platformConfig?: {
-    enabled: boolean
-    apiKey?: string
-    accessToken?: string
-    taskId?: string
-  }
 }
 
 export interface Post {
@@ -62,25 +55,31 @@ export interface ScrapingLog {
   status: 'success' | 'failed'
   itemsCollected: number
   durationMs: number
-  platform?: string
-  clientId?: string
-  error?: string
 }
 
-export interface ApiConfig {
-  apifyApiKey?: string
-  apifyTaskId?: string
-  claudeApiKey?: string
-  claudeModel?: string
-  telegramBotToken?: string
-  telegramChatId?: string
-}
-
-export interface DashboardWidget {
-  id: string
-  type: 'kpi' | 'chart' | 'table' | 'list'
-  title: string
-  config: any
-  position: { x: number; y: number; w: number; h: number }
-  visible: boolean
+export interface Settings {
+  apiKeys: {
+    apify: string
+    anthropic: string
+    telegramBot: string
+    supabaseUrl: string
+    supabaseKey: string
+  }
+  platforms: {
+    linkedin: boolean
+    instagram: boolean
+    facebook: boolean
+    twitter: boolean
+    youtube: boolean
+  }
+  notifications: {
+    telegramChatId: string
+    alertOnNegative: boolean
+    alertOnCompetitor: boolean
+    alertOnSpike: boolean
+  }
+  scraping: {
+    frequency: 'hourly' | 'daily' | 'weekly'
+    retentionDays: number
+  }
 }

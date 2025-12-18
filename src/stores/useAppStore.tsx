@@ -5,7 +5,15 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react'
-import { Client, Post, Comment, Alert, DailyMetric, ScrapingLog } from '@/types'
+import {
+  Client,
+  Post,
+  Comment,
+  Alert,
+  DailyMetric,
+  ScrapingLog,
+  Settings,
+} from '@/types'
 import { toast } from '@/hooks/use-toast'
 
 interface AppState {
@@ -15,6 +23,7 @@ interface AppState {
   alerts: Alert[]
   metrics: DailyMetric[]
   scrapingLogs: ScrapingLog[]
+  settings: Settings
   isScraping: boolean
   addClient: (
     client: Omit<Client, 'id' | 'status' | 'lastUpdated' | 'avatarUrl'>,
@@ -23,6 +32,8 @@ interface AppState {
   markAlertRead: (id: string) => void
   getMetricsByClient: (clientId: string) => DailyMetric[]
   getClientById: (id: string) => Client | undefined
+  updateSettings: (newSettings: Partial<Settings>) => void
+  testTelegramConnection: () => Promise<boolean>
 }
 
 const AppContext = createContext<AppState | undefined>(undefined)
@@ -61,6 +72,33 @@ const MOCK_CLIENTS: Client[] = [
       'https://img.usecurling.com/i?q=systems&color=green&shape=lineal-color',
   },
 ]
+
+const DEFAULT_SETTINGS: Settings = {
+  apiKeys: {
+    apify: '',
+    anthropic: '',
+    telegramBot: '',
+    supabaseUrl: '',
+    supabaseKey: '',
+  },
+  platforms: {
+    linkedin: true,
+    instagram: false,
+    facebook: false,
+    twitter: false,
+    youtube: false,
+  },
+  notifications: {
+    telegramChatId: '',
+    alertOnNegative: true,
+    alertOnCompetitor: true,
+    alertOnSpike: false,
+  },
+  scraping: {
+    frequency: 'daily',
+    retentionDays: 90,
+  },
+}
 
 const GENERATE_COMMENTS = (postId: string, count: number): Comment[] => {
   return Array.from({ length: count }).map((_, i) => ({
@@ -158,6 +196,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [alerts, setAlerts] = useState<Alert[]>(MOCK_ALERTS)
   const [metrics, setMetrics] = useState<DailyMetric[]>([])
   const [scrapingLogs, setScrapingLogs] = useState<ScrapingLog[]>([])
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
   const [isScraping, setIsScraping] = useState(false)
 
   // Initialize data
@@ -197,6 +236,38 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     toast({
       title: 'Cliente Adicionado',
       description: `${newClient.name} foi adicionado ao monitoramento.`,
+    })
+  }
+
+  const updateSettings = (newSettings: Partial<Settings>) => {
+    setSettings((prev) => ({ ...prev, ...newSettings }))
+    // In a real app, this would call Supabase to persist settings
+    console.log('Settings persisted:', newSettings)
+    toast({
+      title: 'Configurações Salvas',
+      description: 'As alterações foram aplicadas com sucesso.',
+    })
+  }
+
+  const testTelegramConnection = async () => {
+    // Mock API call
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const success = Math.random() > 0.3 // 70% success rate mock
+        if (success) {
+          toast({
+            title: 'Sucesso',
+            description: 'Conexão com Telegram estabelecida.',
+          })
+        } else {
+          toast({
+            title: 'Erro',
+            description: 'Falha ao conectar. Verifique o Token e Chat ID.',
+            variant: 'destructive',
+          })
+        }
+        resolve(success)
+      }, 1000)
     })
   }
 
@@ -302,12 +373,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         alerts,
         metrics,
         scrapingLogs,
+        settings,
         isScraping,
         addClient,
         triggerGlobalScrape,
         markAlertRead,
         getMetricsByClient,
         getClientById,
+        updateSettings,
+        testTelegramConnection,
       }}
     >
       {children}

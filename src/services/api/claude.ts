@@ -51,13 +51,17 @@ Analise o seguinte conteúdo do ${platform}${author ? ` publicado por ${author}`
 
 "${content}"
 
-${metadata ? `
+${
+  metadata
+    ? `
 Métricas de engajamento:
 - Curtidas: ${metadata.likes || 0}
 - Comentários: ${metadata.comments || 0}
 - Compartilhamentos: ${metadata.shares || 0}
 ${metadata.views ? `- Visualizações: ${metadata.views}` : ''}
-` : ''}
+`
+    : ''
+}
 
 Forneça uma análise detalhada respondendo em JSON puro (sem markdown, sem blocos de código) com a seguinte estrutura EXATA:
 
@@ -188,4 +192,3 @@ export async function validateClaudeKey(apiKey: string): Promise<boolean> {
     return false
   }
 }
-

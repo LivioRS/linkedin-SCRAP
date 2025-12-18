@@ -7,7 +7,12 @@ import { analyzeSentiment, AnalyzeContentParams } from '../api/claude'
 import { sendAlert, TelegramConfig } from '../api/telegram'
 import { Post, Client } from '@/types'
 
-export type Platform = 'linkedin' | 'instagram' | 'facebook' | 'twitter' | 'youtube'
+export type Platform =
+  | 'linkedin'
+  | 'instagram'
+  | 'facebook'
+  | 'twitter'
+  | 'youtube'
 
 export interface PlatformScraper {
   scrape: (
@@ -174,7 +179,8 @@ export class FacebookMonitor implements PlatformScraper {
         views: 0,
         sentimentScore: 0,
         sentimentExplanation: '',
-        postedAt: item.createdTime || item.timestamp || new Date().toISOString(),
+        postedAt:
+          item.createdTime || item.timestamp || new Date().toISOString(),
         url: item.postUrl || item.url || '#',
       }))
 
@@ -282,7 +288,8 @@ export class YouTubeMonitor implements PlatformScraper {
         views: item.viewCount || item.views || 0,
         sentimentScore: 0,
         sentimentExplanation: '',
-        postedAt: item.publishedAt || item.uploadDate || new Date().toISOString(),
+        postedAt:
+          item.publishedAt || item.uploadDate || new Date().toISOString(),
         url: item.url || item.videoUrl || '#',
       }))
 
@@ -300,9 +307,7 @@ export class YouTubeMonitor implements PlatformScraper {
 /**
  * Factory para obter o monitor correto baseado na plataforma
  */
-export function getPlatformMonitor(
-  platform: Platform,
-): PlatformScraper {
+export function getPlatformMonitor(platform: Platform): PlatformScraper {
   switch (platform) {
     case 'linkedin':
       return new LinkedInMonitor()
@@ -331,8 +336,12 @@ export async function processPosts(
     alertThreshold?: number
   },
 ): Promise<Post[]> {
-  const { claudeApiKey, claudeModel, telegramConfig, alertThreshold = -0.3 } =
-    config
+  const {
+    claudeApiKey,
+    claudeModel,
+    telegramConfig,
+    alertThreshold = -0.3,
+  } = config
 
   const processedPosts: Post[] = []
 
@@ -362,14 +371,10 @@ export async function processPosts(
       processedPosts.push(processedPost)
 
       // Enviar alerta se necessário
-      if (
-        telegramConfig &&
-        processedPost.sentimentScore < alertThreshold
-      ) {
+      if (telegramConfig && processedPost.sentimentScore < alertThreshold) {
         await sendAlert(telegramConfig, {
           type: 'sentiment_drop',
-          severity:
-            processedPost.sentimentScore < -0.6 ? 'high' : 'medium',
+          severity: processedPost.sentimentScore < -0.6 ? 'high' : 'medium',
           title: 'Queda de Sentimento Detectada',
           message: `Post com sentimento negativo detectado (score: ${processedPost.sentimentScore.toFixed(2)})`,
           url: processedPost.url,
@@ -387,4 +392,3 @@ export async function processPosts(
 
   return processedPosts
 }
-

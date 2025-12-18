@@ -15,12 +15,7 @@ import { Settings, Grid, Eye, EyeOff } from 'lucide-react'
 import { DashboardWidget } from '@/types'
 
 export function DashboardCustomizer() {
-  const {
-    widgets,
-    updateWidget,
-    toggleWidget,
-    resetDashboard,
-  } = useDashboard()
+  const { widgets, updateWidget, toggleWidget, resetDashboard } = useDashboard()
   const [open, setOpen] = useState(false)
 
   return (
@@ -91,4 +86,3 @@ export function DashboardCustomizer() {
     </Dialog>
   )
 }
-

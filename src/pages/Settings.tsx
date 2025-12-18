@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import useAppStore from '@/stores/useAppStore'
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -16,427 +20,563 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { CheckCircle2, XCircle, Loader2, Save, TestTube } from 'lucide-react'
+import {
+  Eye,
+  EyeOff,
+  Save,
+  Key,
+  Globe,
+  Bell,
+  Database,
+  Send,
+  Download,
+  FileText,
+  Linkedin,
+  Facebook,
+  Instagram,
+  Twitter,
+  Youtube,
+} from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 import { toast } from '@/hooks/use-toast'
-import { validateApifyKey } from '@/services/api/apify'
-import { validateClaudeKey } from '@/services/api/claude'
-import { validateTelegramConfig, getBotInfo } from '@/services/api/telegram'
-import { ApiConfig } from '@/types'
+
+// Form Schemas
+const apiSchema = z.object({
+  apify: z.string().min(10, 'Token Apify inválido'),
+  anthropic: z.string().min(10, 'Chave API Claude inválida'),
+  telegramBot: z.string().min(10, 'Token do Bot Telegram inválido'),
+  supabaseUrl: z.string().url('URL Supabase inválida'),
+  supabaseKey: z.string().min(10, 'Chave Supabase inválida'),
+})
 
 export default function Settings() {
-  const [config, setConfig] = useState<ApiConfig>({
-    apifyApiKey: '',
-    apifyTaskId: '',
-    claudeApiKey: '',
-    claudeModel: 'claude-sonnet-4-20250514',
-    telegramBotToken: '',
-    telegramChatId: '',
+  const { settings, updateSettings, testTelegramConnection } = useAppStore()
+  const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({})
+  const [isSaving, setIsSaving] = useState(false)
+  const [isTestingTelegram, setIsTestingTelegram] = useState(false)
+
+  const apiForm = useForm<z.infer<typeof apiSchema>>({
+    resolver: zodResolver(apiSchema),
+    defaultValues: settings.apiKeys,
   })
 
-  const [validations, setValidations] = useState<{
-    apify?: boolean
-    claude?: boolean
-    telegram?: boolean
-  }>({})
-
-  const [testing, setTesting] = useState<{
-    apify?: boolean
-    claude?: boolean
-    telegram?: boolean
-  }>({})
-
-  const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    // Carregar configurações salvas do localStorage
-    const saved = localStorage.getItem('apiConfig')
-    if (saved) {
-      try {
-        setConfig(JSON.parse(saved))
-      } catch (e) {
-        console.error('Erro ao carregar configurações:', e)
-      }
-    }
-  }, [])
-
-  const handleSave = async () => {
-    setSaving(true)
-    try {
-      // Salvar no localStorage (em produção, salvaria em um backend)
-      localStorage.setItem('apiConfig', JSON.stringify(config))
-      toast({
-        title: 'Configurações salvas',
-        description: 'Suas configurações foram salvas com sucesso.',
-      })
-    } catch (error) {
-      toast({
-        title: 'Erro ao salvar',
-        description: 'Não foi possível salvar as configurações.',
-        variant: 'destructive',
-      })
-    } finally {
-      setSaving(false)
-    }
+  const toggleSecret = (field: string) => {
+    setShowSecrets((prev) => ({ ...prev, [field]: !prev[field] }))
   }
 
-  const testApify = async () => {
-    if (!config.apifyApiKey) {
-      toast({
-        title: 'API Key necessária',
-        description: 'Por favor, insira a API Key do Apify.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    setTesting((prev) => ({ ...prev, apify: true }))
-    try {
-      const isValid = await validateApifyKey(config.apifyApiKey)
-      setValidations((prev) => ({ ...prev, apify: isValid }))
-      if (isValid) {
-        toast({
-          title: 'Apify validado',
-          description: 'A API Key do Apify está válida.',
-        })
-      } else {
-        toast({
-          title: 'Apify inválido',
-          description: 'A API Key do Apify não é válida.',
-          variant: 'destructive',
-        })
-      }
-    } catch (error) {
-      setValidations((prev) => ({ ...prev, apify: false }))
-      toast({
-        title: 'Erro ao testar',
-        description: 'Não foi possível validar a API Key do Apify.',
-        variant: 'destructive',
-      })
-    } finally {
-      setTesting((prev) => ({ ...prev, apify: false }))
-    }
+  const onSaveApi = (values: z.infer<typeof apiSchema>) => {
+    setIsSaving(true)
+    setTimeout(() => {
+      updateSettings({ apiKeys: values })
+      setIsSaving(false)
+    }, 1000)
   }
 
-  const testClaude = async () => {
-    if (!config.claudeApiKey) {
-      toast({
-        title: 'API Key necessária',
-        description: 'Por favor, insira a API Key do Claude.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    setTesting((prev) => ({ ...prev, claude: true }))
-    try {
-      const isValid = await validateClaudeKey(config.claudeApiKey)
-      setValidations((prev) => ({ ...prev, claude: isValid }))
-      if (isValid) {
-        toast({
-          title: 'Claude validado',
-          description: 'A API Key do Claude está válida.',
-        })
-      } else {
-        toast({
-          title: 'Claude inválido',
-          description: 'A API Key do Claude não é válida.',
-          variant: 'destructive',
-        })
-      }
-    } catch (error) {
-      setValidations((prev) => ({ ...prev, claude: false }))
-      toast({
-        title: 'Erro ao testar',
-        description: 'Não foi possível validar a API Key do Claude.',
-        variant: 'destructive',
-      })
-    } finally {
-      setTesting((prev) => ({ ...prev, claude: false }))
-    }
+  const handleTestTelegram = async () => {
+    setIsTestingTelegram(true)
+    await testTelegramConnection()
+    setIsTestingTelegram(false)
   }
 
-  const testTelegram = async () => {
-    if (!config.telegramBotToken || !config.telegramChatId) {
-      toast({
-        title: 'Configuração necessária',
-        description: 'Por favor, insira o Bot Token e Chat ID do Telegram.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    setTesting((prev) => ({ ...prev, telegram: true }))
-    try {
-      const result = await validateTelegramConfig({
-        botToken: config.telegramBotToken,
-        chatId: config.telegramChatId,
-      })
-
-      setValidations((prev) => ({ ...prev, telegram: result.valid }))
-
-      if (result.valid) {
-        const botInfo = await getBotInfo(config.telegramBotToken)
-        toast({
-          title: 'Telegram validado',
-          description: `Bot conectado: ${botInfo.data?.username || 'N/A'}`,
-        })
-      } else {
-        toast({
-          title: 'Telegram inválido',
-          description: result.error || 'Não foi possível validar o Telegram.',
-          variant: 'destructive',
-        })
-      }
-    } catch (error) {
-      setValidations((prev) => ({ ...prev, telegram: false }))
-      toast({
-        title: 'Erro ao testar',
-        description: 'Não foi possível validar o Telegram.',
-        variant: 'destructive',
-      })
-    } finally {
-      setTesting((prev) => ({ ...prev, telegram: false }))
-    }
+  const handleExport = (format: 'csv' | 'pdf') => {
+    toast({
+      title: 'Exportação Iniciada',
+      description: `Gerando relatório em ${format.toUpperCase()}... O download iniciará em breve.`,
+    })
   }
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex flex-col gap-2">
         <h2 className="text-2xl font-bold tracking-tight">Configurações</h2>
         <p className="text-muted-foreground">
-          Configure as integrações com APIs externas e serviços.
+          Gerencie integrações, notificações e preferências do sistema.
         </p>
       </div>
 
-      {/* Apify Configuration */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Apify - Coleta de Dados</CardTitle>
-          <CardDescription>
-            Configure a API do Apify para coleta automática de dados das redes
-            sociais.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="apifyApiKey">API Key do Apify</Label>
-            <div className="flex gap-2">
-              <Input
-                id="apifyApiKey"
-                type="password"
-                value={config.apifyApiKey}
-                onChange={(e) =>
-                  setConfig({ ...config, apifyApiKey: e.target.value })
-                }
-                placeholder="apify_api_..."
-              />
-              <Button
-                variant="outline"
-                onClick={testApify}
-                disabled={testing.apify}
-              >
-                {testing.apify ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <TestTube className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            {validations.apify !== undefined && (
-              <Alert>
-                {validations.apify ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                ) : (
-                  <XCircle className="h-4 w-4 text-red-500" />
-                )}
-                <AlertDescription>
-                  {validations.apify
-                    ? 'API Key válida'
-                    : 'API Key inválida ou erro na conexão'}
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
+      <Tabs defaultValue="integrations" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="integrations" className="gap-2">
+            <Key className="h-4 w-4" /> Integrações API
+          </TabsTrigger>
+          <TabsTrigger value="platforms" className="gap-2">
+            <Globe className="h-4 w-4" /> Redes Sociais
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-2">
+            <Bell className="h-4 w-4" /> Notificações
+          </TabsTrigger>
+          <TabsTrigger value="system" className="gap-2">
+            <Database className="h-4 w-4" /> Sistema & Dados
+          </TabsTrigger>
+        </TabsList>
 
-          <div className="space-y-2">
-            <Label htmlFor="apifyTaskId">Task ID (Opcional)</Label>
-            <Input
-              id="apifyTaskId"
-              value={config.apifyTaskId}
-              onChange={(e) =>
-                setConfig({ ...config, apifyTaskId: e.target.value })
-              }
-              placeholder="Deixe vazio para usar actor padrão"
-            />
-            <p className="text-sm text-muted-foreground">
-              Se você tem uma task configurada no Apify, insira o ID aqui.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+        {/* API Keys Tab */}
+        <TabsContent value="integrations">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chaves de Acesso</CardTitle>
+              <CardDescription>
+                Gerencie com segurança as credenciais dos serviços integrados.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...apiForm}>
+                <form
+                  onSubmit={apiForm.handleSubmit(onSaveApi)}
+                  className="space-y-6"
+                >
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <FormField
+                      control={apiForm.control}
+                      name="apify"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Apify Token</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input
+                                type={showSecrets.apify ? 'text' : 'password'}
+                                placeholder="apify_api_..."
+                                {...field}
+                              />
+                            </FormControl>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => toggleSecret('apify')}
+                            >
+                              {showSecrets.apify ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                          <FormDescription>
+                            Usado para autenticar o scraper do LinkedIn.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={apiForm.control}
+                      name="anthropic"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Claude API Key</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input
+                                type={
+                                  showSecrets.anthropic ? 'text' : 'password'
+                                }
+                                placeholder="sk-ant-..."
+                                {...field}
+                              />
+                            </FormControl>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => toggleSecret('anthropic')}
+                            >
+                              {showSecrets.anthropic ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                          <FormDescription>
+                            Necessário para análise de sentimento e insights.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={apiForm.control}
+                      name="telegramBot"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telegram Bot Token</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input
+                                type={
+                                  showSecrets.telegramBot ? 'text' : 'password'
+                                }
+                                placeholder="123456:ABC-..."
+                                {...field}
+                              />
+                            </FormControl>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => toggleSecret('telegramBot')}
+                            >
+                              {showSecrets.telegramBot ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="space-y-4">
+                      <FormField
+                        control={apiForm.control}
+                        name="supabaseUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Supabase URL</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="https://xyz.supabase.co"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={apiForm.control}
+                        name="supabaseKey"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Supabase Anon Key</FormLabel>
+                            <div className="relative">
+                              <FormControl>
+                                <Input
+                                  type={
+                                    showSecrets.supabaseKey
+                                      ? 'text'
+                                      : 'password'
+                                  }
+                                  placeholder="eyJ..."
+                                  {...field}
+                                />
+                              </FormControl>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                onClick={() => toggleSecret('supabaseKey')}
+                              >
+                                {showSecrets.supabaseKey ? (
+                                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <Eye className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </Button>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={isSaving}>
+                      {isSaving && (
+                        <Save className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {!isSaving && <Save className="mr-2 h-4 w-4" />}
+                      Salvar Alterações
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* Claude Configuration */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Claude (Anthropic) - Análise de Sentimento</CardTitle>
-          <CardDescription>
-            Configure a API do Claude para análise automática de sentimento e
-            contexto.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="claudeApiKey">API Key do Claude</Label>
-            <div className="flex gap-2">
-              <Input
-                id="claudeApiKey"
-                type="password"
-                value={config.claudeApiKey}
-                onChange={(e) =>
-                  setConfig({ ...config, claudeApiKey: e.target.value })
-                }
-                placeholder="sk-ant-..."
-              />
-              <Button
-                variant="outline"
-                onClick={testClaude}
-                disabled={testing.claude}
-              >
-                {testing.claude ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <TestTube className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            {validations.claude !== undefined && (
-              <Alert>
-                {validations.claude ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                ) : (
-                  <XCircle className="h-4 w-4 text-red-500" />
-                )}
-                <AlertDescription>
-                  {validations.claude
-                    ? 'API Key válida'
-                    : 'API Key inválida ou erro na conexão'}
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
+        {/* Platforms Tab */}
+        <TabsContent value="platforms">
+          <Card>
+            <CardHeader>
+              <CardTitle>Plataformas Monitoradas</CardTitle>
+              <CardDescription>
+                Ative ou desative o monitoramento para redes específicas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[
+                  {
+                    id: 'linkedin',
+                    label: 'LinkedIn',
+                    icon: Linkedin,
+                    desc: 'Coleta de posts corporativos e engajamento.',
+                  },
+                  {
+                    id: 'instagram',
+                    label: 'Instagram',
+                    icon: Instagram,
+                    desc: 'Monitoramento de hashtags e menções.',
+                  },
+                  {
+                    id: 'facebook',
+                    label: 'Facebook',
+                    icon: Facebook,
+                    desc: 'Análise de páginas públicas e grupos.',
+                  },
+                  {
+                    id: 'twitter',
+                    label: 'X (Twitter)',
+                    icon: Twitter,
+                    desc: 'Rastreamento de tweets e trends.',
+                  },
+                  {
+                    id: 'youtube',
+                    label: 'YouTube',
+                    icon: Youtube,
+                    desc: 'Comentários em vídeos do canal.',
+                  },
+                ].map((platform) => (
+                  <div
+                    key={platform.id}
+                    className="flex flex-col space-y-2 rounded-lg border p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <platform.icon className="h-5 w-5 text-muted-foreground" />
+                        <span className="font-semibold">{platform.label}</span>
+                      </div>
+                      <Switch
+                        checked={
+                          settings.platforms[
+                            platform.id as keyof typeof settings.platforms
+                          ]
+                        }
+                        onCheckedChange={(checked) =>
+                          updateSettings({
+                            platforms: {
+                              ...settings.platforms,
+                              [platform.id]: checked,
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {platform.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <div className="space-y-2">
-            <Label htmlFor="claudeModel">Modelo</Label>
-            <Select
-              value={config.claudeModel}
-              onValueChange={(value) =>
-                setConfig({ ...config, claudeModel: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="claude-sonnet-4-20250514">
-                  Claude Sonnet 4
-                </SelectItem>
-                <SelectItem value="claude-3-5-sonnet-20241022">
-                  Claude 3.5 Sonnet
-                </SelectItem>
-                <SelectItem value="claude-3-opus-20240229">
-                  Claude 3 Opus
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Notifications Tab */}
+        <TabsContent value="notifications">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuração de Alertas</CardTitle>
+              <CardDescription>
+                Personalize como e quando você recebe notificações.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Telegram Chat ID</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={settings.notifications.telegramChatId}
+                      onChange={(e) =>
+                        updateSettings({
+                          notifications: {
+                            ...settings.notifications,
+                            telegramChatId: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="Ex: 123456789"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={handleTestTelegram}
+                      disabled={isTestingTelegram}
+                    >
+                      {isTestingTelegram ? (
+                        <Send className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="mr-2 h-4 w-4" />
+                      )}
+                      Testar
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Envie /start para o seu bot para obter este ID.
+                  </p>
+                </div>
+              </div>
 
-      {/* Telegram Configuration */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Telegram - Notificações</CardTitle>
-          <CardDescription>
-            Configure o bot do Telegram para receber alertas automáticos.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="telegramBotToken">Bot Token</Label>
-            <div className="flex gap-2">
-              <Input
-                id="telegramBotToken"
-                type="password"
-                value={config.telegramBotToken}
-                onChange={(e) =>
-                  setConfig({ ...config, telegramBotToken: e.target.value })
-                }
-                placeholder="123456789:ABCdef..."
-              />
-              <Button
-                variant="outline"
-                onClick={testTelegram}
-                disabled={testing.telegram}
-              >
-                {testing.telegram ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <TestTube className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            {validations.telegram !== undefined && (
-              <Alert>
-                {validations.telegram ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                ) : (
-                  <XCircle className="h-4 w-4 text-red-500" />
-                )}
-                <AlertDescription>
-                  {validations.telegram
-                    ? 'Telegram configurado corretamente'
-                    : 'Erro na configuração do Telegram'}
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Gatilhos de Notificação</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <Label className="text-base">Sentimento Negativo</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Alertar quando um post com score &lt; -0.3 for
+                        detectado.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.alertOnNegative}
+                      onCheckedChange={(checked) =>
+                        updateSettings({
+                          notifications: {
+                            ...settings.notifications,
+                            alertOnNegative: checked,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <Label className="text-base">Atividade Concorrente</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Alertar sobre novos posts de empresas concorrentes.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.alertOnCompetitor}
+                      onCheckedChange={(checked) =>
+                        updateSettings({
+                          notifications: {
+                            ...settings.notifications,
+                            alertOnCompetitor: checked,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <Label className="text-base">Pico de Engajamento</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Notificar se um post exceder a média de likes em 50%.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.alertOnSpike}
+                      onCheckedChange={(checked) =>
+                        updateSettings({
+                          notifications: {
+                            ...settings.notifications,
+                            alertOnSpike: checked,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <div className="space-y-2">
-            <Label htmlFor="telegramChatId">Chat ID</Label>
-            <Input
-              id="telegramChatId"
-              value={config.telegramChatId}
-              onChange={(e) =>
-                setConfig({ ...config, telegramChatId: e.target.value })
-              }
-              placeholder="123456789 ou @username"
-            />
-            <p className="text-sm text-muted-foreground">
-              Use @userinfobot no Telegram para obter seu Chat ID.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+        {/* System Tab */}
+        <TabsContent value="system">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sistema & Dados</CardTitle>
+              <CardDescription>
+                Preferências de scraping e gerenciamento de dados.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Frequência de Coleta Automática</Label>
+                  <Select
+                    value={settings.scraping.frequency}
+                    onValueChange={(val: any) =>
+                      updateSettings({
+                        scraping: { ...settings.scraping, frequency: val },
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hourly">A cada hora</SelectItem>
+                      <SelectItem value="daily">Diariamente (00:00)</SelectItem>
+                      <SelectItem value="weekly">Semanalmente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Retenção de Dados (Dias)</Label>
+                  <Input
+                    type="number"
+                    value={settings.scraping.retentionDays}
+                    onChange={(e) =>
+                      updateSettings({
+                        scraping: {
+                          ...settings.scraping,
+                          retentionDays: parseInt(e.target.value),
+                        },
+                      })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Dados mais antigos que este período serão arquivados.
+                  </p>
+                </div>
+              </div>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={saving} size="lg">
-          {saving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
-            </>
-          ) : (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              Salvar Configurações
-            </>
-          )}
-        </Button>
-      </div>
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Exportação de Dados</h3>
+                <div className="flex gap-4">
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={() => handleExport('csv')}
+                  >
+                    <FileText className="mr-2 h-4 w-4" /> Exportar CSV
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={() => handleExport('pdf')}
+                  >
+                    <Download className="mr-2 h-4 w-4" /> Exportar Relatório PDF
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
-

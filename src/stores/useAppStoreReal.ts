@@ -42,16 +42,14 @@ export async function performRealScrape(clientId: string) {
 /**
  * Envia alerta real para o Telegram se configurado
  */
-export async function sendRealAlert(
-  alert: {
-    type: 'sentiment_drop' | 'engagement_spike' | 'competitor_move'
-    severity: 'low' | 'medium' | 'high'
-    title: string
-    message: string
-    clientName?: string
-    url?: string
-  },
-): Promise<{ success: boolean; error?: string }> {
+export async function sendRealAlert(alert: {
+  type: 'sentiment_drop' | 'engagement_spike' | 'competitor_move'
+  severity: 'low' | 'medium' | 'high'
+  title: string
+  message: string
+  clientName?: string
+  url?: string
+}): Promise<{ success: boolean; error?: string }> {
   const config = getApiConfig()
 
   if (!config.telegramBotToken || !config.telegramChatId) {
@@ -69,4 +67,3 @@ export async function sendRealAlert(
     alert,
   )
 }
-

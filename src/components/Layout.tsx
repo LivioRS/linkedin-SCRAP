@@ -20,6 +20,8 @@ const getPageTitle = (pathname: string) => {
       return 'Análise Competitiva'
     case '/alerts':
       return 'Central de Alertas'
+    case '/settings':
+      return 'Configurações do Sistema'
     default:
       return 'ReputaMonitor'
   }
