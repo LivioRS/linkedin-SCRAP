@@ -8,6 +8,7 @@ import {
   Bell,
   ShieldCheck,
   Settings,
+  TrendingUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -24,6 +25,7 @@ export function AppSidebar() {
     { label: 'Feed de Reputação', icon: MessageSquare, path: '/feed' },
     { label: 'Tracker de Posts', icon: Table2, path: '/tracker' },
     { label: 'Análise Competitiva', icon: BarChart2, path: '/analysis' },
+    { label: 'Dashboard Sentimento', icon: TrendingUp, path: '/sentiment' },
     {
       label: 'Central de Alertas',
       icon: Bell,

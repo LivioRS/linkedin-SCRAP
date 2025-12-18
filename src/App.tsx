@@ -10,6 +10,7 @@ import Tracker from './pages/Tracker'
 import Analysis from './pages/Analysis'
 import Alerts from './pages/Alerts'
 import Settings from './pages/Settings'
+import SentimentDashboard from './pages/SentimentDashboard'
 import NotFound from './pages/NotFound'
 
 const App = () => (
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/sentiment" element={<SentimentDashboard />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
