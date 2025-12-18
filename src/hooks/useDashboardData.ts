@@ -1,101 +1,166 @@
-import { useMemo } from 'react'
-import useAppStore from '@/stores/useAppStore'
-import { ClientSentimentData, HeatmapDataPoint } from '@/lib/mockData'
+import { useState, useEffect } from 'react'
+import { Client } from '@/types'
+import { subDays, format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
-export function useDashboardData() {
-  const { clients, posts, metrics } = useAppStore()
+export interface SparklineData {
+  value: number
+}
 
-  const clientsData: ClientSentimentData[] = useMemo(() => {
-    return clients.map((client) => {
-      const clientMetrics = metrics.filter((m) => m.clientId === client.id)
-      const clientPosts = posts.filter((p) => p.clientId === client.id)
+export interface MetricCardData {
+  id: string
+  title: string
+  value: string | number
+  trend: number
+  trendLabel: string
+  data: SparklineData[]
+  color: string
+}
 
-      // Agrupar por data
-      const dataByDate = new Map<string, { sentiment: number; volume: number }>()
+export interface HeatMapCell {
+  day: string
+  hourSlot: string // e.g., "Manhã", "Tarde"
+  value: number // -1 to 1
+}
 
-      clientMetrics.forEach((metric) => {
-        const existing = dataByDate.get(metric.date) || { sentiment: 0, volume: 0 }
-        dataByDate.set(metric.date, {
-          sentiment: existing.sentiment + metric.sentimentScore,
-          volume: existing.volume + metric.postsCount,
-        })
-      })
+export interface ClientChartData {
+  date: string
+  sentiment: number
+  volume: number
+}
 
-      // Converter para array ordenado
-      const data = Array.from(dataByDate.entries())
-        .map(([date, values]) => ({
-          date,
-          sentiment: values.sentiment / (clientMetrics.filter((m) => m.date === date).length || 1),
-          volume: values.volume,
-        }))
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-
-      return {
-        clientId: client.id,
-        clientName: client.name,
-        data: data.length > 0 ? data : [
-          {
-            date: new Date().toISOString().split('T')[0],
-            sentiment: 0,
-            volume: 0,
-          },
-        ],
-      }
-    })
-  }, [clients, metrics, posts])
-
-  const heatmapData: HeatmapDataPoint[] = useMemo(() => {
-    const data: HeatmapDataPoint[] = []
-    const dateSet = new Set<string>()
-
-    // Coletar todas as datas
-    metrics.forEach((m) => dateSet.add(m.date))
-    posts.forEach((p) => {
-      const date = new Date(p.postedAt).toISOString().split('T')[0]
-      dateSet.add(date)
-    })
-
-    const dates = Array.from(dateSet).sort()
-
-    dates.forEach((date) => {
-      clients.forEach((client) => {
-        const dayMetrics = metrics.filter(
-          (m) => m.clientId === client.id && m.date === date,
-        )
-        const dayPosts = posts.filter((p) => {
-          const postDate = new Date(p.postedAt).toISOString().split('T')[0]
-          return p.clientId === client.id && postDate === date
-        })
-
-        const avgSentiment =
-          dayMetrics.length > 0
-            ? dayMetrics.reduce((acc, m) => acc + m.sentimentScore, 0) /
-              dayMetrics.length
-            : dayPosts.length > 0
-              ? dayPosts.reduce((acc, p) => acc + p.sentimentScore, 0) /
-                dayPosts.length
-              : 0
-
-        data.push({
-          date,
-          clientId: client.id,
-          sentiment: avgSentiment,
-          volume: dayPosts.length + dayMetrics.reduce((acc, m) => acc + m.postsCount, 0),
-        })
-      })
-    })
-
-    return data
-  }, [clients, metrics, posts])
-
-  const clientNames = useMemo(() => {
-    return clients.map((c) => c.name)
-  }, [clients])
-
-  return {
-    clientsData,
-    heatmapData,
-    clientNames,
+export interface ClientDashboardData extends Client {
+  history: ClientChartData[]
+  distribution: {
+    positive: number
+    neutral: number
+    negative: number
   }
 }
 
+export function useDashboardData() {
+  const [metrics, setMetrics] = useState<MetricCardData[]>([])
+  const [heatMapData, setHeatMapData] = useState<HeatMapCell[]>([])
+  const [clientsData, setClientsData] = useState<ClientDashboardData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    // Simulate API fetch
+    const loadData = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 800))
+
+      // Mock Metrics
+      const mockMetrics: MetricCardData[] = [
+        {
+          id: 'sentiment',
+          title: 'Sentimento Global',
+          value: '0.68',
+          trend: 12.5,
+          trendLabel: 'vs. mês anterior',
+          data: Array.from({ length: 20 }, () => ({
+            value: 0.4 + Math.random() * 0.4,
+          })),
+          color: 'hsl(var(--primary))',
+        },
+        {
+          id: 'mentions',
+          title: 'Menções Totais',
+          value: '1,284',
+          trend: 8.2,
+          trendLabel: 'vs. mês anterior',
+          data: Array.from({ length: 20 }, () => ({
+            value: 50 + Math.random() * 100,
+          })),
+          color: 'hsl(var(--accent))',
+        },
+        {
+          id: 'engagement',
+          title: 'Engajamento Médio',
+          value: '4.2%',
+          trend: -2.1,
+          trendLabel: 'vs. mês anterior',
+          data: Array.from({ length: 20 }, () => ({
+            value: 3 + Math.random() * 3,
+          })),
+          color: 'hsl(var(--secondary))',
+        },
+        {
+          id: 'reach',
+          title: 'Alcance Potencial',
+          value: '850k',
+          trend: 15.3,
+          trendLabel: 'vs. mês anterior',
+          data: Array.from({ length: 20 }, () => ({
+            value: 200 + Math.random() * 500,
+          })),
+          color: 'hsl(var(--chart-4))',
+        },
+      ]
+
+      // Mock HeatMap
+      const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+      const slots = ['08:00', '12:00', '16:00', '20:00']
+      const mockHeatMap: HeatMapCell[] = []
+      days.forEach((day) => {
+        slots.forEach((slot) => {
+          mockHeatMap.push({
+            day,
+            hourSlot: slot,
+            value: Math.random() * 2 - 0.5, // Bias towards positive
+          })
+        })
+      })
+
+      // Mock Clients Data
+      const mockClients: ClientDashboardData[] = [
+        {
+          id: '1',
+          name: 'Grupo Plaenge',
+          url: 'https://linkedin.com/company/grupo-plaenge',
+          type: 'own',
+          industry: 'Construção Civil',
+          status: 'success',
+          lastUpdated: new Date().toISOString(),
+          avatarUrl:
+            'https://img.usecurling.com/i?q=plaenge&color=green&shape=fill',
+          history: Array.from({ length: 14 }, (_, i) => ({
+            date: format(subDays(new Date(), 13 - i), 'dd/MM', {
+              locale: ptBR,
+            }),
+            sentiment: 0.5 + Math.random() * 0.4,
+            volume: Math.floor(Math.random() * 50) + 10,
+          })),
+          distribution: { positive: 65, neutral: 25, negative: 10 },
+        },
+        {
+          id: '2',
+          name: 'Vanguard',
+          url: 'https://linkedin.com/company/vanguard-home',
+          type: 'competitor',
+          industry: 'Construção Civil',
+          status: 'idle',
+          lastUpdated: new Date().toISOString(),
+          avatarUrl:
+            'https://img.usecurling.com/i?q=vanguard&color=blue&shape=outline',
+          history: Array.from({ length: 14 }, (_, i) => ({
+            date: format(subDays(new Date(), 13 - i), 'dd/MM', {
+              locale: ptBR,
+            }),
+            sentiment: 0.2 + Math.random() * 0.6,
+            volume: Math.floor(Math.random() * 40) + 5,
+          })),
+          distribution: { positive: 45, neutral: 40, negative: 15 },
+        },
+      ]
+
+      setMetrics(mockMetrics)
+      setHeatMapData(mockHeatMap)
+      setClientsData(mockClients)
+      setIsLoading(false)
+    }
+
+    loadData()
+  }, [])
+
+  return { metrics, heatMapData, clientsData, isLoading }
+}

@@ -33,7 +33,8 @@ export const mockClientsData: ClientSentimentData[] = [
         .split('T')[0]
       return {
         date,
-        sentiment: Math.sin((i / 30) * Math.PI * 2) * 0.4 + (Math.random() - 0.5) * 0.3,
+        sentiment:
+          Math.sin((i / 30) * Math.PI * 2) * 0.4 + (Math.random() - 0.5) * 0.3,
         volume: Math.floor(Math.random() * 20) + 5,
       }
     }),
@@ -47,7 +48,9 @@ export const mockClientsData: ClientSentimentData[] = [
         .split('T')[0]
       return {
         date,
-        sentiment: Math.sin((i / 30) * Math.PI * 2 + Math.PI / 3) * 0.5 + (Math.random() - 0.5) * 0.2,
+        sentiment:
+          Math.sin((i / 30) * Math.PI * 2 + Math.PI / 3) * 0.5 +
+          (Math.random() - 0.5) * 0.2,
         volume: Math.floor(Math.random() * 15) + 3,
       }
     }),
@@ -61,7 +64,9 @@ export const mockClientsData: ClientSentimentData[] = [
         .split('T')[0]
       return {
         date,
-        sentiment: Math.sin((i / 30) * Math.PI * 2 - Math.PI / 3) * 0.3 + (Math.random() - 0.5) * 0.4,
+        sentiment:
+          Math.sin((i / 30) * Math.PI * 2 - Math.PI / 3) * 0.3 +
+          (Math.random() - 0.5) * 0.4,
         volume: Math.floor(Math.random() * 18) + 4,
       }
     }),
@@ -76,14 +81,16 @@ Array.from({ length: 30 }).forEach((_, dayIndex) => {
   const date = new Date(Date.now() - (29 - dayIndex) * 86400000)
     .toISOString()
     .split('T')[0]
-  
+
   clients.forEach((clientId, clientIndex) => {
     mockHeatmapData.push({
       date,
       clientId,
-      sentiment: Math.sin((dayIndex / 30) * Math.PI * 2 + (clientIndex * Math.PI / 3)) * 0.4 + (Math.random() - 0.5) * 0.3,
+      sentiment:
+        Math.sin((dayIndex / 30) * Math.PI * 2 + (clientIndex * Math.PI) / 3) *
+          0.4 +
+        (Math.random() - 0.5) * 0.3,
       volume: Math.floor(Math.random() * 20) + 3,
     })
   })
 })
-

@@ -58,7 +58,7 @@ export default function Feed() {
     .filter((post) => {
       const postDate = new Date(post.postedAt)
       const matchesPeriod = postDate >= cutoffDate
-      
+
       const matchesSearch = post.content
         .toLowerCase()
         .includes(searchTerm.toLowerCase())
@@ -291,13 +291,16 @@ export default function Feed() {
           <div className="text-center py-20 text-muted-foreground bg-white rounded-xl border border-dashed shadow-sm">
             <Search className="h-10 w-10 mx-auto mb-4 opacity-20" />
             <p className="text-lg font-medium mb-2">Nenhum post encontrado</p>
-            <p className="text-sm">Tente ajustar os filtros de período ou sentimento.</p>
+            <p className="text-sm">
+              Tente ajustar os filtros de período ou sentimento.
+            </p>
           </div>
         )}
-        
+
         {filteredPosts.length > 0 && (
           <div className="text-center py-4 text-sm text-muted-foreground bg-white rounded-lg border">
-            Mostrando <strong>{filteredPosts.length}</strong> post(s) dos últimos {periodFilter} dias
+            Mostrando <strong>{filteredPosts.length}</strong> post(s) dos
+            últimos {periodFilter} dias
           </div>
         )}
       </div>

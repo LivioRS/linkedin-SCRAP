@@ -217,7 +217,9 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
                 }
               />
               <YAxis hide domain={[-1, 1]} />
-              <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+              <ChartTooltip
+                content={<ChartTooltipContent indicator="line" />}
+              />
               <ChartLegend content={<ChartLegendContent />} />
               {clients.map((client, index) => (
                 <Line

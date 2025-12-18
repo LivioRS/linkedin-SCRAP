@@ -65,12 +65,15 @@ Após acessar, você terá as seguintes páginas disponíveis:
 ## 🔧 Solução de Problemas
 
 ### Erro: "Cannot find module"
+
 Execute novamente: `npm install`
 
 ### Porta 8080 já está em uso
+
 O Vite tentará usar outra porta automaticamente. Verifique o terminal para ver qual porta foi atribuída.
 
 ### Página em branco
+
 1. Verifique o console do navegador (F12) para erros
 2. Certifique-se de que todas as dependências foram instaladas
 3. Tente limpar o cache: `npm run build` e depois `npm start`
@@ -83,4 +86,3 @@ O Vite tentará usar outra porta automaticamente. Verifique o terminal para ver 
 - A porta padrão é **8080** (configurada em `vite.config.ts`)
 - O dashboard carrega dados mockados inicialmente
 - Para usar APIs reais, configure as chaves em `/settings`
-

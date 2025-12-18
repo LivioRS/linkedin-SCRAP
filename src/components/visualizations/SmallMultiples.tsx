@@ -1,5 +1,13 @@
 import React from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+} from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ClientSentimentData } from '@/lib/mockData'
 
@@ -33,11 +41,7 @@ export function SmallMultiples({ clientsData }: SmallMultiplesProps) {
                       })
                     }
                   />
-                  <YAxis
-                    domain={[-1, 1]}
-                    tick={{ fontSize: 10 }}
-                    width={30}
-                  />
+                  <YAxis domain={[-1, 1]} tick={{ fontSize: 10 }} width={30} />
                   <Tooltip
                     labelFormatter={(value) =>
                       new Date(value).toLocaleDateString('pt-BR')
@@ -63,4 +67,3 @@ export function SmallMultiples({ clientsData }: SmallMultiplesProps) {
     </Card>
   )
 }
-
