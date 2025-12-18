@@ -12,9 +12,12 @@ import {
   Alert,
   DailyMetric,
   ScrapingLog,
-  Settings,
+  ApiConfig,
 } from '@/types'
 import { toast } from '@/hooks/use-toast'
+import { getApiConfig } from './useAppStoreReal'
+import { getPlatformMonitor, processPosts } from '@/services/platforms'
+import { sendAlert } from '@/services/api/telegram'
 
 interface AppState {
   clients: Client[]
@@ -239,6 +242,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     })
   }
 
+<<<<<<< HEAD
   const updateSettings = (newSettings: Partial<Settings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }))
     // In a real app, this would call Supabase to persist settings
@@ -272,74 +276,229 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const triggerGlobalScrape = () => {
+=======
+  const triggerGlobalScrape = async () => {
+>>>>>>> 800f66c (feat: Conectar APIs reais e melhorar anÃ¡lise competitiva)
     setIsScraping(true)
     setClients((prev) => prev.map((c) => ({ ...c, status: 'processing' })))
-    toast({
-      title: 'Iniciando Scraper (Apify)',
-      description: 'Coletando dados do LinkedIn...',
-    })
+    
+    const apiConfig = getApiConfig()
+    const startTime = Date.now()
 
-    setTimeout(() => {
-      // Simulate Step 2: Analysis
+    try {
+      // Verificar se as APIs estão configuradas
+      if (!apiConfig.apifyApiKey) {
+        toast({
+          title: 'API não configurada',
+          description: 'Configure a API Key do Apify em Configurações.',
+          variant: 'destructive',
+        })
+        setIsScraping(false)
+        setClients((prev) => prev.map((c) => ({ ...c, status: 'error' })))
+        return
+      }
+
       toast({
-        title: 'Análise de IA (Claude)',
-        description: 'Processando sentimento e contexto...',
+        title: 'Iniciando Scraper (Apify)',
+        description: 'Coletando dados das redes sociais...',
       })
 
-      // Simulate Data Updates
-      setClients((prev) =>
-        prev.map((c) => ({
-          ...c,
-          status: 'success',
-          lastUpdated: new Date().toISOString(),
-        })),
-      )
+      const allNewPosts: Post[] = []
+      const allNewAlerts: Alert[] = []
+      let totalItemsCollected = 0
 
-      // Add new post for random client
-      const randomClient = clients[Math.floor(Math.random() * clients.length)]
-      if (randomClient) {
-        const newPost: Post = {
-          id: `new-post-${Date.now()}`,
-          clientId: randomClient.id,
-          content: `Novo post detectado durante o scrape! Análise de mercado em tempo real. #Alert`,
-          likes: 0,
-          comments: 0,
-          shares: 0,
-          views: 10,
-          sentimentScore: 0.9,
-          sentimentExplanation:
-            'Post recém capturado com alto potencial de engajamento positivo.',
-          postedAt: new Date().toISOString(),
-          url: '#',
-        }
-        setPosts((prev) => [newPost, ...prev])
+      // Processar cada cliente
+      for (const client of clients) {
+        try {
+          // Determinar plataforma do cliente
+          const platform = client.platform || 'linkedin'
+          const monitor = getPlatformMonitor(platform)
 
-        // Trigger Alert if competitor
-        if (randomClient.type === 'competitor') {
-          const newAlert: Alert = {
-            id: Math.random().toString(),
-            type: 'competitor_move',
-            message: `Atividade recente detectada em ${randomClient.name}.`,
-            severity: 'medium',
-            createdAt: new Date().toISOString(),
-            isRead: false,
+          // Configuração específica do cliente ou padrão
+          const clientConfig = {
+            apifyApiKey: apiConfig.apifyApiKey,
+            apifyTaskId: apiConfig.apifyTaskId || client.platformConfig?.taskId,
+            accessToken: client.platformConfig?.accessToken,
           }
-          setAlerts((prev) => [newAlert, ...prev])
-          toast({
-            title: 'Alerta Enviado (Telegram)',
-            description: `Movimento detectado em ${randomClient.name} enviado para o bot.`,
-            variant: 'destructive',
-          })
+
+          // Executar scraping
+          const scrapeResult = await monitor.scrape(client, clientConfig)
+
+          if (scrapeResult.success && scrapeResult.posts.length > 0) {
+            totalItemsCollected += scrapeResult.posts.length
+
+            // Processar posts com análise de sentimento (se Claude configurado)
+            let processedPosts = scrapeResult.posts
+            if (apiConfig.claudeApiKey) {
+              toast({
+                title: 'Análise de IA (Claude)',
+                description: `Analisando ${scrapeResult.posts.length} posts de ${client.name}...`,
+              })
+
+              processedPosts = await processPosts(scrapeResult.posts, {
+                claudeApiKey: apiConfig.claudeApiKey,
+                claudeModel: apiConfig.claudeModel,
+                telegramConfig: apiConfig.telegramBotToken && apiConfig.telegramChatId
+                  ? {
+                      botToken: apiConfig.telegramBotToken,
+                      chatId: apiConfig.telegramChatId,
+                    }
+                  : undefined,
+                alertThreshold: -0.3,
+              })
+            }
+
+            allNewPosts.push(...processedPosts)
+
+            // Verificar posts negativos e criar alertas
+            const negativePosts = processedPosts.filter(
+              (p) => p.sentimentScore < -0.3,
+            )
+
+            for (const post of negativePosts) {
+              const alert: Alert = {
+                id: Math.random().toString(),
+                type: 'sentiment_drop',
+                message: `Post com sentimento negativo detectado em ${client.name}: ${post.content.substring(0, 50)}...`,
+                severity: post.sentimentScore < -0.6 ? 'high' : 'medium',
+                createdAt: new Date().toISOString(),
+                isRead: false,
+              }
+              allNewAlerts.push(alert)
+
+              // Enviar para Telegram se configurado
+              if (apiConfig.telegramBotToken && apiConfig.telegramChatId) {
+                await sendAlert(
+                  {
+                    botToken: apiConfig.telegramBotToken,
+                    chatId: apiConfig.telegramChatId,
+                  },
+                  {
+                    type: 'sentiment_drop',
+                    severity: alert.severity,
+                    title: 'Queda de Sentimento Detectada',
+                    message: alert.message,
+                    clientName: client.name,
+                    url: post.url,
+                  },
+                )
+              }
+            }
+
+            // Alertas para movimentos de concorrentes
+            if (client.type === 'competitor' && processedPosts.length > 0) {
+              const alert: Alert = {
+                id: Math.random().toString(),
+                type: 'competitor_move',
+                message: `${processedPosts.length} novo(s) post(s) detectado(s) em ${client.name}.`,
+                severity: 'medium',
+                createdAt: new Date().toISOString(),
+                isRead: false,
+              }
+              allNewAlerts.push(alert)
+
+              if (apiConfig.telegramBotToken && apiConfig.telegramChatId) {
+                await sendAlert(
+                  {
+                    botToken: apiConfig.telegramBotToken,
+                    chatId: apiConfig.telegramChatId,
+                  },
+                  {
+                    type: 'competitor_move',
+                    severity: 'medium',
+                    title: 'Atividade de Concorrente',
+                    message: alert.message,
+                    clientName: client.name,
+                  },
+                )
+              }
+            }
+
+            // Atualizar status do cliente
+            setClients((prev) =>
+              prev.map((c) =>
+                c.id === client.id
+                  ? {
+                      ...c,
+                      status: 'success',
+                      lastUpdated: new Date().toISOString(),
+                    }
+                  : c,
+              ),
+            )
+          } else if (!scrapeResult.success) {
+            // Erro no scraping
+            setClients((prev) =>
+              prev.map((c) =>
+                c.id === client.id
+                  ? { ...c, status: 'error' }
+                  : c,
+              ),
+            )
+            toast({
+              title: `Erro ao coletar ${client.name}`,
+              description: scrapeResult.error || 'Erro desconhecido',
+              variant: 'destructive',
+            })
+          }
+        } catch (error) {
+          console.error(`Erro ao processar cliente ${client.name}:`, error)
+          setClients((prev) =>
+            prev.map((c) =>
+              c.id === client.id ? { ...c, status: 'error' } : c,
+            ),
+          )
         }
       }
 
+      // Atualizar posts e alertas
+      if (allNewPosts.length > 0) {
+        setPosts((prev) => [...allNewPosts, ...prev])
+      }
+
+      if (allNewAlerts.length > 0) {
+        setAlerts((prev) => [...allNewAlerts, ...prev])
+      }
+
+      // Atualizar métricas diárias
+      const today = new Date().toISOString().split('T')[0]
+      const newMetrics: DailyMetric[] = clients.map((client) => {
+        const clientPosts = allNewPosts.filter((p) => p.clientId === client.id)
+        const avgSentiment =
+          clientPosts.length > 0
+            ? clientPosts.reduce((acc, p) => acc + p.sentimentScore, 0) /
+              clientPosts.length
+            : 0
+        const totalEngagement = clientPosts.reduce(
+          (acc, p) => acc + (p.likes + p.comments + p.shares) / (p.views || 1),
+          0,
+        ) / (clientPosts.length || 1)
+
+        return {
+          date: today,
+          clientId: client.id,
+          sentimentScore: avgSentiment,
+          engagementRate: totalEngagement,
+          postsCount: clientPosts.length,
+        }
+      })
+
+      setMetrics((prev) => {
+        // Remover métricas duplicadas do dia atual e adicionar novas
+        const filtered = prev.filter((m) => m.date !== today)
+        return [...filtered, ...newMetrics]
+      })
+
+      // Registrar log de scraping
+      const durationMs = Date.now() - startTime
       setScrapingLogs((prev) => [
         {
           id: Math.random().toString(),
           date: new Date().toISOString(),
-          status: 'success',
-          itemsCollected: Math.floor(Math.random() * 50) + 10,
-          durationMs: 4500,
+          status: totalItemsCollected > 0 ? 'success' : 'failed',
+          itemsCollected: totalItemsCollected,
+          durationMs,
+          platform: 'multiple',
         },
         ...prev,
       ])
@@ -347,9 +506,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setIsScraping(false)
       toast({
         title: 'Ciclo Concluído',
-        description: 'Dados sincronizados com o Supabase.',
+        description: `${totalItemsCollected} itens coletados e analisados com sucesso.`,
       })
-    }, 3000)
+    } catch (error) {
+      console.error('Erro no scraping global:', error)
+      setIsScraping(false)
+      setClients((prev) => prev.map((c) => ({ ...c, status: 'error' })))
+      toast({
+        title: 'Erro no Scraping',
+        description:
+          error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive',
+      })
+    }
   }
 
   const markAlertRead = (id: string) => {
