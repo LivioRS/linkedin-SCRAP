@@ -24,7 +24,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  ResponsiveContainer,
 } from 'recharts'
 
 interface SentimentChartsProps {
@@ -52,15 +51,15 @@ export function SentimentCharts({
   const distributionConfig: ChartConfig = {
     positive: {
       label: 'Positivo',
-      color: 'hsl(var(--success))',
+      color: 'hsl(142, 70%, 45%)',
     },
     neutral: {
       label: 'Neutro',
-      color: 'hsl(var(--muted))',
+      color: 'hsl(210, 40%, 90%)',
     },
     negative: {
       label: 'Negativo',
-      color: 'hsl(var(--destructive))',
+      color: 'hsl(0, 84%, 60%)',
     },
   }
 
@@ -73,13 +72,13 @@ export function SentimentCharts({
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <Card className="col-span-2 shadow-planin border-none">
+      <Card className="col-span-2 shadow-sm border-none bg-white">
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-primary">
+          <CardTitle className="text-lg font-bold text-foreground">
             Tendência de Sentimento
           </CardTitle>
           <CardDescription>
-            Evolução histórica do score de reputação e volume de menções.
+            Evolução histórica do score e volume.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -91,7 +90,7 @@ export function SentimentCharts({
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
-                stroke="#e5e7eb"
+                stroke="#f0f0f0"
               />
               <XAxis
                 dataKey="date"
@@ -142,9 +141,9 @@ export function SentimentCharts({
         </CardContent>
       </Card>
 
-      <Card className="shadow-planin border-none">
+      <Card className="shadow-sm border-none bg-white">
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-primary">
+          <CardTitle className="text-lg font-bold text-foreground">
             Distribuição
           </CardTitle>
           <CardDescription>Share de sentimento total.</CardDescription>
@@ -178,13 +177,13 @@ export function SentimentCharts({
         </CardContent>
       </Card>
 
-      <Card className="col-span-full md:col-span-1 lg:col-span-3 shadow-planin border-none">
+      <Card className="col-span-full md:col-span-1 lg:col-span-3 shadow-sm border-none bg-white">
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-primary">
-            Análise de Tópicos & Palavras-chave
+          <CardTitle className="text-lg font-bold text-foreground">
+            Tópicos & Palavras-chave
           </CardTitle>
           <CardDescription>
-            Assuntos mais frequentes associados à marca no período selecionado.
+            Assuntos mais frequentes associados à marca.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -194,7 +193,7 @@ export function SentimentCharts({
               layout="vertical"
               margin={{ left: 0, right: 20 }}
             >
-              <CartesianGrid horizontal={false} stroke="#e5e7eb" />
+              <CartesianGrid horizontal={false} stroke="#f0f0f0" />
               <YAxis
                 dataKey="topic"
                 type="category"

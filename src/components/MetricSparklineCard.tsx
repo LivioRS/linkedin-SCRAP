@@ -1,13 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react'
-import {
-  LineChart,
-  Line,
-  ResponsiveContainer,
-  YAxis,
-  XAxis,
-  Tooltip,
-} from 'recharts'
+import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
+import { LineChart, Line, YAxis, XAxis, Tooltip } from 'recharts'
 import { cn } from '@/lib/utils'
 import { SparklineData } from '@/hooks/useDashboardData'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
@@ -29,7 +22,9 @@ export function MetricSparklineCard({
   data,
   color,
 }: MetricSparklineCardProps) {
-  const isPositive = trend >= 0
+  const isPositive = trend > 0
+  const isNeutral = trend === 0
+
   const chartConfig = {
     value: {
       label: 'Valor',
@@ -38,37 +33,45 @@ export function MetricSparklineCard({
   }
 
   return (
-    <Card className="flex flex-col justify-between h-full shadow-planin hover:shadow-planin-hover transition-all duration-300">
+    <Card className="flex flex-col justify-between h-full shadow-sm hover:shadow-md transition-all duration-300 border-border/60">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+        <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
           {title}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-baseline gap-2 mb-4">
-          <span className="text-3xl font-bold text-primary">{value}</span>
+        <div className="flex items-baseline gap-2 mb-3">
+          <span className="text-3xl font-bold text-foreground tracking-tight">
+            {value}
+          </span>
           <div
             className={cn(
-              'flex items-center text-xs font-medium',
-              isPositive ? 'text-green-600' : 'text-red-600',
+              'flex items-center text-xs font-bold px-1.5 py-0.5 rounded-full',
+              isPositive
+                ? 'bg-green-100 text-green-700'
+                : isNeutral
+                  ? 'bg-gray-100 text-gray-700'
+                  : 'bg-red-100 text-red-700',
             )}
           >
             {isPositive ? (
               <ArrowUpRight className="h-3 w-3 mr-1" />
+            ) : isNeutral ? (
+              <Minus className="h-3 w-3 mr-1" />
             ) : (
               <ArrowDownRight className="h-3 w-3 mr-1" />
             )}
             {Math.abs(trend)}%
-            <span className="text-muted-foreground ml-1 font-normal">
-              {trendLabel}
-            </span>
           </div>
         </div>
-        <div className="h-[60px] w-full">
+        <div className="text-xs text-muted-foreground mb-4 -mt-1 pl-0.5">
+          {trendLabel}
+        </div>
+        <div className="h-[50px] w-full mt-auto">
           <ChartContainer config={chartConfig} className="h-full w-full">
             <LineChart data={data}>
               <XAxis hide dataKey="index" />
-              <YAxis hide domain={['dataMin', 'dataMax']} />
+              <YAxis hide domain={['dataMin - 10', 'dataMax + 10']} />
               <Tooltip
                 content={<ChartTooltipContent hideLabel indicator="line" />}
                 cursor={{
@@ -81,10 +84,10 @@ export function MetricSparklineCard({
                 type="monotone"
                 dataKey="value"
                 stroke={color}
-                strokeWidth={2}
+                strokeWidth={2.5}
                 dot={false}
-                activeDot={{ r: 4, fill: color }}
-                animationDuration={1000}
+                activeDot={{ r: 4, fill: color, strokeWidth: 0 }}
+                animationDuration={1500}
               />
             </LineChart>
           </ChartContainer>
