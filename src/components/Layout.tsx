@@ -16,8 +16,12 @@ const getPageTitle = (pathname: string) => {
       return 'Gerenciamento de Clientes'
     case '/feed':
       return 'Feed de Reputação'
+    case '/tracker':
+      return 'Tracker de Posts'
     case '/analysis':
       return 'Análise Competitiva'
+    case '/sentiment':
+      return 'Dashboard de Sentimento'
     case '/alerts':
       return 'Central de Alertas'
     case '/settings':
