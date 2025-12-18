@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import useAppStore from '@/stores/useAppStore'
 import {
   Select,
@@ -7,327 +7,159 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-  type ChartConfig,
-} from '@/components/ui/chart'
-import {
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from 'recharts'
-import { Lightbulb, Activity, TrendingUp } from 'lucide-react'
+import { AnalysisHeader } from '@/components/analysis/AnalysisHeader'
+import { SentimentOverview } from '@/components/analysis/SentimentOverview'
+import { SentimentCharts } from '@/components/analysis/SentimentCharts'
+import { MentionsFeed } from '@/components/analysis/MentionsFeed'
+import { subDays, isAfter } from 'date-fns'
 
 export default function Analysis() {
-  const { clients, metrics, posts } = useAppStore()
+  const { clients, posts, metrics } = useAppStore()
   const [period, setPeriod] = useState('30')
-
-  const shareOfVoiceData = clients
-    .map((client) => ({
-      name: client.name,
-      value: posts.filter((p) => p.clientId === client.id).length,
-    }))
-    .filter((d) => d.value > 0)
-
-  const pieChartConfig: ChartConfig = clients.reduce((acc, client, index) => {
-    acc[client.name] = {
-      label: client.name,
-      color: `hsl(var(--chart-${(index % 5) + 1}))`,
-    }
-    return acc
-  }, {} as ChartConfig)
-
-  const dates = Array.from(new Set(metrics.map((m) => m.date))).sort()
-  const trendData = dates
-    .map((date) => {
-      const entry: any = { date }
-      clients.forEach((client) => {
-        const metric = metrics.find(
-          (m) => m.clientId === client.id && m.date === date,
-        )
-        entry[client.name] = metric ? metric.sentimentScore : 0
-      })
-      return entry
-    })
-    .slice(-parseInt(period))
-
-  const trendChartConfig: ChartConfig = { ...pieChartConfig }
-
-  const engagementData = clients.map((client) => {
-    const clientMetrics = metrics.filter((m) => m.clientId === client.id)
-    const avgEngagement =
-      clientMetrics.reduce((sum, m) => sum + m.engagementRate, 0) /
-      (clientMetrics.length || 1)
-    return { name: client.name, engagement: avgEngagement * 100 }
-  })
-
-  const barChartConfig: ChartConfig = {
-    engagement: {
-      label: 'Taxa de Engajamento (%)',
-      color: 'hsl(var(--primary))',
-    },
-    ...pieChartConfig,
-  }
+  const [platform, setPlatform] = useState('all')
 
   const ownClient = clients.find((c) => c.type === 'own')
-  const competitors = clients.filter((c) => c.type === 'competitor')
-  const ownEngagement =
-    engagementData.find((d) => d.name === ownClient?.name)?.engagement || 0
-  const avgCompEngagement =
-    competitors.reduce(
-      (sum, c) =>
-        sum + (engagementData.find((d) => d.name === c.name)?.engagement || 0),
-      0,
-    ) / (competitors.length || 1)
+
+  // Filter Data Logic
+  const filteredData = useMemo(() => {
+    const cutoffDate = subDays(new Date(), parseInt(period))
+
+    const filteredPosts = posts.filter((post) => {
+      const isDateValid = isAfter(new Date(post.postedAt), cutoffDate)
+      const isPlatformValid =
+        platform === 'all' ||
+        post.vehicle?.toLowerCase() === platform.toLowerCase() ||
+        (platform === 'linkedin' && !post.vehicle) // Default to LinkedIn if missing
+      return isDateValid && isPlatformValid
+    })
+
+    const filteredMetrics = metrics.filter((metric) => {
+      const isDateValid = isAfter(new Date(metric.date), cutoffDate)
+      // Metrics might not have platform data in this mock structure, assuming global or checking source
+      return isDateValid && metric.clientId === ownClient?.id
+    })
+
+    return { posts: filteredPosts, metrics: filteredMetrics }
+  }, [posts, metrics, period, platform, ownClient])
+
+  // Calculate KPIs
+  const kpis = useMemo(() => {
+    const totalMentions = filteredData.posts.length
+    const sentimentScore =
+      filteredData.posts.reduce((acc, p) => acc + p.sentimentScore, 0) /
+      (totalMentions || 1)
+
+    const engagementRate =
+      filteredData.posts.reduce(
+        (acc, p) => acc + (p.likes + p.comments) / (p.views || 100),
+        0,
+      ) / (totalMentions || 1)
+
+    const positiveCount = filteredData.posts.filter(
+      (p) => p.sentimentScore > 0.3,
+    ).length
+    const negativeCount = filteredData.posts.filter(
+      (p) => p.sentimentScore < -0.3,
+    ).length
+    const npsScore =
+      totalMentions > 0
+        ? ((positiveCount - negativeCount) / totalMentions) * 100
+        : 0
+
+    return { totalMentions, sentimentScore, engagementRate, npsScore }
+  }, [filteredData])
+
+  // Prepare Chart Data
+  const chartData = useMemo(() => {
+    // Trend Data
+    const dates = Array.from(
+      new Set(filteredData.posts.map((p) => p.postedAt.split('T')[0])),
+    ).sort()
+    const trendData = dates.map((date) => {
+      const dayPosts = filteredData.posts.filter((p) =>
+        p.postedAt.startsWith(date),
+      )
+      const sentiment =
+        dayPosts.reduce((acc, p) => acc + p.sentimentScore, 0) /
+        (dayPosts.length || 1)
+      return {
+        date,
+        sentiment: parseFloat(sentiment.toFixed(2)),
+        volume: dayPosts.length,
+      }
+    })
+
+    // Distribution Data
+    const positive = filteredData.posts.filter(
+      (p) => p.sentimentScore > 0.3,
+    ).length
+    const negative = filteredData.posts.filter(
+      (p) => p.sentimentScore < -0.3,
+    ).length
+    const neutral = filteredData.posts.length - positive - negative
+    const distributionData = [
+      { name: 'Positivo', value: positive, color: 'hsl(var(--success))' },
+      { name: 'Neutro', value: neutral, color: 'hsl(var(--muted))' },
+      { name: 'Negativo', value: negative, color: 'hsl(var(--destructive))' },
+    ].filter((d) => d.value > 0)
+
+    // Topic Data (Mocked based on categories for now)
+    const topicMap = new Map<string, number>()
+    filteredData.posts.forEach((p) => {
+      const topic = p.category || 'Geral'
+      topicMap.set(topic, (topicMap.get(topic) || 0) + 1)
+    })
+    const topicData = Array.from(topicMap.entries())
+      .map(([topic, count]) => ({ topic, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+
+    return { trendData, distributionData, topicData }
+  }, [filteredData])
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl shadow-planin">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-primary">
-            Análise Competitiva
-          </h2>
-          <p className="text-muted-foreground">
-            Comparação detalhada de performance e reputação de mercado.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-lg border">
-          <span className="text-sm font-medium px-2 text-gray-600">
-            Período:
-          </span>
+    <div className="space-y-8 animate-fade-in">
+      {/* Header Section */}
+      <AnalysisHeader />
+
+      {/* Filter Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl border shadow-sm gap-4">
+        <h2 className="text-lg font-semibold text-primary">
+          Filtros de Análise
+        </h2>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <Select value={platform} onValueChange={setPlatform}>
+            <SelectTrigger className="w-[180px] bg-gray-50 border-gray-200 focus:ring-accent">
+              <SelectValue placeholder="Plataforma" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as Fontes</SelectItem>
+              <SelectItem value="linkedin">LinkedIn</SelectItem>
+              <SelectItem value="instagram">Instagram</SelectItem>
+              <SelectItem value="news">Notícias</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[140px] border-0 bg-white shadow-sm h-8">
+            <SelectTrigger className="w-[180px] bg-gray-50 border-gray-200 focus:ring-accent">
               <SelectValue placeholder="Período" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="7">Últimos 7 Dias</SelectItem>
               <SelectItem value="30">Últimos 30 Dias</SelectItem>
-              <SelectItem value="90">Últimos 90 Dias</SelectItem>
+              <SelectItem value="90">Últimos 3 Meses</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="h-full">
-          <CardHeader>
-            <CardTitle>Share of Voice</CardTitle>
-            <CardDescription>
-              Volume de menções e posts por marca
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={pieChartConfig}
-              className="min-h-[300px] w-full"
-            >
-              <PieChart>
-                <Pie
-                  data={shareOfVoiceData}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={80}
-                  paddingAngle={5}
-                  stroke="#fff"
-                  strokeWidth={2}
-                >
-                  {shareOfVoiceData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={`hsl(var(--chart-${(index % 5) + 1}))`}
-                    />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend
-                  content={<ChartLegendContent />}
-                  className="-translate-y-2 flex-wrap gap-2"
-                />
-              </PieChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-        <Card className="h-full">
-          <CardHeader>
-            <CardTitle>Comparativo de Engajamento</CardTitle>
-            <CardDescription>Média de engajamento no período</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={barChartConfig}
-              className="min-h-[300px] w-full"
-            >
-              <BarChart
-                data={engagementData}
-                layout="vertical"
-                margin={{ left: 0 }}
-              >
-                <CartesianGrid
-                  horizontal={true}
-                  vertical={false}
-                  strokeDasharray="3 3"
-                  stroke="#e5e7eb"
-                />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  hide
-                  width={100}
-                  tick={{ fontSize: 12 }}
-                />
-                <XAxis
-                  type="number"
-                  unit="%"
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="engagement" radius={[0, 4, 4, 0]} barSize={32}>
-                  {engagementData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={`hsl(var(--chart-${(index % 5) + 1}))`}
-                    />
-                  ))}
-                </Bar>
-                <ChartLegend content={<ChartLegendContent />} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Evolução de Sentimento</CardTitle>
-            <CardDescription>
-              Tendência histórica do score de sentimento (-1 a 1)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={trendChartConfig}
-              className="h-[400px] w-full"
-            >
-              <LineChart
-                data={trendData}
-                margin={{ top: 20, right: 20, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#e5e7eb"
-                />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={(value) =>
-                    new Date(value).toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: 'short',
-                    })
-                  }
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={10}
-                  tick={{ fill: '#6B7280' }}
-                />
-                <YAxis
-                  domain={[-1, 1]}
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fill: '#6B7280' }}
-                />
-                <ChartTooltip
-                  content={<ChartTooltipContent indicator="line" />}
-                />
-                <ChartLegend content={<ChartLegendContent />} />
-                {clients.map((client, index) => (
-                  <Line
-                    key={client.id}
-                    type="monotone"
-                    dataKey={client.name}
-                    stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
-                    strokeWidth={3}
-                    dot={false}
-                    activeDot={{ r: 6 }}
-                  />
-                ))}
-              </LineChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
-      <Card className="bg-gradient-to-br from-primary/5 to-secondary/10 border-accent/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-primary">
-            <Lightbulb className="h-5 w-5 text-accent" /> Insights Competitivos
-            (Claude AI)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {ownEngagement > avgCompEngagement ? (
-            <div className="flex items-start gap-4 p-4 bg-white/80 rounded-xl shadow-sm border border-white/50">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Activity className="h-6 w-6 text-green-700" />
-              </div>
-              <div>
-                <p className="font-bold text-gray-900 text-lg">
-                  Liderança em Engajamento
-                </p>
-                <p className="text-gray-600 mt-1">
-                  Sua marca tem{' '}
-                  <span className="text-green-700 font-bold">
-                    {(ownEngagement - avgCompEngagement).toFixed(1)}%
-                  </span>{' '}
-                  mais engajamento que a média dos concorrentes. Continue com a
-                  estratégia de conteúdo atual.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-start gap-4 p-4 bg-white/80 rounded-xl shadow-sm border border-white/50">
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-amber-700" />
-              </div>
-              <div>
-                <p className="font-bold text-gray-900 text-lg">
-                  Oportunidade de Melhoria
-                </p>
-                <p className="text-gray-600 mt-1">
-                  O engajamento está abaixo da média do setor. Considere
-                  analisar os posts com melhor performance dos concorrentes para
-                  identificar temas de interesse.
-                </p>
-              </div>
-            </div>
-          )}
-          <div className="p-4 bg-white/80 rounded-xl shadow-sm border border-white/50">
-            <p className="text-gray-600 leading-relaxed">
-              "A análise de tendências mostra que{' '}
-              <strong className="text-primary">
-                {clients.find((c) => c.type === 'competitor')?.name}
-              </strong>{' '}
-              teve um pico de sentimento positivo na última semana,
-              correlacionado com o lançamento de uma nova feature."
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+
+      {/* KPI Section */}
+      <SentimentOverview {...kpis} />
+
+      {/* Charts Section */}
+      <SentimentCharts {...chartData} />
+
+      {/* Feed Section */}
+      <MentionsFeed posts={filteredData.posts.slice(0, 10)} clients={clients} />
     </div>
   )
 }

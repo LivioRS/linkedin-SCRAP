@@ -188,9 +188,7 @@ const GENERATE_COMMENTS = (postId: string, count: number): Comment[] => {
       postId,
       author: authorNames[Math.floor(Math.random() * authorNames.length)],
       content:
-        COMMENT_TEMPLATES[
-          Math.floor(Math.random() * COMMENT_TEMPLATES.length)
-        ],
+        COMMENT_TEMPLATES[Math.floor(Math.random() * COMMENT_TEMPLATES.length)],
       sentimentScore: Math.random() * 1.2 - 0.2, // Tendência positiva
       postedAt: commentDate.toISOString(),
     })
@@ -217,7 +215,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   })
 
   // Função para gerar posts dos últimos 90 dias na inicialização
-  const GENERATE_INITIAL_POSTS = (clients: Client[]): {
+  const GENERATE_INITIAL_POSTS = (
+    clients: Client[],
+  ): {
     posts: Post[]
     comments: Comment[]
   } => {
@@ -232,37 +232,65 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (!shouldHavePost) return
 
         const numPostsToday = Math.random() > 0.5 ? 1 : 2 // 1 ou 2 posts por dia
-        
+
         Array.from({ length: numPostsToday }).forEach((_, postIndex) => {
           const postId = `${client.id}-post-init-${dayIndex}-${postIndex}`
           const dayOffset = days - dayIndex - 1
           const randomHour = Math.floor(Math.random() * 24)
           const randomMinute = Math.floor(Math.random() * 60)
-          
+
           // Distribuir sentimento de forma mais realista ao longo do tempo
-          const baseSentiment = Math.sin((dayIndex / days) * Math.PI * 2) * 0.3 + (Math.random() - 0.5) * 0.4
+          const baseSentiment =
+            Math.sin((dayIndex / days) * Math.PI * 2) * 0.3 +
+            (Math.random() - 0.5) * 0.4
           const sentimentScore = Math.max(-1, Math.min(1, baseSentiment))
-          
+
           const postComments = GENERATE_COMMENTS(
             postId,
             Math.floor(Math.random() * 8),
           )
 
           const postedAt = new Date(
-            Date.now() - dayOffset * 86400000 - randomHour * 3600000 - randomMinute * 60000
+            Date.now() -
+              dayOffset * 86400000 -
+              randomHour * 3600000 -
+              randomMinute * 60000,
           )
 
-          const vehicles = ['InfoMoney', 'Folha de Curitiba', 'Money Times', 'Bing News', 'LinkedIn', 'Instagram', 'Facebook', 'Twitter']
-          const regions = ['Corporativo', 'Regional', 'Nacional', 'Internacional']
-          const categories = ['Operacional', 'Financeiro', 'Marketing', 'RH', 'Sustentabilidade', 'Inovação']
-          
-          const content = SAMPLE_POST_TEMPLATES[
-            Math.floor(Math.random() * SAMPLE_POST_TEMPLATES.length)
+          const vehicles = [
+            'InfoMoney',
+            'Folha de Curitiba',
+            'Money Times',
+            'Bing News',
+            'LinkedIn',
+            'Instagram',
+            'Facebook',
+            'Twitter',
           ]
+          const regions = [
+            'Corporativo',
+            'Regional',
+            'Nacional',
+            'Internacional',
+          ]
+          const categories = [
+            'Operacional',
+            'Financeiro',
+            'Marketing',
+            'RH',
+            'Sustentabilidade',
+            'Inovação',
+          ]
+
+          const content =
+            SAMPLE_POST_TEMPLATES[
+              Math.floor(Math.random() * SAMPLE_POST_TEMPLATES.length)
+            ]
           const vehicle = vehicles[Math.floor(Math.random() * vehicles.length)]
           const region = regions[Math.floor(Math.random() * regions.length)]
-          const category = categories[Math.floor(Math.random() * categories.length)]
-          
+          const category =
+            categories[Math.floor(Math.random() * categories.length)]
+
           // Calcular urgência baseada no sentimento e engajamento
           const likes = Math.floor(Math.random() * 500) + 10
           let urgency: 'baixa' | 'media' | 'alta' = 'baixa'
@@ -307,7 +335,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     setMetrics(GENERATE_MOCK_METRICS(clients))
     // Gerar posts iniciais dos últimos 90 dias
-    const { posts: initialPosts, comments: initialComments } = GENERATE_INITIAL_POSTS(clients)
+    const { posts: initialPosts, comments: initialComments } =
+      GENERATE_INITIAL_POSTS(clients)
     setPosts(initialPosts)
     setComments(initialComments)
   }, [])
@@ -525,15 +554,32 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const sentiment = Math.random() * 1.6 - 0.6 // bias slightly positive
         const isNegative = sentiment < -0.3
 
-        const vehicles = ['InfoMoney', 'Folha de Curitiba', 'Money Times', 'Bing News', 'LinkedIn', 'Instagram', 'Facebook', 'Twitter']
+        const vehicles = [
+          'InfoMoney',
+          'Folha de Curitiba',
+          'Money Times',
+          'Bing News',
+          'LinkedIn',
+          'Instagram',
+          'Facebook',
+          'Twitter',
+        ]
         const regions = ['Corporativo', 'Regional', 'Nacional', 'Internacional']
-        const categories = ['Operacional', 'Financeiro', 'Marketing', 'RH', 'Sustentabilidade', 'Inovação']
-        
+        const categories = [
+          'Operacional',
+          'Financeiro',
+          'Marketing',
+          'RH',
+          'Sustentabilidade',
+          'Inovação',
+        ]
+
         const vehicle = vehicles[Math.floor(Math.random() * vehicles.length)]
         const region = regions[Math.floor(Math.random() * regions.length)]
-        const category = categories[Math.floor(Math.random() * categories.length)]
+        const category =
+          categories[Math.floor(Math.random() * categories.length)]
         const likes = Math.floor(Math.random() * 500)
-        
+
         let urgency: 'baixa' | 'media' | 'alta' = 'baixa'
         if (sentiment < -0.5 || likes > 1000) urgency = 'alta'
         else if (sentiment < -0.3 || likes > 500) urgency = 'media'
@@ -583,13 +629,35 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (Math.random() > 0.7) {
           const client =
             clients.find((c) => c.type === 'own') || MOCK_CLIENTS[0]
-          const vehicles = ['InfoMoney', 'Folha de Curitiba', 'Money Times', 'Bing News', 'LinkedIn', 'Instagram', 'Facebook', 'Twitter']
-          const regions = ['Corporativo', 'Regional', 'Nacional', 'Internacional']
-          const categories = ['Operacional', 'Financeiro', 'Marketing', 'RH', 'Sustentabilidade', 'Inovação']
-          
+          const vehicles = [
+            'InfoMoney',
+            'Folha de Curitiba',
+            'Money Times',
+            'Bing News',
+            'LinkedIn',
+            'Instagram',
+            'Facebook',
+            'Twitter',
+          ]
+          const regions = [
+            'Corporativo',
+            'Regional',
+            'Nacional',
+            'Internacional',
+          ]
+          const categories = [
+            'Operacional',
+            'Financeiro',
+            'Marketing',
+            'RH',
+            'Sustentabilidade',
+            'Inovação',
+          ]
+
           const vehicle = vehicles[Math.floor(Math.random() * vehicles.length)]
           const region = regions[Math.floor(Math.random() * regions.length)]
-          const category = categories[Math.floor(Math.random() * categories.length)]
+          const category =
+            categories[Math.floor(Math.random() * categories.length)]
           const content = `Conteúdo monitorado da URL: ${target.url}. Análise de impacto e reputação realizada.`
           const title = `${client.name}: Conteúdo monitorado da URL específica`
 

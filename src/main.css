@@ -16,17 +16,17 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 13% 10%;
 
-    /* Planin Blue Palette */
-    --primary: 200 100% 18%; /* #003D5C - Dark Blue */
+    /* Planin Purple Palette - Inspirado no escritório Planin */
+    --primary: 270 70% 50%; /* #7C3AED - Vibrant Purple */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 100% 26%; /* #005A87 - Medium Blue */
+    --secondary: 270 60% 60%; /* #9F7AEA - Medium Purple */
     --secondary-foreground: 0 0% 100%;
 
     --muted: 210 20% 96.1%;
     --muted-foreground: 220 9% 46%; /* #6B7280 */
 
-    --accent: 195 100% 40%; /* #0099CC - Light Blue */
+    --accent: 270 80% 65%; /* #A78BFA - Light Purple */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -37,34 +37,34 @@
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 195 100% 40%; /* Accent color for rings */
+    --ring: 270 70% 50%; /* Primary Purple for rings */
 
     --radius: 0.5rem; /* 8px base radius */
 
-    /* Sidebar - Dark Theme */
-    --sidebar-background: 200 100% 18%; /* #003D5C */
+    /* Sidebar - Purple Theme */
+    --sidebar-background: 270 70% 50%; /* #7C3AED - Vibrant Purple */
     --sidebar-foreground: 0 0% 100%; /* White */
-    --sidebar-primary: 195 100% 40%; /* Accent Blue */
+    --sidebar-primary: 270 80% 65%; /* Light Purple */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 100% 26%; /* Secondary Blue for hover */
+    --sidebar-accent: 270 60% 55%; /* Medium Purple for hover */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 200 100% 22%; /* Slightly lighter than bg */
-    --sidebar-ring: 195 100% 40%;
+    --sidebar-border: 270 65% 45%; /* Slightly darker than bg */
+    --sidebar-ring: 270 80% 65%;
 
-    /* Charts - Planin Palette */
-    --chart-1: 200 100% 18%; /* #003D5C */
-    --chart-2: 195 100% 40%; /* #0099CC */
-    --chart-3: 200 100% 26%; /* #005A87 */
-    --chart-4: 199 80% 65%; /* Lighter Blue */
-    --chart-5: 199 60% 85%; /* Pale Blue */
+    /* Charts - Planin Purple Palette */
+    --chart-1: 270 70% 50%; /* #7C3AED - Primary Purple */
+    --chart-2: 270 60% 60%; /* #9F7AEA - Medium Purple */
+    --chart-3: 270 80% 65%; /* #A78BFA - Light Purple */
+    --chart-4: 280 70% 70%; /* Lighter Purple */
+    --chart-5: 280 60% 80%; /* Pale Purple */
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    /* Dark mode overrides would go here, but focusing on the specified light theme */
-    --primary: 200 100% 18%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Dark mode overrides - Purple theme */
+    --primary: 270 70% 50%;
+    --primary-foreground: 0 0% 100%;
   }
 }
 

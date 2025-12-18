@@ -26,13 +26,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import {
-  Search,
-  Eye,
-  Calendar,
-  Filter,
-  Download,
-} from 'lucide-react'
+import { Search, Eye, Calendar, Filter, Download } from 'lucide-react'
 import { SentimentBadge } from '@/components/SentimentBadge'
 import { format, subDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale/pt-BR'
@@ -295,7 +289,9 @@ export default function Tracker() {
                 <TableHead className="font-semibold">Categoria</TableHead>
                 <TableHead className="font-semibold">Sentimento</TableHead>
                 <TableHead className="font-semibold">Urgência</TableHead>
-                <TableHead className="font-semibold text-right">Ações</TableHead>
+                <TableHead className="font-semibold text-right">
+                  Ações
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -356,7 +352,8 @@ export default function Tracker() {
                         <Badge
                           variant="outline"
                           className={
-                            getSentimentLabel(post.sentimentScore) === 'positivo'
+                            getSentimentLabel(post.sentimentScore) ===
+                            'positivo'
                               ? 'bg-green-50 text-green-700 border-green-200'
                               : getSentimentLabel(post.sentimentScore) ===
                                   'negativo'
@@ -523,4 +520,3 @@ export default function Tracker() {
     </div>
   )
 }
-

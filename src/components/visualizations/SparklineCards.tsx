@@ -10,7 +10,8 @@ interface SparklineCardsProps {
 
 export function SparklineCards({ clientsData }: SparklineCardsProps) {
   const getTrend = (data: ClientSentimentData['data']) => {
-    if (data.length < 2) return { icon: Minus, color: 'text-gray-500', label: 'Estável' }
+    if (data.length < 2)
+      return { icon: Minus, color: 'text-gray-500', label: 'Estável' }
     const first = data[0]?.sentiment || 0
     const last = data[data.length - 1]?.sentiment || 0
     const diff = last - first
@@ -112,4 +113,3 @@ export function SparklineCards({ clientsData }: SparklineCardsProps) {
     </div>
   )
 }
-

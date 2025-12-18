@@ -3,12 +3,10 @@ import {
   LayoutDashboard,
   Users,
   MessageSquare,
-  Table2,
   BarChart2,
   Bell,
-  ShieldCheck,
   Settings,
-  TrendingUp,
+  Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -21,11 +19,10 @@ export function AppSidebar() {
 
   const menuItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
+    { label: 'Dashboard Sentimento', icon: Activity, path: '/sentiment' },
     { label: 'Clientes', icon: Users, path: '/clients' },
     { label: 'Feed de Reputação', icon: MessageSquare, path: '/feed' },
-    { label: 'Tracker de Posts', icon: Table2, path: '/tracker' },
     { label: 'Análise Competitiva', icon: BarChart2, path: '/analysis' },
-    { label: 'Dashboard Sentimento', icon: TrendingUp, path: '/sentiment' },
     {
       label: 'Central de Alertas',
       icon: Bell,
@@ -37,8 +34,15 @@ export function AppSidebar() {
 
   return (
     <aside className="w-[280px] bg-sidebar border-r border-sidebar-border hidden md:flex flex-col h-screen fixed left-0 top-0 z-30 shadow-xl shadow-black/5">
-      <div className="h-20 flex items-center justify-center px-6 border-b border-sidebar-border/50">
-        <span className="text-base text-sidebar-foreground font-semibold uppercase tracking-widest">
+      <div className="h-20 flex flex-col justify-center px-6 border-b border-sidebar-border/50">
+        <div className="flex items-center gap-3">
+          <img
+            src="https://planin.com/wp-content/uploads/2023/01/planin-logo-branco.png"
+            alt="PLANIN"
+            className="h-8 w-auto"
+          />
+        </div>
+        <span className="text-[10px] text-sidebar-foreground/70 uppercase tracking-widest mt-1 font-medium">
           Monitor de Reputação Digital
         </span>
       </div>
@@ -73,6 +77,19 @@ export function AppSidebar() {
             )}
           </Link>
         ))}
+      </div>
+      <div className="p-6 border-t border-sidebar-border/50 bg-black/10">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-sidebar-primary flex items-center justify-center text-white font-bold border-2 border-sidebar-accent">
+            JD
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-sm font-medium text-white truncate">John Doe</p>
+            <p className="text-xs text-sidebar-foreground/60 truncate">
+              Marketing Manager
+            </p>
+          </div>
+        </div>
       </div>
     </aside>
   )

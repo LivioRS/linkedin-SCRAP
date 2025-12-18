@@ -238,53 +238,54 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {usingFallback && (
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-lg mb-4 text-sm">
-            ⚠️ Dados de exemplo - Execute "Global Scrape" para coletar dados reais
+        {hasData ? (
+          <ChartContainer
+            config={lineChartConfig}
+            className="min-h-[300px] w-full"
+          >
+            <LineChart
+              data={sentimentTrendData}
+              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="#e5e7eb"
+              />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={12}
+                tick={{ fill: '#6B7280', fontSize: 12 }}
+                tickFormatter={(value) =>
+                  new Date(value).toLocaleDateString('pt-BR', {
+                    day: 'numeric',
+                    month: 'short',
+                  })
+                }
+              />
+              <YAxis hide domain={[-1, 1]} />
+              <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              {clients.map((client, index) => (
+                <Line
+                  key={client.id}
+                  type="monotone"
+                  dataKey={client.name}
+                  stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
+                  strokeWidth={3}
+                  dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                />
+              ))}
+            </LineChart>
+          </ChartContainer>
+        ) : (
+          <div className="flex items-center justify-center min-h-[300px] text-muted-foreground">
+            <p className="text-sm">Sem dados disponíveis para exibir</p>
           </div>
         )}
-        <ChartContainer
-          config={lineChartConfig}
-          className="min-h-[300px] w-full"
-        >
-          <LineChart
-            data={sentimentTrendData}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              stroke="#e5e7eb"
-            />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={12}
-              tick={{ fill: '#6B7280', fontSize: 12 }}
-              tickFormatter={(value) =>
-                new Date(value).toLocaleDateString('pt-BR', {
-                  day: 'numeric',
-                  month: 'short',
-                })
-              }
-            />
-            <YAxis hide domain={[-1, 1]} />
-            <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-            <ChartLegend content={<ChartLegendContent />} />
-            {chartClients.map((client: any, index: number) => (
-              <Line
-                key={client.id || index}
-                type="monotone"
-                dataKey={client.name}
-                stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
-                strokeWidth={3}
-                dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
-                activeDot={{ r: 6, strokeWidth: 0 }}
-              />
-            ))}
-          </LineChart>
-        </ChartContainer>
       </CardContent>
     </Card>
   )
