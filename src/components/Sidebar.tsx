@@ -32,6 +32,7 @@ export function AppSidebar() {
   ]
 
   return (
+<<<<<<< HEAD
     <aside className="w-[280px] bg-sidebar border-r border-sidebar-border hidden md:flex flex-col h-screen fixed left-0 top-0 z-30 shadow-xl shadow-black/5">
       <div className="h-20 flex flex-col justify-center px-6 border-b border-sidebar-border/50">
         <div className="flex items-center gap-3">
@@ -43,6 +44,24 @@ export function AppSidebar() {
         </div>
         <span className="text-[10px] text-sidebar-foreground/70 uppercase tracking-widest mt-1 font-medium">
           Monitor de Reputação Digital
+=======
+    <aside className="w-[260px] bg-sidebar border-r border-sidebar-border hidden md:flex flex-col h-screen fixed left-0 top-0 z-30">
+      <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
+        <img 
+          src="/planin-logo.png" 
+          alt="Planin Logo" 
+          className="h-8 w-auto mr-2"
+          onError={(e) => {
+            // Fallback para ícone se logo não existir
+            e.currentTarget.style.display = 'none'
+            const fallback = e.currentTarget.nextElementSibling as HTMLElement
+            if (fallback) fallback.style.display = 'block'
+          }}
+        />
+        <ShieldCheck className="h-8 w-8 text-primary mr-2 hidden" />
+        <span className="font-bold text-lg text-sidebar-foreground">
+          ReputaMonitor
+>>>>>>> 3b79a64 (fix: Remover nome do usuÃ¡rio, adicionar logo planin e melhorar alinhamento)
         </span>
       </div>
       <div className="flex-1 py-8 px-4 space-y-2">
@@ -77,6 +96,7 @@ export function AppSidebar() {
           </Link>
         ))}
       </div>
+<<<<<<< HEAD
       <div className="p-6 border-t border-sidebar-border/50 bg-black/10">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-sidebar-primary flex items-center justify-center text-white font-bold border-2 border-sidebar-accent">
@@ -90,6 +110,8 @@ export function AppSidebar() {
           </div>
         </div>
       </div>
+=======
+>>>>>>> 3b79a64 (fix: Remover nome do usuÃ¡rio, adicionar logo planin e melhorar alinhamento)
     </aside>
   )
 }

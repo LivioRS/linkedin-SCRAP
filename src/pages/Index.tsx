@@ -31,12 +31,12 @@ export default function Index() {
     })
   }
 
-  // Sort widgets by position to ensure visual order matches logic
-  // Primary sort by Y, secondary sort by X
-  const sortedWidgets = [...visibleWidgets].sort((a, b) => {
-    if (a.position.y === b.position.y) return a.position.x - b.position.x
-    return a.position.y - b.position.y
-  })
+  // Organizar widgets por tipo para melhor layout
+  const kpiWidgets = visibleWidgets.filter((w) => w.type === 'kpi')
+  const chartWidgets = visibleWidgets.filter((w) => w.type === 'chart')
+  const listWidgets = visibleWidgets.filter((w) => w.type === 'list')
+
+  const widgetProps = { clients, posts, metrics, alerts }
 
   return (
     <div className="space-y-8">
@@ -60,6 +60,7 @@ export default function Index() {
         </div>
       </div>
 
+<<<<<<< HEAD
       {sortedWidgets.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
           {sortedWidgets.map((widget) => {
@@ -71,6 +72,50 @@ export default function Index() {
             )
           })}
         </div>
+=======
+      {visibleWidgets.length > 0 ? (
+        <>
+          {/* KPIs - Grid de 4 colunas */}
+          {kpiWidgets.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {kpiWidgets.map((widget) => (
+                <div key={widget.id}>
+                  {renderWidget(widget.id, widgetProps)}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Charts - Grid responsivo */}
+          {chartWidgets.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {chartWidgets.map((widget) => (
+                <div
+                  key={widget.id}
+                  className={
+                    widget.id === 'chart-sentiment-trend'
+                      ? 'lg:col-span-2'
+                      : 'lg:col-span-1'
+                  }
+                >
+                  {renderWidget(widget.id, widgetProps)}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Lists - Grid de 2 colunas */}
+          {listWidgets.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {listWidgets.map((widget) => (
+                <div key={widget.id}>
+                  {renderWidget(widget.id, widgetProps)}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+>>>>>>> 3b79a64 (fix: Remover nome do usuÃ¡rio, adicionar logo planin e melhorar alinhamento)
       ) : (
         <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-gray-200 rounded-xl bg-white/50">
           <div className="p-4 rounded-full bg-gray-100 mb-4">
