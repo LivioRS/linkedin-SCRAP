@@ -8,6 +8,23 @@ interface SmallMultiplesProps {
 }
 
 export function SmallMultiples({ clientsData }: SmallMultiplesProps) {
+  const hasData = clientsData.some(client => client.data.length > 0)
+
+  if (!hasData) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Evolução de Sentimento por Cliente</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-12 text-muted-foreground">
+            <p>Nenhum dado disponível para exibir</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -15,49 +32,51 @@ export function SmallMultiples({ clientsData }: SmallMultiplesProps) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {clientsData.map((client) => (
-            <div key={client.clientId} className="space-y-2">
-              <h3 className="text-sm font-semibold text-muted-foreground">
-                {client.clientName}
-              </h3>
-              <ResponsiveContainer width="100%" height={150}>
-                <LineChart data={client.data}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={(value) =>
-                      new Date(value).toLocaleDateString('pt-BR', {
-                        day: 'numeric',
-                        month: 'short',
-                      })
-                    }
-                  />
-                  <YAxis
-                    domain={[-1, 1]}
-                    tick={{ fontSize: 10 }}
-                    width={30}
-                  />
-                  <Tooltip
-                    labelFormatter={(value) =>
-                      new Date(value).toLocaleDateString('pt-BR')
-                    }
-                    formatter={(value: number) => [
-                      value.toFixed(2),
-                      'Sentimento',
-                    ]}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="sentiment"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          ))}
+          {clientsData
+            .filter((client) => client.data.length > 0)
+            .map((client) => (
+              <div key={client.clientId} className="space-y-2">
+                <h3 className="text-sm font-semibold text-muted-foreground">
+                  {client.clientName}
+                </h3>
+                <ResponsiveContainer width="100%" height={150}>
+                  <LineChart data={client.data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 10 }}
+                      tickFormatter={(value) =>
+                        new Date(value).toLocaleDateString('pt-BR', {
+                          day: 'numeric',
+                          month: 'short',
+                        })
+                      }
+                    />
+                    <YAxis
+                      domain={[-1, 1]}
+                      tick={{ fontSize: 10 }}
+                      width={30}
+                    />
+                    <Tooltip
+                      labelFormatter={(value) =>
+                        new Date(value).toLocaleDateString('pt-BR')
+                      }
+                      formatter={(value: number) => [
+                        value.toFixed(2),
+                        'Sentimento',
+                      ]}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="sentiment"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ))}
         </div>
       </CardContent>
     </Card>

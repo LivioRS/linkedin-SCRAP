@@ -3,7 +3,9 @@ import useAppStore from '@/stores/useAppStore'
 import { ClientSentimentData, HeatmapDataPoint } from '@/lib/mockData'
 
 export function useDashboardData() {
-  const { clients, posts, metrics } = useAppStore()
+  const { clients, posts, metrics, isScraping } = useAppStore()
+  
+  const isLoading = isScraping
 
   const clientsData: ClientSentimentData[] = useMemo(() => {
     return clients.map((client) => {
@@ -96,6 +98,7 @@ export function useDashboardData() {
     clientsData,
     heatmapData,
     clientNames,
+    isLoading,
   }
 }
 
