@@ -147,7 +147,57 @@ const SAMPLE_POST_TEMPLATES = [
   'Nossa equipe de engenharia inova mais uma vez com tecnologias sustentáveis.',
   'O mercado imobiliário segue aquecido neste trimestre, ótima oportunidade para investir.',
   'Evento de inauguração foi um sucesso absoluto. Obrigado a todos os parceiros!',
+  'Novo lançamento chegando! Fiquem atentos para grandes novidades este mês.',
+  'Agradecemos a todos os clientes pelo feedback positivo. Continuamos trabalhando para melhorar.',
+  'Evento exclusivo para parceiros acontecerá na próxima semana. Mais informações em breve.',
+  'Nossa equipe está sempre inovando para trazer as melhores soluções ao mercado.',
+  'Parceria estratégica anunciada hoje marca um novo capítulo na nossa história.',
+  'Resultados do último trimestre superaram expectativas. Obrigado pela confiança!',
+  'Workshop gratuito sobre tendências do mercado. Inscreva-se e participe!',
+  'Sustentabilidade é prioridade. Conheça nossas iniciativas ambientais.',
 ]
+
+const COMMENT_TEMPLATES = [
+  'Excelente trabalho! Parabéns pela iniciativa.',
+  'Muito interessante essa abordagem.',
+  'Quando teremos mais detalhes sobre isso?',
+  'Ótima notícia! Estou ansioso para saber mais.',
+  'Parabéns pela transparência e compromisso.',
+  'Isso é muito importante para o setor.',
+  'Adorei a iniciativa! Continuem assim.',
+  'Precisamos de mais informações sobre isso.',
+]
+
+const GENERATE_COMMENTS = (postId: string, count: number): Comment[] => {
+  const comments: Comment[] = []
+  const authorNames = [
+    'João Silva',
+    'Maria Santos',
+    'Pedro Oliveira',
+    'Ana Costa',
+    'Carlos Ferreira',
+    'Juliana Alves',
+    'Roberto Lima',
+    'Fernanda Souza',
+  ]
+
+  for (let i = 0; i < count; i++) {
+    const commentDate = new Date(Date.now() - Math.random() * 30 * 86400000)
+    comments.push({
+      id: `${postId}-comment-${i}`,
+      postId,
+      author: authorNames[Math.floor(Math.random() * authorNames.length)],
+      content:
+        COMMENT_TEMPLATES[
+          Math.floor(Math.random() * COMMENT_TEMPLATES.length)
+        ],
+      sentimentScore: Math.random() * 1.2 - 0.2, // Tendência positiva
+      postedAt: commentDate.toISOString(),
+    })
+  }
+
+  return comments
+}
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [clients, setClients] = useState<Client[]>(MOCK_CLIENTS)
@@ -166,8 +216,78 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     youtube: 'idle',
   })
 
+  // Função para gerar posts dos últimos 90 dias na inicialização
+  const GENERATE_INITIAL_POSTS = (clients: Client[]): {
+    posts: Post[]
+    comments: Comment[]
+  } => {
+    const posts: Post[] = []
+    const comments: Comment[] = []
+    const days = 90
+
+    clients.forEach((client) => {
+      // Gerar 1-2 posts por dia em média, distribuídos ao longo dos 90 dias
+      Array.from({ length: days }).forEach((_, dayIndex) => {
+        const shouldHavePost = Math.random() > 0.3 // 70% de chance de ter post no dia
+        if (!shouldHavePost) return
+
+        const numPostsToday = Math.random() > 0.5 ? 1 : 2 // 1 ou 2 posts por dia
+        
+        Array.from({ length: numPostsToday }).forEach((_, postIndex) => {
+          const postId = `${client.id}-post-init-${dayIndex}-${postIndex}`
+          const dayOffset = days - dayIndex - 1
+          const randomHour = Math.floor(Math.random() * 24)
+          const randomMinute = Math.floor(Math.random() * 60)
+          
+          // Distribuir sentimento de forma mais realista ao longo do tempo
+          const baseSentiment = Math.sin((dayIndex / days) * Math.PI * 2) * 0.3 + (Math.random() - 0.5) * 0.4
+          const sentimentScore = Math.max(-1, Math.min(1, baseSentiment))
+          
+          const postComments = GENERATE_COMMENTS(
+            postId,
+            Math.floor(Math.random() * 8),
+          )
+
+          const postedAt = new Date(
+            Date.now() - dayOffset * 86400000 - randomHour * 3600000 - randomMinute * 60000
+          )
+
+          posts.push({
+            id: postId,
+            clientId: client.id,
+            content:
+              SAMPLE_POST_TEMPLATES[
+                Math.floor(Math.random() * SAMPLE_POST_TEMPLATES.length)
+              ],
+            likes: Math.floor(Math.random() * 500) + 10,
+            comments: postComments.length,
+            shares: Math.floor(Math.random() * 20),
+            views: Math.floor(Math.random() * 5000) + 1000,
+            sentimentScore,
+            sentimentExplanation:
+              sentimentScore > 0.5
+                ? 'O conteúdo destaca crescimento e inovação, gerando reações positivas sobre o futuro da empresa.'
+                : sentimentScore < -0.3
+                  ? 'O reconhecimento de falhas técnicas gerou frustração, embora a transparência tenha sido notada.'
+                  : 'Conteúdo informativo com recepção neutra pela audiência.',
+            postedAt: postedAt.toISOString(),
+            url: '#',
+          })
+
+          comments.push(...postComments)
+        })
+      })
+    })
+
+    return { posts, comments }
+  }
+
   useEffect(() => {
     setMetrics(GENERATE_MOCK_METRICS(clients))
+    // Gerar posts iniciais dos últimos 90 dias
+    const { posts: initialPosts, comments: initialComments } = GENERATE_INITIAL_POSTS(clients)
+    setPosts(initialPosts)
+    setComments(initialComments)
   }, [])
 
   const addClient = (
