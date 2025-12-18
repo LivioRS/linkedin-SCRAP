@@ -16,6 +16,23 @@ interface SmallMultiplesProps {
 }
 
 export function SmallMultiples({ clientsData }: SmallMultiplesProps) {
+  const hasData = clientsData.some(client => client.data.length > 0)
+
+  if (!hasData) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Evolução de Sentimento por Cliente</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-12 text-muted-foreground">
+            <p>Nenhum dado disponível para exibir</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
