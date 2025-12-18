@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import useAppStore from '@/stores/useAppStore'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -34,9 +34,11 @@ import {
   Bot,
   MessageSquareText,
   Search,
+  Calendar,
 } from 'lucide-react'
 import { SentimentBadge } from '@/components/SentimentBadge'
 import { useSearchParams } from 'react-router-dom'
+import { subDays } from 'date-fns'
 
 export default function Feed() {
   const { posts, comments, clients } = useAppStore()
@@ -44,9 +46,19 @@ export default function Feed() {
   const initialSearch = searchParams.get('search') || ''
   const [searchTerm, setSearchTerm] = useState(initialSearch)
   const [sentimentFilter, setSentimentFilter] = useState('all')
+  const [periodFilter, setPeriodFilter] = useState('90') // Padrão: últimos 90 dias
+
+  // Calcular data de corte baseada no período selecionado
+  const cutoffDate = useMemo(() => {
+    const days = parseInt(periodFilter)
+    return subDays(new Date(), days)
+  }, [periodFilter])
 
   const filteredPosts = posts
     .filter((post) => {
+      const postDate = new Date(post.postedAt)
+      const matchesPeriod = postDate >= cutoffDate
+      
       const matchesSearch = post.content
         .toLowerCase()
         .includes(searchTerm.toLowerCase())
@@ -58,7 +70,7 @@ export default function Feed() {
             : sentimentFilter === 'negative'
               ? post.sentimentScore < -0.3
               : post.sentimentScore >= -0.3 && post.sentimentScore <= 0.3
-      return matchesSearch && matchesSentiment
+      return matchesSearch && matchesSentiment && matchesPeriod
     })
     .sort(
       (a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime(),
@@ -85,6 +97,19 @@ export default function Feed() {
               className="pl-9"
             />
           </div>
+          <Select value={periodFilter} onValueChange={setPeriodFilter}>
+            <SelectTrigger className="w-full sm:w-[160px]">
+              <Calendar className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Últimos 7 dias</SelectItem>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="90">Últimos 90 dias</SelectItem>
+              <SelectItem value="180">Últimos 6 meses</SelectItem>
+              <SelectItem value="365">Último ano</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={sentimentFilter} onValueChange={setSentimentFilter}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Sentimento" />
@@ -258,7 +283,14 @@ export default function Feed() {
         {filteredPosts.length === 0 && (
           <div className="text-center py-20 text-muted-foreground bg-white rounded-xl border border-dashed shadow-sm">
             <Search className="h-10 w-10 mx-auto mb-4 opacity-20" />
-            <p>Nenhum post encontrado com os filtros atuais.</p>
+            <p className="text-lg font-medium mb-2">Nenhum post encontrado</p>
+            <p className="text-sm">Tente ajustar os filtros de período ou sentimento.</p>
+          </div>
+        )}
+        
+        {filteredPosts.length > 0 && (
+          <div className="text-center py-4 text-sm text-muted-foreground bg-white rounded-lg border">
+            Mostrando <strong>{filteredPosts.length}</strong> post(s) dos últimos {periodFilter} dias
           </div>
         )}
       </div>

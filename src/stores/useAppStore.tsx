@@ -113,7 +113,7 @@ const DEFAULT_SETTINGS: Settings = {
 
 const GENERATE_MOCK_METRICS = (clients: Client[]): DailyMetric[] => {
   const metrics: DailyMetric[] = []
-  const days = 30
+  const days = 90 // Últimos 90 dias
   clients.forEach((client) => {
     for (let i = 0; i < days; i++) {
       metrics.push({
@@ -123,7 +123,7 @@ const GENERATE_MOCK_METRICS = (clients: Client[]): DailyMetric[] => {
         clientId: client.id,
         sentimentScore: Math.random() * 1.5 - 0.5,
         engagementRate: Math.random() * 0.08 + 0.01,
-        postsCount: Math.floor(Math.random() * 4),
+        postsCount: Math.floor(Math.random() * 3) + 1, // 1-3 posts por dia
       })
     }
   })
