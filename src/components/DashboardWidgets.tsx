@@ -146,7 +146,7 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
       const dayMetric = metrics.find(
         (m) => m.clientId === client.id && m.date === date,
       )
-      data[client.name] = dayMetric?.sentimentScore || 0
+      data[client.name] = dayMetric?.sentimentScore ?? 0
     })
     return data
   })
@@ -159,8 +159,11 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
     return acc
   }, {} as any)
 
+  // Se não houver dados, mostrar mensagem
+  const hasData = clients.length > 0 && metrics.length > 0
+
   return (
-    <Card className="col-span-1 lg:col-span-2">
+    <Card>
       <CardHeader>
         <CardTitle>Tendências de Sentimento</CardTitle>
         <CardDescription>
@@ -168,42 +171,48 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer
-          config={lineChartConfig}
-          className="min-h-[300px] w-full"
-        >
-          <LineChart
-            data={sentimentTrendData}
-            margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
+        {hasData ? (
+          <ChartContainer
+            config={lineChartConfig}
+            className="min-h-[300px] w-full"
           >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tickFormatter={(value) =>
-                new Date(value).toLocaleDateString('pt-BR', {
-                  day: 'numeric',
-                  month: 'short',
-                })
-              }
-            />
-            <YAxis hide domain={[-1, 1]} />
-            <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-            <ChartLegend content={<ChartLegendContent />} />
-            {clients.map((client, index) => (
-              <Line
-                key={client.id}
-                type="monotone"
-                dataKey={client.name}
-                stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
-                strokeWidth={2}
-                dot={false}
+            <LineChart
+              data={sentimentTrendData}
+              margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                tickFormatter={(value) =>
+                  new Date(value).toLocaleDateString('pt-BR', {
+                    day: 'numeric',
+                    month: 'short',
+                  })
+                }
               />
-            ))}
-          </LineChart>
-        </ChartContainer>
+              <YAxis hide domain={[-1, 1]} />
+              <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              {clients.map((client, index) => (
+                <Line
+                  key={client.id}
+                  type="monotone"
+                  dataKey={client.name}
+                  stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
+                  strokeWidth={2}
+                  dot={false}
+                />
+              ))}
+            </LineChart>
+          </ChartContainer>
+        ) : (
+          <div className="min-h-[300px] flex items-center justify-center text-muted-foreground">
+            <p>Nenhum dado disponível. Execute uma coleta para ver as tendências.</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
@@ -222,6 +231,7 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
       name: client.name,
       value: industryPosts.filter((p) => p.clientId === client.id).length,
     }))
+    .filter((item) => item.value > 0) // Filtrar valores zero
 
   const pieChartConfig = clients.reduce((acc, client, index) => {
     acc[client.name] = {
@@ -230,6 +240,8 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
     }
     return acc
   }, {} as any)
+
+  const hasData = shareOfVoiceData.length > 0 && shareOfVoiceData.some((d) => d.value > 0)
 
   return (
     <Card className="col-span-1">
@@ -240,32 +252,38 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer
-          config={pieChartConfig}
-          className="min-h-[250px] w-full"
-        >
-          <PieChart>
-            <Pie
-              data={shareOfVoiceData}
-              dataKey="value"
-              nameKey="name"
-              innerRadius={60}
-              strokeWidth={5}
-            >
-              {shareOfVoiceData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={`hsl(var(--chart-${(index % 5) + 1}))`}
-                />
-              ))}
-            </Pie>
-            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-            <ChartLegend
-              content={<ChartLegendContent nameKey="name" />}
-              className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-            />
-          </PieChart>
-        </ChartContainer>
+        {hasData ? (
+          <ChartContainer
+            config={pieChartConfig}
+            className="min-h-[250px] w-full"
+          >
+            <PieChart>
+              <Pie
+                data={shareOfVoiceData}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={60}
+                strokeWidth={5}
+              >
+                {shareOfVoiceData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={`hsl(var(--chart-${(index % 5) + 1}))`}
+                  />
+                ))}
+              </Pie>
+              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+              <ChartLegend
+                content={<ChartLegendContent nameKey="name" />}
+                className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+              />
+            </PieChart>
+          </ChartContainer>
+        ) : (
+          <div className="min-h-[250px] flex items-center justify-center text-muted-foreground">
+            <p>Nenhum dado disponível. Execute uma coleta para ver o Share of Voice.</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
