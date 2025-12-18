@@ -178,6 +178,8 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
     return acc
   }, {} as any)
 
+  const hasData = metrics.length > 0 && clients.length > 0
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -187,48 +189,54 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer
-          config={lineChartConfig}
-          className="min-h-[300px] w-full"
-        >
-          <LineChart
-            data={sentimentTrendData}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+        {hasData ? (
+          <ChartContainer
+            config={lineChartConfig}
+            className="min-h-[300px] w-full"
           >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              stroke="#e5e7eb"
-            />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={12}
-              tick={{ fill: '#6B7280', fontSize: 12 }}
-              tickFormatter={(value) =>
-                new Date(value).toLocaleDateString('pt-BR', {
-                  day: 'numeric',
-                  month: 'short',
-                })
-              }
-            />
-            <YAxis hide domain={[-1, 1]} />
-            <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
-            <ChartLegend content={<ChartLegendContent />} />
-            {clients.map((client, index) => (
-              <Line
-                key={client.id}
-                type="monotone"
-                dataKey={client.name}
-                stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
-                strokeWidth={3}
-                dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
-                activeDot={{ r: 6, strokeWidth: 0 }}
+            <LineChart
+              data={sentimentTrendData}
+              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="#e5e7eb"
               />
-            ))}
-          </LineChart>
-        </ChartContainer>
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={12}
+                tick={{ fill: '#6B7280', fontSize: 12 }}
+                tickFormatter={(value) =>
+                  new Date(value).toLocaleDateString('pt-BR', {
+                    day: 'numeric',
+                    month: 'short',
+                  })
+                }
+              />
+              <YAxis hide domain={[-1, 1]} />
+              <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              {clients.map((client, index) => (
+                <Line
+                  key={client.id}
+                  type="monotone"
+                  dataKey={client.name}
+                  stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
+                  strokeWidth={3}
+                  dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                />
+              ))}
+            </LineChart>
+          </ChartContainer>
+        ) : (
+          <div className="flex items-center justify-center min-h-[300px] text-muted-foreground">
+            <p className="text-sm">Sem dados disponíveis para exibir</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
@@ -247,6 +255,7 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
       name: client.name,
       value: industryPosts.filter((p) => p.clientId === client.id).length,
     }))
+    .filter((item) => item.value > 0) // Filtrar apenas itens com valor > 0
 
   const pieChartConfig = clients.reduce((acc, client, index) => {
     acc[client.name] = {

@@ -35,19 +35,8 @@ export function AppSidebar() {
 
   return (
     <aside className="w-[280px] bg-sidebar border-r border-sidebar-border hidden md:flex flex-col h-screen fixed left-0 top-0 z-30 shadow-xl shadow-black/5">
-      <div className="h-20 flex flex-col justify-center px-6 border-b border-sidebar-border/50">
-        <div className="flex items-center gap-3">
-          <img
-            src="https://planin.com/wp-content/uploads/2023/01/planin-logo-branco.png"
-            alt="PLANIN"
-            className="h-8 w-auto"
-            onError={(e) => {
-              // Fallback para logo local se URL não funcionar
-              e.currentTarget.src = '/planin-logo.png'
-            }}
-          />
-        </div>
-        <span className="text-[10px] text-sidebar-foreground/70 uppercase tracking-widest mt-1 font-medium">
+      <div className="h-20 flex items-center justify-center px-6 border-b border-sidebar-border/50">
+        <span className="text-base text-sidebar-foreground font-semibold uppercase tracking-widest">
           Monitor de Reputação Digital
         </span>
       </div>

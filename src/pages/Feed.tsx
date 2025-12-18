@@ -148,13 +148,20 @@ export default function Feed() {
                       <span className="bg-white px-2 py-1 rounded border">
                         {new Date(post.postedAt).toLocaleString('pt-BR')}
                       </span>
-                      <a
-                        href={post.url}
-                        target="_blank"
-                        className="text-accent hover:text-accent/80 hover:underline flex items-center gap-1"
-                      >
-                        Link <ExternalLink className="h-3 w-3" />
-                      </a>
+                      {post.url && post.url !== '#' ? (
+                        <a
+                          href={post.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-accent hover:text-accent/80 hover:underline flex items-center gap-1"
+                        >
+                          Link <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">
+                          Link não disponível
+                        </span>
+                      )}
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground font-medium">

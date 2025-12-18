@@ -33,13 +33,26 @@ export function AppHeader({ title }: { title: string }) {
 
   return (
     <header className="h-20 bg-white border-b border-border shadow-sm flex items-center justify-between px-8 sticky top-0 z-20">
-      <div>
-        <h1 className="text-2xl font-bold text-primary tracking-tight">
-          {title}
-        </h1>
-        <p className="text-xs text-muted-foreground hidden sm:block">
-          Visão geral do sistema
-        </p>
+      <div className="flex items-center gap-6">
+        <div className="flex items-center justify-center">
+          <img
+            src="https://planin.com/wp-content/uploads/2023/01/planin-logo-branco.png"
+            alt="PLANIN"
+            className="h-10 w-auto"
+            onError={(e) => {
+              e.currentTarget.src = '/planin-logo.png'
+            }}
+          />
+        </div>
+        <div className="h-8 w-px bg-gray-200"></div>
+        <div>
+          <h1 className="text-2xl font-bold text-primary tracking-tight">
+            {title}
+          </h1>
+          <p className="text-xs text-muted-foreground hidden sm:block">
+            Visão geral do sistema
+          </p>
+        </div>
       </div>
       <div className="flex items-center gap-6">
         <div className="relative hidden md:block w-72 group">
