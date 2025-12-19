@@ -12,6 +12,7 @@ import {
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
+  ChartConfig,
 } from '@/components/ui/chart'
 import {
   LineChart,
@@ -32,7 +33,7 @@ interface ClientSentimentChartsProps {
 }
 
 export function ClientSentimentCharts({ client }: ClientSentimentChartsProps) {
-  const lineChartConfig = {
+  const lineChartConfig: ChartConfig = {
     sentiment: {
       label: 'Sentimento',
       color: 'hsl(var(--primary))',
@@ -61,9 +62,11 @@ export function ClientSentimentCharts({ client }: ClientSentimentChartsProps) {
     },
   ]
 
-  const distConfig = {
+  const distConfig: ChartConfig = {
     value: { label: 'Posts', color: 'hsl(var(--primary))' },
   }
+
+  const hasHistory = client.history && client.history.length > 0
 
   return (
     <div className="space-y-4 bg-white p-6 rounded-xl border border-border/60 shadow-sm hover:shadow-md transition-shadow">
@@ -96,43 +99,52 @@ export function ClientSentimentCharts({ client }: ClientSentimentChartsProps) {
             Evolução do Sentimento (14 dias)
           </h4>
           <div className="h-[200px] w-full">
-            <ChartContainer config={lineChartConfig} className="h-full w-full">
-              <LineChart
-                data={client.history}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            {hasHistory ? (
+              <ChartContainer
+                config={lineChartConfig}
+                className="h-full w-full"
               >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#f0f0f0"
-                />
-                <XAxis
-                  dataKey="date"
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fontSize: 11, fill: '#888' }}
-                  dy={10}
-                />
-                <YAxis
-                  yAxisId="left"
-                  domain={[0, 1]}
-                  tickLine={false}
-                  axisLine={false}
-                  tick={{ fontSize: 11, fill: '#888' }}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="sentiment"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={3}
-                  dot={false}
-                  activeDot={{ r: 6 }}
-                  name="Score"
-                />
-              </LineChart>
-            </ChartContainer>
+                <LineChart
+                  data={client.history}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#f0f0f0"
+                  />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 11, fill: '#888' }}
+                    dy={10}
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    domain={[0, 1]}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 11, fill: '#888' }}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="sentiment"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={{ r: 6 }}
+                    name="Score"
+                  />
+                </LineChart>
+              </ChartContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-sm text-muted-foreground border border-dashed rounded bg-gray-50">
+                Dados históricos indisponíveis
+              </div>
+            )}
           </div>
         </div>
 

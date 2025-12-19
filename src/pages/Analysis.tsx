@@ -12,7 +12,7 @@ import { AnalysisHeader } from '@/components/analysis/AnalysisHeader'
 import { SentimentOverview } from '@/components/analysis/SentimentOverview'
 import { SentimentCharts } from '@/components/analysis/SentimentCharts'
 import { MentionsFeed } from '@/components/analysis/MentionsFeed'
-import { subDays, isAfter } from 'date-fns'
+import { subDays, isAfter, isValid } from 'date-fns'
 import { Download, FileText } from 'lucide-react'
 import { exportToCSV, exportToPDF } from '@/services/export/reports'
 
@@ -25,10 +25,15 @@ export default function Analysis() {
 
   // Filter Data Logic
   const filteredData = useMemo(() => {
+    if (!posts || !metrics) return { posts: [], metrics: [] }
+
     const cutoffDate = subDays(new Date(), parseInt(period))
 
     const filteredPosts = posts.filter((post) => {
-      const isDateValid = isAfter(new Date(post.postedAt), cutoffDate)
+      const postDate = new Date(post.postedAt)
+      if (!isValid(postDate)) return false
+
+      const isDateValid = isAfter(postDate, cutoffDate)
       const isPlatformValid =
         platform === 'all' ||
         post.vehicle?.toLowerCase() === platform.toLowerCase() ||
@@ -37,7 +42,10 @@ export default function Analysis() {
     })
 
     const filteredMetrics = metrics.filter((metric) => {
-      const isDateValid = isAfter(new Date(metric.date), cutoffDate)
+      const metricDate = new Date(metric.date)
+      if (!isValid(metricDate)) return false
+
+      const isDateValid = isAfter(metricDate, cutoffDate)
       return isDateValid && metric.clientId === ownClient?.id
     })
 

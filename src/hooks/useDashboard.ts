@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { DashboardWidget } from '@/types'
 
-const DASHBOARD_STORAGE_KEY = 'planin_dashboard_widgets_v2'
+const DASHBOARD_STORAGE_KEY = 'planin_dashboard_widgets_v3' // Updated version key to reset layout if needed
 
 const DEFAULT_WIDGETS: DashboardWidget[] = [
   {
@@ -41,7 +41,7 @@ const DEFAULT_WIDGETS: DashboardWidget[] = [
     type: 'chart',
     title: 'Tendências de Sentimento',
     config: { chartType: 'line', metric: 'sentiment' },
-    position: { x: 0, y: 2, w: 8, h: 4 }, // Increased width
+    position: { x: 0, y: 2, w: 8, h: 4 },
     visible: true,
   },
   {
@@ -71,15 +71,15 @@ const DEFAULT_WIDGETS: DashboardWidget[] = [
 ]
 
 export function useDashboard() {
-  const [widgets, setWidgets] = useState<DashboardWidget[]>(DEFAULT_WIDGETS)
+  const [widgets, setWidgets] = useState<DashboardWidget[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const saved = localStorage.getItem(DASHBOARD_STORAGE_KEY)
-    if (saved) {
-      try {
+    try {
+      const saved = localStorage.getItem(DASHBOARD_STORAGE_KEY)
+      if (saved) {
         const parsed = JSON.parse(saved)
-        // Merge with default to ensure new widgets appear
+        // Ensure all default widgets exist (handling updates/new widgets)
         const merged = DEFAULT_WIDGETS.map((def) => {
           const savedWidget = parsed.find(
             (p: DashboardWidget) => p.id === def.id,
@@ -87,14 +87,15 @@ export function useDashboard() {
           return savedWidget ? { ...def, ...savedWidget } : def
         })
         setWidgets(merged)
-      } catch (e) {
-        console.error('Erro ao carregar widgets:', e)
+      } else {
         setWidgets(DEFAULT_WIDGETS)
       }
-    } else {
+    } catch (e) {
+      console.error('Erro ao carregar widgets:', e)
       setWidgets(DEFAULT_WIDGETS)
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }, [])
 
   const saveWidgets = (newWidgets: DashboardWidget[]) => {
@@ -114,7 +115,7 @@ export function useDashboard() {
   }
 
   const moveWidgetUp = (index: number) => {
-    if (index === 0) return
+    if (index <= 0) return
     const newWidgets = [...widgets]
     const temp = newWidgets[index]
     newWidgets[index] = newWidgets[index - 1]
@@ -123,7 +124,7 @@ export function useDashboard() {
   }
 
   const moveWidgetDown = (index: number) => {
-    if (index === widgets.length - 1) return
+    if (index >= widgets.length - 1) return
     const newWidgets = [...widgets]
     const temp = newWidgets[index]
     newWidgets[index] = newWidgets[index + 1]

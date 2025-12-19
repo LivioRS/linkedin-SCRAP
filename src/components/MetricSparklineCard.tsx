@@ -32,6 +32,8 @@ export function MetricSparklineCard({
     },
   }
 
+  const hasData = data && data.length > 0
+
   return (
     <Card className="flex flex-col justify-between h-full shadow-sm hover:shadow-md transition-all duration-300 border-border/60">
       <CardHeader className="pb-2">
@@ -68,29 +70,35 @@ export function MetricSparklineCard({
           {trendLabel}
         </div>
         <div className="h-[50px] w-full mt-auto">
-          <ChartContainer config={chartConfig} className="h-full w-full">
-            <LineChart data={data}>
-              <XAxis hide dataKey="index" />
-              <YAxis hide domain={['dataMin - 10', 'dataMax + 10']} />
-              <Tooltip
-                content={<ChartTooltipContent hideLabel indicator="line" />}
-                cursor={{
-                  stroke: 'hsl(var(--muted-foreground))',
-                  strokeWidth: 1,
-                  strokeDasharray: '4 4',
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke={color}
-                strokeWidth={2.5}
-                dot={false}
-                activeDot={{ r: 4, fill: color, strokeWidth: 0 }}
-                animationDuration={1500}
-              />
-            </LineChart>
-          </ChartContainer>
+          {hasData ? (
+            <ChartContainer config={chartConfig} className="h-full w-full">
+              <LineChart data={data}>
+                <XAxis hide dataKey="index" />
+                <YAxis hide domain={['dataMin - 10', 'dataMax + 10']} />
+                <Tooltip
+                  content={<ChartTooltipContent hideLabel indicator="line" />}
+                  cursor={{
+                    stroke: 'hsl(var(--muted-foreground))',
+                    strokeWidth: 1,
+                    strokeDasharray: '4 4',
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke={color}
+                  strokeWidth={2.5}
+                  dot={false}
+                  activeDot={{ r: 4, fill: color, strokeWidth: 0 }}
+                  animationDuration={1500}
+                />
+              </LineChart>
+            </ChartContainer>
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground bg-gray-50 rounded">
+              Sem dados
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

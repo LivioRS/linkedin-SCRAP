@@ -1,10 +1,5 @@
 import { useState, useEffect } from 'react'
-import {
-  MetricCardData,
-  HeatMapCell,
-  ClientDashboardData,
-  ClientChartData,
-} from '@/types'
+import { MetricCardData, HeatMapCell, ClientDashboardData } from '@/types'
 import useAppStore from '@/stores/useAppStore'
 import { getDay, getHours, parseISO, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -18,18 +13,36 @@ export function useDashboardData() {
   useEffect(() => {
     if (isLoading) return
 
+    // Validate data availability
+    if (!clients || !dailyMetrics || !posts) {
+      return
+    }
+
     const ownClient = clients.find((c) => c.type === 'own')
-    if (!ownClient) return
+    if (!ownClient) {
+      // Fallback or empty state if no own client is defined
+      setMetrics([])
+      setHeatMapData([])
+      setClientsData([])
+      return
+    }
 
     // 1. Calculate Metrics Cards
     const ownMetrics = dailyMetrics
       .filter((m) => m.clientId === ownClient.id)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-    // Sentiment
+    // Safe accessors for metrics
     const currentSentiment =
-      ownMetrics[ownMetrics.length - 1]?.sentimentScore || 0
-    const prevSentiment = ownMetrics[ownMetrics.length - 2]?.sentimentScore || 0
+      ownMetrics.length > 0
+        ? ownMetrics[ownMetrics.length - 1]?.sentimentScore
+        : 0
+    const prevSentiment =
+      ownMetrics.length > 1
+        ? ownMetrics[ownMetrics.length - 2]?.sentimentScore
+        : 0
+
+    // Prevent division by zero or invalid calculations
     const sentimentTrend =
       prevSentiment !== 0
         ? ((currentSentiment - prevSentiment) / Math.abs(prevSentiment)) * 100
@@ -41,9 +54,13 @@ export function useDashboardData() {
 
     // Engagement
     const currentEngagement =
-      ownMetrics[ownMetrics.length - 1]?.engagementRate || 0
+      ownMetrics.length > 0
+        ? ownMetrics[ownMetrics.length - 1]?.engagementRate
+        : 0
     const prevEngagement =
-      ownMetrics[ownMetrics.length - 2]?.engagementRate || 0
+      ownMetrics.length > 1
+        ? ownMetrics[ownMetrics.length - 2]?.engagementRate
+        : 0
     const engagementTrend =
       prevEngagement !== 0
         ? ((currentEngagement - prevEngagement) / prevEngagement) * 100
@@ -57,7 +74,9 @@ export function useDashboardData() {
         id: 'sentiment',
         title: 'Sentimento Global',
         value: currentSentiment.toFixed(2),
-        trend: parseFloat(sentimentTrend.toFixed(1)),
+        trend: isNaN(sentimentTrend)
+          ? 0
+          : parseFloat(sentimentTrend.toFixed(1)),
         trendLabel: 'vs. dia anterior',
         data: ownMetrics.map((m, i) => ({ index: i, value: m.sentimentScore })),
         color: 'hsl(var(--primary))',
@@ -75,7 +94,9 @@ export function useDashboardData() {
         id: 'engagement',
         title: 'Engajamento Médio',
         value: `${(currentEngagement * 100).toFixed(1)}%`,
-        trend: parseFloat(engagementTrend.toFixed(1)),
+        trend: isNaN(engagementTrend)
+          ? 0
+          : parseFloat(engagementTrend.toFixed(1)),
         trendLabel: 'vs. dia anterior',
         data: ownMetrics.map((m, i) => ({
           index: i,
@@ -87,7 +108,9 @@ export function useDashboardData() {
         id: 'reach',
         title: 'Alcance Potencial',
         value:
-          totalReach > 1000 ? `${(totalReach / 1000).toFixed(1)}k` : totalReach,
+          totalReach > 1000
+            ? `${(totalReach / 1000).toFixed(1)}k`
+            : totalReach.toString(),
         trend: 12.5,
         trendLabel: 'vs. mês anterior',
         data: ownMetrics.map((m, i) => ({
@@ -104,20 +127,26 @@ export function useDashboardData() {
     const heatmapMap = new Map<string, { sum: number; count: number }>()
 
     ownPosts.forEach((post) => {
-      const date = new Date(post.postedAt)
-      const dayName = days[getDay(date)]
-      const hour = getHours(date)
-      let slot = '20:00'
-      if (hour < 10) slot = '08:00'
-      else if (hour < 14) slot = '12:00'
-      else if (hour < 18) slot = '16:00'
+      try {
+        const date = new Date(post.postedAt)
+        if (isNaN(date.getTime())) return // Skip invalid dates
 
-      const key = `${dayName}-${slot}`
-      const current = heatmapMap.get(key) || { sum: 0, count: 0 }
-      heatmapMap.set(key, {
-        sum: current.sum + post.sentimentScore,
-        count: current.count + 1,
-      })
+        const dayName = days[getDay(date)]
+        const hour = getHours(date)
+        let slot = '20:00'
+        if (hour < 10) slot = '08:00'
+        else if (hour < 14) slot = '12:00'
+        else if (hour < 18) slot = '16:00'
+
+        const key = `${dayName}-${slot}`
+        const current = heatmapMap.get(key) || { sum: 0, count: 0 }
+        heatmapMap.set(key, {
+          sum: current.sum + post.sentimentScore,
+          count: current.count + 1,
+        })
+      } catch (e) {
+        console.error('Error processing post for heatmap:', e)
+      }
     })
 
     const computedHeatmap: HeatMapCell[] = []
@@ -127,7 +156,7 @@ export function useDashboardData() {
         computedHeatmap.push({
           day,
           hourSlot: slot,
-          value: data ? data.sum / data.count : 0,
+          value: data && data.count > 0 ? data.sum / data.count : 0,
         })
       })
     })

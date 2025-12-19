@@ -4,8 +4,9 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from 'react'
-import { Client, Post, DailyMetric, Alert, Settings } from '@/types'
+import { Client, Post, DailyMetric, Alert, Settings, Comment } from '@/types'
 import { subDays, format } from 'date-fns'
 
 interface AppState {
@@ -13,7 +14,7 @@ interface AppState {
   posts: Post[]
   metrics: DailyMetric[]
   alerts: Alert[]
-  comments: Comment[] // Added comments
+  comments: Comment[]
   settings: Settings
   isLoading: boolean
   isScraping: boolean
@@ -79,8 +80,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-  const generateMockData = () => {
-    // Clients
+  const generateMockData = useCallback(() => {
+    // Mock Clients
     const mockClients: Client[] = [
       {
         id: '1',
@@ -116,7 +117,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       },
     ]
 
-    // Metrics (Last 30 days)
+    // Mock Metrics (Last 30 days)
     const mockMetrics: DailyMetric[] = []
     const today = new Date()
 
@@ -142,7 +143,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     })
 
-    // Posts
+    // Mock Posts
     const mockPosts: Post[] = []
     mockClients.forEach((client) => {
       const postCount =
@@ -172,7 +173,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       }
     })
 
-    // Alerts
+    // Mock Alerts
     const mockAlerts: Alert[] = [
       {
         id: '1',
@@ -208,9 +209,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setPosts(mockPosts)
     setAlerts(mockAlerts)
     setIsLoading(false)
-  }
+  }, [])
 
-  const fetchFromSupabase = async () => {
+  const fetchFromSupabase = useCallback(async () => {
+    setIsLoading(true)
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 800))
+
     if (!supabaseUrl || !supabaseKey) {
       console.warn('Supabase credentials not found. Using mock data.')
       generateMockData()
@@ -218,16 +223,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      // Fetch logic implementation would go here using supabase-js or fetch
-      // For this implementation, we will simulate a fetch failure/success
-      // Since we don't have the real supabase instance configured in this environment
-      // We fall back to mock data to ensure the UI works
+      // In a real scenario, use supabase client here.
+      // Since we are mocking for stability as per User Story:
       generateMockData()
     } catch (error) {
       console.error('Error fetching data:', error)
-      generateMockData()
+      generateMockData() // Fallback to mock data on error
     }
-  }
+  }, [supabaseUrl, supabaseKey, generateMockData])
 
   const addClient = (
     client: Omit<Client, 'id' | 'status' | 'lastUpdated' | 'avatarUrl'>,
@@ -251,11 +254,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const updateSettings = (newSettings: Partial<Settings>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }))
-    localStorage.setItem(
-      'planin_settings',
-      JSON.stringify({ ...settings, ...newSettings }),
-    )
+    setSettings((prev) => {
+      const updated = { ...prev, ...newSettings }
+      localStorage.setItem('planin_settings', JSON.stringify(updated))
+      return updated
+    })
   }
 
   const markAlertRead = (id: string) => {
@@ -265,6 +268,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const triggerGlobalScrape = async () => {
+    if (isScraping) return
     setIsScraping(true)
     setScrapingStatus({ linkedin: 'loading', instagram: 'pending' })
     await new Promise((resolve) => setTimeout(resolve, 2000))
@@ -312,11 +316,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       try {
         setSettings(JSON.parse(savedSettings))
       } catch (e) {
-        console.error(e)
+        console.error('Failed to parse settings:', e)
       }
     }
     fetchFromSupabase()
-  }, [])
+  }, [fetchFromSupabase])
 
   return React.createElement(
     AppContext.Provider,

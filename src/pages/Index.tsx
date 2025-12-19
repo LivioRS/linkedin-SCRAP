@@ -4,9 +4,8 @@ import { DashboardCustomizer } from '@/components/DashboardCustomizer'
 import { useAppStore } from '@/stores/useAppStore'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
-import { AppHeader } from '@/components/Header'
 import { Button } from '@/components/ui/button'
-import { Download, FileText } from 'lucide-react'
+import { Download, FileText, RefreshCw } from 'lucide-react'
 import { exportToPDF, exportToCSV } from '@/services/export/reports'
 import { subDays } from 'date-fns'
 
@@ -18,6 +17,7 @@ export default function Index() {
     metrics,
     alerts,
     isLoading: isDataLoading,
+    refreshData,
   } = useAppStore()
 
   const isLoading = isDashboardLoading || isDataLoading
@@ -75,7 +75,10 @@ export default function Index() {
             Monitoramento em tempo real e KPIs principais.
           </p>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex gap-2 w-full sm:w-auto flex-wrap">
+          <Button variant="ghost" size="sm" onClick={refreshData}>
+            <RefreshCw className="h-4 w-4 mr-2" /> Atualizar
+          </Button>
           <Button variant="outline" size="sm" onClick={handleExportCSV}>
             <FileText className="h-4 w-4 mr-2" /> CSV
           </Button>

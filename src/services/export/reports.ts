@@ -27,16 +27,21 @@ export function exportToCSV(data: ReportData, filename?: string): void {
     ],
     ...posts.map((post) => {
       const client = clients.find((c) => c.id === post.clientId)
+      const content = post.content ? post.content.replace(/"/g, '""') : ''
       return [
         post.id,
         client?.name || 'N/A',
-        `"${post.content.replace(/"/g, '""')}"`,
-        post.likes.toString(),
-        post.comments.toString(),
-        post.shares.toString(),
-        post.views.toString(),
-        post.sentimentScore.toFixed(2),
-        format(new Date(post.postedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+        `"${content}"`,
+        (post.likes || 0).toString(),
+        (post.comments || 0).toString(),
+        (post.shares || 0).toString(),
+        (post.views || 0).toString(),
+        (post.sentimentScore || 0).toFixed(2),
+        post.postedAt
+          ? format(new Date(post.postedAt), 'dd/MM/yyyy HH:mm', {
+              locale: ptBR,
+            })
+          : 'N/A',
       ]
     }),
   ]
@@ -50,9 +55,9 @@ export function exportToCSV(data: ReportData, filename?: string): void {
       return [
         metric.date,
         client?.name || 'N/A',
-        metric.sentimentScore.toFixed(2),
-        (metric.engagementRate * 100).toFixed(2) + '%',
-        metric.postsCount.toString(),
+        (metric.sentimentScore || 0).toFixed(2),
+        ((metric.engagementRate || 0) * 100).toFixed(2) + '%',
+        (metric.postsCount || 0).toString(),
       ]
     }),
   ]
@@ -61,13 +66,20 @@ export function exportToCSV(data: ReportData, filename?: string): void {
 
   const alertsCSV = [
     ['ID', 'Tipo', 'Mensagem', 'Severidade', 'Data'],
-    ...alerts.map((alert) => [
-      alert.id,
-      alert.type,
-      `"${alert.message.replace(/"/g, '""')}"`,
-      alert.severity,
-      format(new Date(alert.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
-    ]),
+    ...alerts.map((alert) => {
+      const message = alert.message ? alert.message.replace(/"/g, '""') : ''
+      return [
+        alert.id,
+        alert.type,
+        `"${message}"`,
+        alert.severity,
+        alert.createdAt
+          ? format(new Date(alert.createdAt), 'dd/MM/yyyy HH:mm', {
+              locale: ptBR,
+            })
+          : 'N/A',
+      ]
+    }),
   ]
     .map((row) => row.join(','))
     .join('\n')
@@ -94,9 +106,13 @@ function generateReportHTML(data: ReportData): string {
   const { clients, posts, metrics, alerts } = data
   const ownClient = clients.find((c) => c.type === 'own')
   const ownMetrics = metrics.filter((m) => m.clientId === ownClient?.id)
+
   const avgSentiment =
-    ownMetrics.reduce((acc, m) => acc + m.sentimentScore, 0) /
-    (ownMetrics.length || 1)
+    ownMetrics.length > 0
+      ? ownMetrics.reduce((acc, m) => acc + (m.sentimentScore || 0), 0) /
+        ownMetrics.length
+      : 0
+
   const totalPosts = posts.length
   const totalAlerts = alerts.length
 
@@ -174,10 +190,10 @@ function generateReportHTML(data: ReportData): string {
                 : 'sentiment-neutral'
           return `<tr>
             <td style="font-weight: 500;">${client?.name || 'N/A'}</td>
-            <td>${post.content.substring(0, 120)}${post.content.length > 120 ? '...' : ''}</td>
-            <td>👍 ${post.likes} <span style="color: #9ca3af;">|</span> 💬 ${post.comments}</td>
-            <td><span class="${sentimentClass}">${post.sentimentScore.toFixed(2)}</span></td>
-            <td>${format(new Date(post.postedAt), 'dd/MM/yyyy', { locale: ptBR })}</td>
+            <td>${(post.content || '').substring(0, 120)}${(post.content || '').length > 120 ? '...' : ''}</td>
+            <td>👍 ${post.likes || 0} <span style="color: #9ca3af;">|</span> 💬 ${post.comments || 0}</td>
+            <td><span class="${sentimentClass}">${(post.sentimentScore || 0).toFixed(2)}</span></td>
+            <td>${post.postedAt ? format(new Date(post.postedAt), 'dd/MM/yyyy', { locale: ptBR }) : '-'}</td>
           </tr>`
         })
         .join('')}
@@ -193,11 +209,11 @@ function generateReportHTML(data: ReportData): string {
         .map((metric) => {
           const client = clients.find((c) => c.id === metric.clientId)
           return `<tr>
-            <td>${format(new Date(metric.date), 'dd/MM/yyyy', { locale: ptBR })}</td>
+            <td>${metric.date ? format(new Date(metric.date), 'dd/MM/yyyy', { locale: ptBR }) : '-'}</td>
             <td>${client?.name || 'N/A'}</td>
-            <td>${metric.sentimentScore.toFixed(2)}</td>
-            <td>${(metric.engagementRate * 100).toFixed(2)}%</td>
-            <td>${metric.postsCount}</td>
+            <td>${(metric.sentimentScore || 0).toFixed(2)}</td>
+            <td>${((metric.engagementRate || 0) * 100).toFixed(2)}%</td>
+            <td>${metric.postsCount || 0}</td>
           </tr>`
         })
         .join('')}
@@ -219,7 +235,7 @@ function generateReportHTML(data: ReportData): string {
           <td style="text-transform: capitalize;">${alert.type.replace('_', ' ')}</td>
           <td>${alert.message}</td>
           <td style="text-transform: uppercase; font-size: 11px; font-weight: 700;">${alert.severity}</td>
-          <td>${format(new Date(alert.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</td>
+          <td>${alert.createdAt ? format(new Date(alert.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : '-'}</td>
         </tr>
       `,
         )

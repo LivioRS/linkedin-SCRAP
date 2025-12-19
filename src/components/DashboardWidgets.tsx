@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   Card,
   CardContent,
@@ -12,6 +12,7 @@ import {
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
+  ChartConfig,
 } from '@/components/ui/chart'
 import {
   PieChart,
@@ -32,6 +33,7 @@ import {
   Activity,
   ArrowUpRight,
   CheckCircle2,
+  PieChart as PieChartIcon,
 } from 'lucide-react'
 import { SentimentBadge } from '@/components/SentimentBadge'
 import { Button } from '@/components/ui/button'
@@ -44,6 +46,19 @@ interface WidgetProps {
   metrics: DailyMetric[]
   alerts: Alert[]
 }
+
+const EmptyState = ({
+  message,
+  icon: Icon,
+}: {
+  message: string
+  icon: React.ElementType
+}) => (
+  <div className="flex flex-col items-center justify-center h-full p-6 text-center text-muted-foreground bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
+    <Icon className="h-8 w-8 mb-2 opacity-20" />
+    <p className="text-sm font-medium">{message}</p>
+  </div>
+)
 
 export function KPISentimentWidget({ clients, metrics }: WidgetProps) {
   const ownClient = clients.find((c) => c.type === 'own')
@@ -157,31 +172,38 @@ export function KPICompetitorsWidget({ clients }: WidgetProps) {
 }
 
 export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
-  const sentimentTrendData = Array.from({ length: 15 }).map((_, i) => {
-    const date = new Date(Date.now() - (14 - i) * 86400000)
-      .toISOString()
-      .split('T')[0]
-    const data: any = { date }
+  const sentimentTrendData = useMemo(() => {
+    if (!clients.length || !metrics.length) return []
 
-    clients.forEach((client) => {
-      const dayMetric = metrics.find(
-        (m) => m.clientId === client.id && m.date === date,
-      )
-      // Fallback to 0 only if we have metrics but no data for this day,
-      // or if totally empty, it will be 0.
-      data[client.name] = dayMetric?.sentimentScore ?? 0
+    return Array.from({ length: 15 }).map((_, i) => {
+      const date = new Date(Date.now() - (14 - i) * 86400000)
+        .toISOString()
+        .split('T')[0]
+      const data: any = { date }
+
+      clients.forEach((client) => {
+        const dayMetric = metrics.find(
+          (m) => m.clientId === client.id && m.date === date,
+        )
+        data[client.name] = dayMetric?.sentimentScore ?? 0
+      })
+
+      return data
     })
+  }, [clients, metrics])
 
-    return data
-  })
+  const lineChartConfig = useMemo(() => {
+    const config: ChartConfig = {}
+    clients.forEach((client, index) => {
+      config[client.name] = {
+        label: client.name,
+        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+      }
+    })
+    return config
+  }, [clients])
 
-  const lineChartConfig = clients.reduce((acc, client, index) => {
-    acc[client.name] = {
-      label: client.name,
-      color: `hsl(var(--chart-${(index % 5) + 1}))`,
-    }
-    return acc
-  }, {} as any)
+  const hasData = sentimentTrendData.some((d) => Object.keys(d).length > 1)
 
   return (
     <Card className="w-full h-full flex flex-col">
@@ -192,79 +214,95 @@ export function ChartSentimentTrendWidget({ clients, metrics }: WidgetProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 min-h-0">
-        <ChartContainer
-          config={lineChartConfig}
-          className="h-full w-full aspect-auto"
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={sentimentTrendData}
-              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                stroke="#e5e7eb"
-              />
-              <XAxis
-                dataKey="date"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={12}
-                tick={{ fill: '#6B7280', fontSize: 12 }}
-                tickFormatter={(value) =>
-                  new Date(value).toLocaleDateString('pt-BR', {
-                    day: 'numeric',
-                    month: 'short',
-                  })
-                }
-              />
-              <YAxis hide domain={[-1, 1]} />
-              <ChartTooltip
-                content={<ChartTooltipContent indicator="line" />}
-              />
-              <ChartLegend content={<ChartLegendContent />} />
-              {clients.map((client, index) => (
-                <Line
-                  key={client.id}
-                  type="monotone"
-                  dataKey={client.name}
-                  stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
-                  strokeWidth={3}
-                  dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
+        {!hasData ? (
+          <EmptyState
+            message="Dados de tendência insuficientes."
+            icon={TrendingUp}
+          />
+        ) : (
+          <ChartContainer
+            config={lineChartConfig}
+            className="h-full w-full aspect-auto"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={sentimentTrendData}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#e5e7eb"
                 />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={12}
+                  tick={{ fill: '#6B7280', fontSize: 12 }}
+                  tickFormatter={(value) =>
+                    new Date(value).toLocaleDateString('pt-BR', {
+                      day: 'numeric',
+                      month: 'short',
+                    })
+                  }
+                />
+                <YAxis hide domain={[-1, 1]} />
+                <ChartTooltip
+                  content={<ChartTooltipContent indicator="line" />}
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+                {clients.map((client, index) => (
+                  <Line
+                    key={client.id}
+                    type="monotone"
+                    dataKey={client.name}
+                    stroke={`hsl(var(--chart-${(index % 5) + 1}))`}
+                    strokeWidth={3}
+                    dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   )
 }
 
 export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
-  const ownClient = clients.find((c) => c.type === 'own')
-  const industryPosts = posts.filter((p) => {
-    const client = clients.find((c) => c.id === p.clientId)
-    return client?.industry === ownClient?.industry
-  })
+  const shareOfVoiceData = useMemo(() => {
+    const ownClient = clients.find((c) => c.type === 'own')
+    if (!ownClient) return []
 
-  const shareOfVoiceData = clients
-    .filter((c) => c.industry === ownClient?.industry)
-    .map((client) => ({
-      name: client.name,
-      value: industryPosts.filter((p) => p.clientId === client.id).length,
-    }))
-    .filter((item) => item.value > 0)
+    const industryPosts = posts.filter((p) => {
+      const client = clients.find((c) => c.id === p.clientId)
+      return client?.industry === ownClient?.industry
+    })
 
-  const pieChartConfig = clients.reduce((acc, client, index) => {
-    acc[client.name] = {
-      label: client.name,
-      color: `hsl(var(--chart-${(index % 5) + 1}))`,
-    }
-    return acc
-  }, {} as any)
+    return clients
+      .filter((c) => c.industry === ownClient?.industry)
+      .map((client) => ({
+        name: client.name,
+        value: industryPosts.filter((p) => p.clientId === client.id).length,
+      }))
+      .filter((item) => item.value > 0)
+  }, [clients, posts])
+
+  const pieChartConfig = useMemo(() => {
+    const config: ChartConfig = {}
+    clients.forEach((client, index) => {
+      config[client.name] = {
+        label: client.name,
+        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+      }
+    })
+    return config
+  }, [clients])
+
+  const hasData = shareOfVoiceData.length > 0
 
   return (
     <Card className="col-span-1 h-full flex flex-col">
@@ -275,48 +313,58 @@ export function ChartShareOfVoiceWidget({ clients, posts }: WidgetProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 min-h-0">
-        <ChartContainer
-          config={pieChartConfig}
-          className="h-full w-full aspect-auto"
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={shareOfVoiceData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={60}
-                paddingAngle={2}
-                strokeWidth={2}
-                stroke="#fff"
-              >
-                {shareOfVoiceData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={`hsl(var(--chart-${(index % 5) + 1}))`}
-                  />
-                ))}
-              </Pie>
-              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-              <ChartLegend
-                content={<ChartLegendContent nameKey="name" />}
-                className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/2 [&>*]:justify-center"
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+        {!hasData ? (
+          <EmptyState
+            message="Sem dados de Share of Voice."
+            icon={PieChartIcon}
+          />
+        ) : (
+          <ChartContainer
+            config={pieChartConfig}
+            className="h-full w-full aspect-auto"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={shareOfVoiceData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={60}
+                  paddingAngle={2}
+                  strokeWidth={2}
+                  stroke="#fff"
+                >
+                  {shareOfVoiceData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={`hsl(var(--chart-${(index % 5) + 1}))`}
+                    />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                <ChartLegend
+                  content={<ChartLegendContent nameKey="name" />}
+                  className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/2 [&>*]:justify-center"
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   )
 }
 
 export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
-  const negativePosts = posts
-    .filter((p) => p.sentimentScore < -0.3)
-    .sort(
-      (a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime(),
-    )
-    .slice(0, 5)
+  const negativePosts = useMemo(() => {
+    return posts
+      .filter((p) => p.sentimentScore < -0.3)
+      .sort(
+        (a, b) =>
+          new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime(),
+      )
+      .slice(0, 5)
+  }, [posts])
 
   return (
     <Card className="h-full shadow-sm border-none bg-white flex flex-col">
@@ -381,12 +429,14 @@ export function ListNegativePostsWidget({ clients, posts }: WidgetProps) {
 }
 
 export function ListRecentAlertsWidget({ alerts }: WidgetProps) {
-  const recentAlerts = alerts
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
-    .slice(0, 5)
+  const recentAlerts = useMemo(() => {
+    return alerts
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
+      .slice(0, 5)
+  }, [alerts])
 
   return (
     <Card className="h-full shadow-sm border-none bg-white flex flex-col">
