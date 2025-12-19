@@ -65,8 +65,9 @@ export default function Index() {
   }
 
   return (
-    <div className="space-y-8 pb-10">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 animate-fade-in pb-10">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl border shadow-sm">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-primary font-display">
             Visão Geral
@@ -89,16 +90,23 @@ export default function Index() {
         </div>
       </div>
 
+      {/* Dynamic Widgets Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 auto-rows-min">
         {visibleWidgets.map((widget) => (
           <div
             key={widget.id}
             className={cn(
-              'rounded-xl transition-all duration-300',
+              'rounded-xl transition-all duration-300 h-full',
               // Dynamic Grid Span Logic based on widget config width (1-12)
-              `col-span-1 md:col-span-${Math.min(widget.position.w, 12)} lg:col-span-${widget.position.w}`,
+              widget.position.w === 3 ? 'lg:col-span-3' :
+              widget.position.w === 4 ? 'lg:col-span-4' :
+              widget.position.w === 6 ? 'lg:col-span-6' :
+              widget.position.w === 8 ? 'lg:col-span-8' :
+              widget.position.w === 9 ? 'lg:col-span-9' :
+              widget.position.w === 12 ? 'lg:col-span-12' :
+              'lg:col-span-6',
               // Height classes
-              widget.position.h > 2 ? 'h-[400px]' : 'h-[160px]',
+              widget.position.h > 2 ? 'h-[400px]' : 'h-auto',
             )}
           >
             {renderWidget(widget.id, { clients, posts, metrics, alerts })}

@@ -7,7 +7,6 @@ import {
   Bell,
   Settings,
   Activity,
-  LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -37,7 +36,21 @@ export function AppSidebar() {
     <aside className="w-[280px] bg-slate-900 border-r border-slate-800 hidden md:flex flex-col h-screen fixed left-0 top-0 z-30 shadow-2xl">
       <div className="h-20 flex flex-col justify-center px-6 border-b border-slate-800 bg-slate-950/50">
         <div className="flex items-center gap-3">
-          <div className="bg-primary p-1.5 rounded-lg shadow-lg shadow-primary/20">
+          <img
+            src="/planin-logo.png"
+            alt="Planin Logo"
+            className="h-10 w-auto object-contain"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.style.display = 'none'
+              const fallback = target.nextElementSibling as HTMLElement
+              if (fallback) fallback.style.display = 'flex'
+            }}
+          />
+          <div
+            className="bg-primary p-1.5 rounded-lg shadow-lg shadow-primary/20 hidden"
+            style={{ display: 'none' }}
+          >
             <svg
               width="20"
               height="20"
@@ -73,8 +86,8 @@ export function AppSidebar() {
             PLANIN
           </span>
         </div>
-        <span className="text-[10px] text-slate-400 uppercase tracking-widest mt-1.5 font-semibold pl-1">
-          Monitor de Reputação
+        <span className="text-base text-slate-400 uppercase tracking-widest mt-1.5 font-semibold pl-1">
+          Monitor de Reputação Digital
         </span>
       </div>
 
@@ -114,20 +127,6 @@ export function AppSidebar() {
         ))}
       </div>
 
-      <div className="p-4 border-t border-slate-800 bg-slate-950/30">
-        <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800 cursor-pointer transition-colors group">
-          <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-primary to-purple-400 flex items-center justify-center text-white font-bold border border-white/10 shadow-inner">
-            JD
-          </div>
-          <div className="overflow-hidden flex-1">
-            <p className="text-sm font-medium text-white truncate group-hover:text-primary transition-colors">
-              John Doe
-            </p>
-            <p className="text-xs text-slate-400 truncate">Marketing Manager</p>
-          </div>
-          <LogOut className="h-4 w-4 text-slate-500 group-hover:text-white transition-colors" />
-        </div>
-      </div>
     </aside>
   )
 }
