@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react'
 const getPageTitle = (pathname: string) => {
   switch (pathname) {
     case '/':
-      return 'Dashboard'
+      return 'Visão Geral'
     case '/sentiment':
       return 'Dashboard de Sentimento'
     case '/clients':
@@ -19,11 +19,11 @@ const getPageTitle = (pathname: string) => {
     case '/feed':
       return 'Feed de Reputação'
     case '/analysis':
-      return 'Análise Competitiva'
+      return 'Análise Competitiva e Profunda'
     case '/alerts':
       return 'Central de Alertas'
     case '/settings':
-      return 'Configurações'
+      return 'Configurações do Sistema'
     default:
       return 'ReputaMonitor'
   }
@@ -39,7 +39,7 @@ function LayoutContent() {
   }, [pathname])
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground font-sans">
+    <div className="flex min-h-screen bg-slate-50 text-foreground font-sans selection:bg-primary/20 selection:text-primary">
       <AppSidebar />
       <div className="md:hidden fixed top-4 left-4 z-50">
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
@@ -47,20 +47,23 @@ function LayoutContent() {
             <Button
               variant="outline"
               size="icon"
-              className="bg-primary text-white border-none shadow-lg"
+              className="bg-slate-900 text-white border-slate-800 shadow-lg"
             >
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-[280px] border-r-0">
+          <SheetContent
+            side="left"
+            className="p-0 w-[280px] border-r-0 bg-slate-900"
+          >
             <AppSidebar />
           </SheetContent>
         </Sheet>
       </div>
       <div className="flex-1 md:ml-[280px] flex flex-col min-h-screen transition-all duration-300 ease-in-out">
         <AppHeader title={title} />
-        <main className="flex-1 p-8 overflow-y-auto">
-          <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+          <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Outlet />
           </div>
         </main>

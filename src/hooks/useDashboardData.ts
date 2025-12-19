@@ -3,56 +3,11 @@ import {
   MetricCardData,
   HeatMapCell,
   ClientDashboardData,
-  SparklineData,
-} from '@/types' // Assuming these interfaces might be moved, but keeping export structure
+  ClientChartData,
+} from '@/types'
 import useAppStore from '@/stores/useAppStore'
-import { subDays, format, getDay, getHours, parseISO } from 'date-fns'
+import { getDay, getHours, parseISO, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-
-// Re-export interfaces for compatibility
-export interface SparklineData {
-  index: number
-  value: number
-}
-
-export interface MetricCardData {
-  id: string
-  title: string
-  value: string | number
-  trend: number
-  trendLabel: string
-  data: SparklineData[]
-  color: string
-}
-
-export interface HeatMapCell {
-  day: string
-  hourSlot: string
-  value: number
-}
-
-export interface ClientChartData {
-  date: string
-  sentiment: number
-  volume: number
-}
-
-export interface ClientDashboardData {
-  id: string
-  name: string
-  url: string
-  type: string
-  industry: string
-  status: string
-  lastUpdated: string
-  avatarUrl: string
-  history: ClientChartData[]
-  distribution: {
-    positive: number
-    neutral: number
-    negative: number
-  }
-}
 
 export function useDashboardData() {
   const { clients, metrics: dailyMetrics, posts, isLoading } = useAppStore()

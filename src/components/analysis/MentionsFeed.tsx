@@ -19,20 +19,20 @@ export function MentionsFeed({ posts, clients }: MentionsFeedProps) {
   const getSentimentBadge = (score: number) => {
     if (score > 0.3) {
       return (
-        <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100 px-2 py-0.5 text-[10px] uppercase font-bold">
+        <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-200 px-2 py-0.5 text-[10px] uppercase font-bold">
           Positivo
         </Badge>
       )
     }
     if (score < -0.3) {
       return (
-        <Badge className="bg-red-100 text-red-700 border-red-200 hover:bg-red-100 px-2 py-0.5 text-[10px] uppercase font-bold">
+        <Badge className="bg-red-100 text-red-700 border-red-200 hover:bg-red-200 px-2 py-0.5 text-[10px] uppercase font-bold">
           Negativo
         </Badge>
       )
     }
     return (
-      <Badge className="bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100 px-2 py-0.5 text-[10px] uppercase font-bold">
+      <Badge className="bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 px-2 py-0.5 text-[10px] uppercase font-bold">
         Neutro
       </Badge>
     )
@@ -68,7 +68,7 @@ export function MentionsFeed({ posts, clients }: MentionsFeedProps) {
                         {client?.name}
                       </h4>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="capitalize font-medium">
+                        <span className="capitalize font-medium bg-slate-100 px-1.5 rounded">
                           {post.vehicle || 'LinkedIn'}
                         </span>
                         <span>•</span>
@@ -81,7 +81,7 @@ export function MentionsFeed({ posts, clients }: MentionsFeedProps) {
                   </div>
                   {getSentimentBadge(post.sentimentScore)}
                 </div>
-                <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">
+                <p className="text-sm text-gray-700 leading-relaxed mb-3 line-clamp-2 font-medium">
                   {post.content}
                 </p>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground font-medium pt-2 border-t border-dashed">

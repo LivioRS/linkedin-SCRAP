@@ -13,7 +13,7 @@ export interface Post {
   id: string
   clientId: string
   content: string
-  title?: string // Título do post (se disponível)
+  title?: string
   likes: number
   comments: number
   shares: number
@@ -22,10 +22,10 @@ export interface Post {
   sentimentExplanation: string
   postedAt: string
   url: string
-  vehicle?: string // Veículo/fonte (ex: InfoMoney, Folha de Curitiba, etc.)
-  region?: string // Região (ex: Corporativo, Regional, etc.)
-  category?: string // Categoria (ex: Operacional, Financeiro, etc.)
-  urgency?: 'baixa' | 'media' | 'alta' // Urgência do post
+  vehicle?: string
+  region?: string
+  category?: string
+  urgency?: 'baixa' | 'media' | 'alta'
 }
 
 export interface Comment {
@@ -52,14 +52,6 @@ export interface DailyMetric {
   sentimentScore: number
   engagementRate: number
   postsCount: number
-}
-
-export interface ScrapingLog {
-  id: string
-  date: string
-  status: 'success' | 'failed'
-  itemsCollected: number
-  durationMs: number
 }
 
 export interface TargetUrl {
@@ -107,8 +99,47 @@ export interface DashboardWidget {
   visible: boolean
 }
 
-export interface ApiConfig {
-  apifyApiKey?: string
-  telegramBotToken?: string
-  telegramChatId?: string
+// Data structures for Analysis and Dashboard Hooks
+export interface SparklineData {
+  index: number
+  value: number
+}
+
+export interface MetricCardData {
+  id: string
+  title: string
+  value: string | number
+  trend: number
+  trendLabel: string
+  data: SparklineData[]
+  color: string
+}
+
+export interface HeatMapCell {
+  day: string
+  hourSlot: string
+  value: number
+}
+
+export interface ClientChartData {
+  date: string
+  sentiment: number
+  volume: number
+}
+
+export interface ClientDashboardData {
+  id: string
+  name: string
+  url: string
+  type: string
+  industry: string
+  status: string
+  lastUpdated: string
+  avatarUrl: string
+  history: ClientChartData[]
+  distribution: {
+    positive: number
+    neutral: number
+    negative: number
+  }
 }

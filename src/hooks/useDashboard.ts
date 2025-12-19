@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { DashboardWidget } from '@/types'
 
-const DASHBOARD_STORAGE_KEY = 'dashboard_widgets'
+const DASHBOARD_STORAGE_KEY = 'planin_dashboard_widgets_v2'
 
 const DEFAULT_WIDGETS: DashboardWidget[] = [
   {
@@ -41,7 +41,7 @@ const DEFAULT_WIDGETS: DashboardWidget[] = [
     type: 'chart',
     title: 'Tendências de Sentimento',
     config: { chartType: 'line', metric: 'sentiment' },
-    position: { x: 0, y: 2, w: 6, h: 4 },
+    position: { x: 0, y: 2, w: 8, h: 4 }, // Increased width
     visible: true,
   },
   {
@@ -49,13 +49,13 @@ const DEFAULT_WIDGETS: DashboardWidget[] = [
     type: 'chart',
     title: 'Share of Voice',
     config: { chartType: 'pie', metric: 'sov' },
-    position: { x: 6, y: 2, w: 6, h: 4 },
+    position: { x: 8, y: 2, w: 4, h: 4 },
     visible: true,
   },
   {
     id: 'list-negative-posts',
     type: 'list',
-    title: 'Posts Críticos',
+    title: 'Posts Críticos (Atenção)',
     config: { filter: 'negative', limit: 5 },
     position: { x: 0, y: 6, w: 6, h: 4 },
     visible: true,
@@ -78,10 +78,21 @@ export function useDashboard() {
     const saved = localStorage.getItem(DASHBOARD_STORAGE_KEY)
     if (saved) {
       try {
-        setWidgets(JSON.parse(saved))
+        const parsed = JSON.parse(saved)
+        // Merge with default to ensure new widgets appear
+        const merged = DEFAULT_WIDGETS.map((def) => {
+          const savedWidget = parsed.find(
+            (p: DashboardWidget) => p.id === def.id,
+          )
+          return savedWidget ? { ...def, ...savedWidget } : def
+        })
+        setWidgets(merged)
       } catch (e) {
         console.error('Erro ao carregar widgets:', e)
+        setWidgets(DEFAULT_WIDGETS)
       }
+    } else {
+      setWidgets(DEFAULT_WIDGETS)
     }
     setIsLoading(false)
   }, [])
@@ -91,40 +102,33 @@ export function useDashboard() {
     localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify(newWidgets))
   }
 
-  const updateWidget = (id: string, updates: Partial<DashboardWidget>) => {
-    const updated = widgets.map((w) => (w.id === id ? { ...w, ...updates } : w))
-    saveWidgets(updated)
-  }
-
   const toggleWidget = (id: string) => {
-    updateWidget(id, { visible: !widgets.find((w) => w.id === id)?.visible })
+    const newWidgets = widgets.map((w) =>
+      w.id === id ? { ...w, visible: !w.visible } : w,
+    )
+    saveWidgets(newWidgets)
   }
 
-  const moveWidget = (id: string, position: { x: number; y: number }) => {
-    updateWidget(id, {
-      position: {
-        ...widgets.find((w) => w.id === id)?.position,
-        ...position,
-      } as any,
-    })
+  const reorderWidgets = (newOrder: DashboardWidget[]) => {
+    saveWidgets(newOrder)
   }
 
-  const resizeWidget = (id: string, size: { w: number; h: number }) => {
-    updateWidget(id, {
-      position: {
-        ...widgets.find((w) => w.id === id)?.position,
-        ...size,
-      } as any,
-    })
+  const moveWidgetUp = (index: number) => {
+    if (index === 0) return
+    const newWidgets = [...widgets]
+    const temp = newWidgets[index]
+    newWidgets[index] = newWidgets[index - 1]
+    newWidgets[index - 1] = temp
+    saveWidgets(newWidgets)
   }
 
-  const addWidget = (widget: Omit<DashboardWidget, 'id'>) => {
-    const newWidget: DashboardWidget = { ...widget, id: `widget-${Date.now()}` }
-    saveWidgets([...widgets, newWidget])
-  }
-
-  const removeWidget = (id: string) => {
-    saveWidgets(widgets.filter((w) => w.id !== id))
+  const moveWidgetDown = (index: number) => {
+    if (index === widgets.length - 1) return
+    const newWidgets = [...widgets]
+    const temp = newWidgets[index]
+    newWidgets[index] = newWidgets[index + 1]
+    newWidgets[index + 1] = temp
+    saveWidgets(newWidgets)
   }
 
   const resetDashboard = () => {
@@ -137,12 +141,10 @@ export function useDashboard() {
     widgets,
     visibleWidgets,
     isLoading,
-    updateWidget,
     toggleWidget,
-    moveWidget,
-    resizeWidget,
-    addWidget,
-    removeWidget,
+    reorderWidgets,
+    moveWidgetUp,
+    moveWidgetDown,
     resetDashboard,
   }
 }

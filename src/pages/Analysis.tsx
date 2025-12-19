@@ -13,11 +13,11 @@ import { SentimentOverview } from '@/components/analysis/SentimentOverview'
 import { SentimentCharts } from '@/components/analysis/SentimentCharts'
 import { MentionsFeed } from '@/components/analysis/MentionsFeed'
 import { subDays, isAfter } from 'date-fns'
-import { Download } from 'lucide-react'
-import { exportToCSV } from '@/services/export/reports'
+import { Download, FileText } from 'lucide-react'
+import { exportToCSV, exportToPDF } from '@/services/export/reports'
 
 export default function Analysis() {
-  const { clients, posts, metrics, alerts } = useAppStore()
+  const { clients, posts, metrics, alerts, isLoading } = useAppStore()
   const [period, setPeriod] = useState('30')
   const [platform, setPlatform] = useState('all')
 
@@ -121,24 +121,28 @@ export default function Analysis() {
     return { trendData, distributionData, topicData }
   }, [filteredData])
 
-  const handleExport = () => {
-    exportToCSV(
-      {
-        clients,
-        posts: filteredData.posts,
-        metrics: filteredData.metrics,
-        alerts: [],
-        period: {
-          start: subDays(new Date(), parseInt(period)),
-          end: new Date(),
-        },
+  const handleExport = (type: 'csv' | 'pdf') => {
+    const data = {
+      clients,
+      posts: filteredData.posts,
+      metrics: filteredData.metrics,
+      alerts: [],
+      period: {
+        start: subDays(new Date(), parseInt(period)),
+        end: new Date(),
       },
-      `analise-sentimento-${period}d.csv`,
-    )
+    }
+
+    if (type === 'csv') exportToCSV(data, `analise-sentimento-${period}d.csv`)
+    else exportToPDF(data, `analise-sentimento-${period}d.pdf`)
+  }
+
+  if (isLoading) {
+    return <div className="p-8">Carregando análise...</div>
   }
 
   return (
-    <div className="space-y-6 animate-fade-in pb-10">
+    <div className="space-y-6 pb-10">
       {/* Header Section */}
       <AnalysisHeader />
 
@@ -170,13 +174,22 @@ export default function Analysis() {
             </SelectContent>
           </Select>
         </div>
-        <Button
-          variant="outline"
-          className="gap-2 w-full sm:w-auto"
-          onClick={handleExport}
-        >
-          <Download className="h-4 w-4" /> Exportar Dados
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            className="gap-2 w-full sm:w-auto"
+            onClick={() => handleExport('csv')}
+          >
+            <FileText className="h-4 w-4" /> CSV
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-2 w-full sm:w-auto"
+            onClick={() => handleExport('pdf')}
+          >
+            <Download className="h-4 w-4" /> PDF
+          </Button>
+        </div>
       </div>
 
       {/* KPI Section */}

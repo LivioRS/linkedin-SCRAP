@@ -48,8 +48,8 @@ function KPI({
         <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
           {title}
         </CardTitle>
-        <div className="p-2 bg-gray-50 rounded-full">
-          <Icon className="h-4 w-4 text-gray-500" />
+        <div className="p-2 bg-slate-50 rounded-full">
+          <Icon className="h-4 w-4 text-slate-500" />
         </div>
       </CardHeader>
       <CardContent>

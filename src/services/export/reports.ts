@@ -72,7 +72,7 @@ export function exportToCSV(data: ReportData, filename?: string): void {
     .map((row) => row.join(','))
     .join('\n')
 
-  const fullCSV = `RELATÓRIO DE MONITORAMENTO\nPeríodo: ${format(data.period.start, 'dd/MM/yyyy', { locale: ptBR })} a ${format(data.period.end, 'dd/MM/yyyy', { locale: ptBR })}\n\n=== POSTS ===\n${postsCSV}\n\n=== MÉTRICAS ===\n${metricsCSV}\n\n=== ALERTAS ===\n${alertsCSV}`
+  const fullCSV = `RELATÓRIO PLANIN - MONITORAMENTO DE REPUTAÇÃO\nGerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}\nPeríodo: ${format(data.period.start, 'dd/MM/yyyy', { locale: ptBR })} a ${format(data.period.end, 'dd/MM/yyyy', { locale: ptBR })}\n\n=== POSTS ===\n${postsCSV}\n\n=== MÉTRICAS ===\n${metricsCSV}\n\n=== ALERTAS ===\n${alertsCSV}`
 
   const blob = new Blob(['\ufeff' + fullCSV], {
     type: 'text/csv;charset=utf-8;',
@@ -82,7 +82,7 @@ export function exportToCSV(data: ReportData, filename?: string): void {
   link.setAttribute('href', url)
   link.setAttribute(
     'download',
-    filename || `relatorio-${format(new Date(), 'yyyy-MM-dd')}.csv`,
+    filename || `planin-report-${format(new Date(), 'yyyy-MM-dd')}.csv`,
   )
   link.style.visibility = 'hidden'
   document.body.appendChild(link)
@@ -105,47 +105,65 @@ function generateReportHTML(data: ReportData): string {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Relatório de Monitoramento</title>
+  <title>Relatório PLANIN</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; color: #333; }
-    h1 { color: #1a1a1a; border-bottom: 3px solid #0066cc; padding-bottom: 10px; }
-    h2 { color: #0066cc; margin-top: 30px; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px; }
-    .summary { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
-    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 15px; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; margin: 40px; color: #1f2937; line-height: 1.5; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7c3aed; padding-bottom: 20px; margin-bottom: 30px; }
+    .logo { font-size: 24px; font-weight: 800; color: #7c3aed; }
+    h1 { color: #111827; font-size: 24px; margin: 0; }
+    h2 { color: #4b5563; font-size: 18px; margin-top: 40px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
+    .summary { background: #f9fafb; padding: 24px; border-radius: 12px; border: 1px solid #e5e7eb; }
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 16px; }
     .summary-item { text-align: center; }
-    .summary-value { font-size: 32px; font-weight: bold; color: #0066cc; }
-    .summary-label { font-size: 14px; color: #666; margin-top: 5px; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-    th { background-color: #0066cc; color: white; }
-    tr:nth-child(even) { background-color: #f9f9f9; }
-    .sentiment-positive { color: #28a745; font-weight: bold; }
-    .sentiment-negative { color: #dc3545; font-weight: bold; }
-    .sentiment-neutral { color: #6c757d; }
-    .alert-high { background-color: #fee; color: #c33; }
-    .alert-medium { background-color: #ffeaa7; color: #d63031; }
-    .alert-low { background-color: #e8f5e9; color: #2e7d32; }
-    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 12px; }
+    .summary-value { font-size: 36px; font-weight: 800; color: #7c3aed; }
+    .summary-label { font-size: 14px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+    th { background-color: #f3f4f6; color: #374151; font-weight: 600; text-align: left; padding: 12px; border-bottom: 2px solid #e5e7eb; }
+    td { padding: 12px; border-bottom: 1px solid #e5e7eb; color: #4b5563; }
+    tr:last-child td { border-bottom: none; }
+    .sentiment-positive { color: #059669; font-weight: 600; background: #d1fae5; padding: 2px 8px; border-radius: 99px; font-size: 12px; }
+    .sentiment-negative { color: #dc2626; font-weight: 600; background: #fee2e2; padding: 2px 8px; border-radius: 99px; font-size: 12px; }
+    .sentiment-neutral { color: #4b5563; background: #f3f4f6; padding: 2px 8px; border-radius: 99px; font-size: 12px; }
+    .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #9ca3af; font-size: 12px; }
   </style>
 </head>
 <body>
-  <h1>Relatório de Monitoramento de Reputação</h1>
-  <div class="summary">
-    <h3>Resumo Executivo</h3>
-    <p><strong>Período:</strong> ${format(data.period.start, 'dd/MM/yyyy', { locale: ptBR })} a ${format(data.period.end, 'dd/MM/yyyy', { locale: ptBR })}</p>
-    ${ownClient ? `<p><strong>Cliente Principal:</strong> ${ownClient.name}</p>` : ''}
-    <div class="summary-grid">
-      <div class="summary-item"><div class="summary-value">${avgSentiment.toFixed(2)}</div><div class="summary-label">Sentimento Médio</div></div>
-      <div class="summary-item"><div class="summary-value">${totalPosts}</div><div class="summary-label">Posts Analisados</div></div>
-      <div class="summary-item"><div class="summary-value">${totalAlerts}</div><div class="summary-label">Alertas Gerados</div></div>
+  <div class="header">
+    <div class="logo">PLANIN</div>
+    <div style="text-align: right;">
+      <h1>Relatório de Monitoramento</h1>
+      <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">Gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</div>
     </div>
   </div>
-  <h2>Posts Analisados (Recentes)</h2>
+  
+  <div class="summary">
+    <div style="font-weight: 600; color: #374151; margin-bottom: 8px;">RESUMO EXECUTIVO</div>
+    <div>Período: ${format(data.period.start, 'dd/MM/yyyy', { locale: ptBR })} a ${format(data.period.end, 'dd/MM/yyyy', { locale: ptBR })}</div>
+    ${ownClient ? `<div>Marca Principal: <strong>${ownClient.name}</strong></div>` : ''}
+    
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="summary-value">${avgSentiment.toFixed(2)}</div>
+        <div class="summary-label">Sentimento Médio</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value">${totalPosts}</div>
+        <div class="summary-label">Posts Coletados</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value">${totalAlerts}</div>
+        <div class="summary-label">Alertas</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Últimas Publicações (Top 20)</h2>
   <table>
-    <thead><tr><th>Cliente</th><th>Conteúdo</th><th>Engajamento</th><th>Sentimento</th><th>Data</th></tr></thead>
+    <thead><tr><th>Cliente</th><th style="width: 40%;">Conteúdo</th><th>Engajamento</th><th>Sentimento</th><th>Data</th></tr></thead>
     <tbody>
       ${posts
-        .slice(0, 50)
+        .slice(0, 20)
         .map((post) => {
           const client = clients.find((c) => c.id === post.clientId)
           const sentimentClass =
@@ -154,35 +172,66 @@ function generateReportHTML(data: ReportData): string {
               : post.sentimentScore < -0.3
                 ? 'sentiment-negative'
                 : 'sentiment-neutral'
-          return `<tr><td>${client?.name || 'N/A'}</td><td>${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}</td><td>👍 ${post.likes} 💬 ${post.comments}</td><td class="${sentimentClass}">${post.sentimentScore.toFixed(2)}</td><td>${format(new Date(post.postedAt), 'dd/MM/yyyy', { locale: ptBR })}</td></tr>`
+          return `<tr>
+            <td style="font-weight: 500;">${client?.name || 'N/A'}</td>
+            <td>${post.content.substring(0, 120)}${post.content.length > 120 ? '...' : ''}</td>
+            <td>👍 ${post.likes} <span style="color: #9ca3af;">|</span> 💬 ${post.comments}</td>
+            <td><span class="${sentimentClass}">${post.sentimentScore.toFixed(2)}</span></td>
+            <td>${format(new Date(post.postedAt), 'dd/MM/yyyy', { locale: ptBR })}</td>
+          </tr>`
         })
         .join('')}
     </tbody>
   </table>
+
   <h2>Métricas Diárias</h2>
   <table>
     <thead><tr><th>Data</th><th>Cliente</th><th>Sentimento</th><th>Engajamento</th><th>Posts</th></tr></thead>
     <tbody>
       ${metrics
-        .slice(0, 30)
+        .slice(0, 15)
         .map((metric) => {
           const client = clients.find((c) => c.id === metric.clientId)
-          return `<tr><td>${format(new Date(metric.date), 'dd/MM/yyyy', { locale: ptBR })}</td><td>${client?.name || 'N/A'}</td><td>${metric.sentimentScore.toFixed(2)}</td><td>${(metric.engagementRate * 100).toFixed(2)}%</td><td>${metric.postsCount}</td></tr>`
+          return `<tr>
+            <td>${format(new Date(metric.date), 'dd/MM/yyyy', { locale: ptBR })}</td>
+            <td>${client?.name || 'N/A'}</td>
+            <td>${metric.sentimentScore.toFixed(2)}</td>
+            <td>${(metric.engagementRate * 100).toFixed(2)}%</td>
+            <td>${metric.postsCount}</td>
+          </tr>`
         })
         .join('')}
     </tbody>
   </table>
+
   ${
     alerts.length > 0
-      ? `<h2>Alertas</h2><table><thead><tr><th>Tipo</th><th>Mensagem</th><th>Severidade</th><th>Data</th></tr></thead><tbody>${alerts
-          .map(
-            (alert) =>
-              `<tr class="alert-${alert.severity}"><td>${alert.type}</td><td>${alert.message}</td><td>${alert.severity}</td><td>${format(new Date(alert.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</td></tr>`,
-          )
-          .join('')}</tbody></table>`
+      ? `
+  <h2>Alertas do Sistema</h2>
+  <table>
+    <thead><tr><th>Tipo</th><th>Mensagem</th><th>Severidade</th><th>Data</th></tr></thead>
+    <tbody>
+      ${alerts
+        .slice(0, 10)
+        .map(
+          (alert) => `
+        <tr>
+          <td style="text-transform: capitalize;">${alert.type.replace('_', ' ')}</td>
+          <td>${alert.message}</td>
+          <td style="text-transform: uppercase; font-size: 11px; font-weight: 700;">${alert.severity}</td>
+          <td>${format(new Date(alert.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</td>
+        </tr>
+      `,
+        )
+        .join('')}
+    </tbody>
+  </table>`
       : ''
   }
-  <div class="footer"><p>Relatório gerado em ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p></div>
+
+  <div class="footer">
+    <p>Este relatório contém informações confidenciais de monitoramento da PLANIN.</p>
+  </div>
 </body>
 </html>`
 }
@@ -202,6 +251,7 @@ export async function exportToPDF(
   printWindow.onload = () => {
     setTimeout(() => {
       printWindow.print()
-    }, 250)
+      // Optional: printWindow.close()
+    }, 500)
   }
 }
